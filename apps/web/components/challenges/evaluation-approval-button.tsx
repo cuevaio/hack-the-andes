@@ -180,9 +180,9 @@ export function EvaluationApprovalButton({
         </button>
       </div>
       <p className="text-sm text-[var(--hud-muted)]">
-        En esta computadora se usa Windows Hello, Touch ID o el PIN del equipo.
-        Google Workspace puede bloquear las passkeys del teléfono: no escanees
-        el código QR.
+        En esta computadora Windows debe pedir el PIN, la huella o el rostro. Si
+        aparece un código QR, cancélalo: esa ventana es el teléfono y Google
+        Workspace puede bloquearla.
       </p>
       {error ? (
         <p className="text-sm text-red-300" role="alert">

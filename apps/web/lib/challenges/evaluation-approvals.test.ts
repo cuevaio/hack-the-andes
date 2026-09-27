@@ -231,7 +231,8 @@ describe("Broken Agent evaluation approvals", () => {
       rp: { id: "hacktheandes.com" },
       authenticatorSelection: {
         authenticatorAttachment: "platform",
-        residentKey: "discouraged",
+        residentKey: "required",
+        requireResidentKey: true,
         userVerification: "required",
       },
       hints: ["client-device"],

@@ -287,29 +287,28 @@ export const parseApprovalAuthenticator = (
   );
 };
 
-const registrationPreferences = (
-  authenticator: ApprovalAuthenticator,
-): {
-  readonly authenticatorSelection: {
-    readonly residentKey: "discouraged";
-    readonly userVerification: "required";
-  };
-  readonly preferredAuthenticatorType: "localDevice" | "securityKey";
-} => {
-  let preferredAuthenticatorType: "localDevice" | "securityKey" = "localDevice";
+const registrationPreferences = (authenticator: ApprovalAuthenticator) => {
   if (authenticator === "security-key") {
-    preferredAuthenticatorType = "securityKey";
+    return {
+      authenticatorSelection: {
+        residentKey: "discouraged" as const,
+        userVerification: "required" as const,
+      },
+      preferredAuthenticatorType: "securityKey" as const,
+    };
   }
   return {
-    // A preferred resident key is a synced passkey. Chrome stores that in
-    // Google Password Manager, and Workspace admins can disable it — the
-    // phone QR flow then fails before Windows Hello is offered. A
-    // non-discoverable platform credential still requires user verification.
+    // Windows Hello only creates a discoverable passkey. residentKey
+    // "discouraged" makes Windows skip the PIN and open the phone QR, which
+    // Google Workspace then blocks. A required platform credential stays on
+    // this computer and still requires user verification.
     authenticatorSelection: {
-      residentKey: "discouraged",
-      userVerification: "required",
+      authenticatorAttachment: "platform" as const,
+      residentKey: "required" as const,
+      requireResidentKey: true,
+      userVerification: "required" as const,
     },
-    preferredAuthenticatorType,
+    preferredAuthenticatorType: "localDevice" as const,
   };
 };
 
