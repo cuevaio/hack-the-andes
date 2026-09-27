@@ -42,8 +42,8 @@ const workflow = [
   },
   {
     title: "Aprueba personalmente",
-    command: "Abre approvalUrl en tu navegador",
-    body: "Revisa tu razonamiento vinculado al source exacto y confirma con Face ID, Touch ID, Windows Hello, PIN o llave de seguridad. El agente no puede completar este paso.",
+    command: "Abre approvalUrl en tu computadora",
+    body: "Revisa tu razonamiento vinculado al source exacto y confirma con Face ID, Touch ID, Windows Hello, PIN o llave de seguridad. Google Workspace puede bloquear las passkeys del teléfono. El agente no puede completar este paso.",
   },
   {
     title: "Solicita el veredicto oculto",

@@ -3,12 +3,15 @@ import type { BrokenAgentHumanReview } from "@chofex/challenges-contract";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 
+import { HttpError } from "../registration/http";
+
 import {
   consumeEvaluationApproval,
   createOrReuseEvaluationApproval,
   type EvaluationApprovalDatabase,
   evaluationApprovalForParticipant,
   evaluationApprovalOptions,
+  parseApprovalAuthenticator,
   reviewDigestFor,
 } from "./evaluation-approvals";
 
@@ -219,13 +222,19 @@ describe("Broken Agent evaluation approvals", () => {
       "Participant",
       approval.id,
       "https://hacktheandes.com",
+      "local-device",
       database,
     );
 
     expect(ceremony.kind).toBe("registration");
     expect(ceremony.options).toMatchObject({
       rp: { id: "hacktheandes.com" },
-      authenticatorSelection: { userVerification: "required" },
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        residentKey: "discouraged",
+        userVerification: "required",
+      },
+      hints: ["client-device"],
     });
     const stored = await client.query<{
       ceremony_challenge: string | null;
@@ -241,5 +250,45 @@ describe("Broken Agent evaluation approvals", () => {
       relying_party_id: "hacktheandes.com",
     });
     expect(stored.rows[0]?.ceremony_challenge).not.toBeNull();
+  });
+
+  test("can register a security key when the computer has no platform authenticator", async () => {
+    const approval = await createOrReuseEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+    const ceremony = await evaluationApprovalOptions(
+      "user_1",
+      "participant@example.com",
+      "Participant",
+      approval.id,
+      "https://hacktheandes.com",
+      "security-key",
+      database,
+    );
+
+    expect(ceremony.options).toMatchObject({
+      authenticatorSelection: {
+        authenticatorAttachment: "cross-platform",
+        residentKey: "discouraged",
+        userVerification: "required",
+      },
+      hints: ["security-key"],
+    });
+  });
+
+  test("rejects an authenticator that would send the participant to a phone passkey", () => {
+    expect(parseApprovalAuthenticator("local-device")).toBe("local-device");
+    try {
+      parseApprovalAuthenticator("phone");
+      throw new Error("expected the phone authenticator to be rejected");
+    } catch (error) {
+      expect(error).toBeInstanceOf(HttpError);
+      if (!(error instanceof HttpError)) throw error;
+      expect(error.status).toBe(400);
+      expect(error.code).toBe("INVALID_APPROVAL_AUTHENTICATOR");
+    }
   });
 });

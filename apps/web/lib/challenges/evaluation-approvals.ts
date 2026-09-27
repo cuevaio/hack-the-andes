@@ -274,6 +274,45 @@ const activeApproval = (row: ApprovalRow): void => {
   }
 };
 
+export type ApprovalAuthenticator = "local-device" | "security-key";
+
+export const parseApprovalAuthenticator = (
+  value: unknown,
+): ApprovalAuthenticator => {
+  if (value === "local-device" || value === "security-key") return value;
+  throw new HttpError(
+    400,
+    "INVALID_APPROVAL_AUTHENTICATOR",
+    "Choose this computer or a security key",
+  );
+};
+
+const registrationPreferences = (
+  authenticator: ApprovalAuthenticator,
+): {
+  readonly authenticatorSelection: {
+    readonly residentKey: "discouraged";
+    readonly userVerification: "required";
+  };
+  readonly preferredAuthenticatorType: "localDevice" | "securityKey";
+} => {
+  let preferredAuthenticatorType: "localDevice" | "securityKey" = "localDevice";
+  if (authenticator === "security-key") {
+    preferredAuthenticatorType = "securityKey";
+  }
+  return {
+    // A preferred resident key is a synced passkey. Chrome stores that in
+    // Google Password Manager, and Workspace admins can disable it — the
+    // phone QR flow then fails before Windows Hello is offered. A
+    // non-discoverable platform credential still requires user verification.
+    authenticatorSelection: {
+      residentKey: "discouraged",
+      userVerification: "required",
+    },
+    preferredAuthenticatorType,
+  };
+};
+
 const relyingPartyFor = (origin: string): { origin: string; rpID: string } => {
   const url = new URL(origin);
   if (url.protocol !== "https:" && url.hostname !== "localhost") {
@@ -292,6 +331,7 @@ export const evaluationApprovalOptions = async (
   displayName: string,
   approvalId: string,
   origin: string,
+  authenticator: ApprovalAuthenticator = "local-device",
   database?: EvaluationApprovalDatabase,
 ): Promise<{
   readonly kind: "registration" | "authentication";
@@ -325,6 +365,7 @@ export const evaluationApprovalOptions = async (
     | Awaited<ReturnType<typeof generateAuthenticationOptions>>;
   if (passkeys.rows.length === 0) {
     kind = "registration";
+    const preferences = registrationPreferences(authenticator);
     options = await generateRegistrationOptions({
       rpName: "Hack the Andes",
       rpID: relyingParty.rpID,
@@ -333,10 +374,8 @@ export const evaluationApprovalOptions = async (
       userDisplayName: displayName || email,
       timeout: ceremonyTimeoutMs,
       attestationType: "none",
-      authenticatorSelection: {
-        residentKey: "preferred",
-        userVerification: "required",
-      },
+      authenticatorSelection: preferences.authenticatorSelection,
+      preferredAuthenticatorType: preferences.preferredAuthenticatorType,
     });
   } else {
     kind = "authentication";

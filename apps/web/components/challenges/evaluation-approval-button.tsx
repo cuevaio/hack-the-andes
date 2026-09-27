@@ -36,7 +36,10 @@ const approvalErrorMessages: Readonly<Record<string, string>> = {
     "Esta aprobación ya fue usada. Repite el comando para comenzar otra evaluación.",
   HUMAN_VERIFICATION_FAILED:
     "No se pudo verificar tu presencia. Inténtalo de nuevo.",
+  INVALID_APPROVAL_AUTHENTICATOR: "Elige este equipo o una llave de seguridad.",
 };
+
+type ApprovalAuthenticator = "local-device" | "security-key";
 
 const responseErrorMessage = (
   document: ApprovalErrorResponse | { readonly ok: true },
@@ -50,21 +53,39 @@ const responseErrorMessage = (
 
 class ApprovalUiError extends Error {}
 
+const browserFailureMessage = (cause: unknown): string => {
+  const code =
+    cause && typeof cause === "object" && "code" in cause ? cause.code : "";
+  if (code === "ERROR_AUTHENTICATOR_MISSING_USER_VERIFICATION_SUPPORT") {
+    return "Este equipo no tiene Windows Hello, Touch ID ni PIN. Configura uno, o usa una llave de seguridad.";
+  }
+  if (
+    code === "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY" ||
+    code === "ERROR_CEREMONY_ABORTED"
+  ) {
+    return "No se completó en este equipo. Confirma con Windows Hello, Touch ID o el PIN. Si Google Workspace bloqueó el teléfono, no escanees el código QR.";
+  }
+  return "No se completó la verificación. Inténtalo de nuevo en esta computadora.";
+};
+
 export function EvaluationApprovalButton({
   approvalId,
 }: {
   readonly approvalId: string;
 }) {
-  const [state, setState] = useState<"idle" | "working" | "approved">("idle");
+  const [state, setState] = useState<"idle" | "approved">("idle");
+  const [pending, setPending] = useState<ApprovalAuthenticator>();
   const [error, setError] = useState<string>();
 
-  const approve = async () => {
-    setState("working");
+  const approve = async (authenticator: ApprovalAuthenticator) => {
+    setPending(authenticator);
     setError(undefined);
     try {
       const basePath = `/api/v1/challenges/broken-agent/approvals/${approvalId}`;
       const optionsResponse = await fetch(`${basePath}/options`, {
         method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ authenticator }),
       });
       const optionsDocument = (await optionsResponse.json()) as
         | ApprovalOptionsResponse
@@ -107,14 +128,15 @@ export function EvaluationApprovalButton({
           ),
         );
       }
+      setPending(undefined);
       setState("approved");
     } catch (cause) {
       setError(
         cause instanceof ApprovalUiError
           ? cause.message
-          : "No se completó la verificación. Inténtalo de nuevo y confirma en tu dispositivo.",
+          : browserFailureMessage(cause),
       );
-      setState("idle");
+      setPending(undefined);
     }
   };
 
@@ -132,19 +154,35 @@ export function EvaluationApprovalButton({
     );
   }
 
+  const localLabel =
+    pending === "local-device" ? "Verificando…" : "Aprobar en este equipo";
+  const securityLabel =
+    pending === "security-key" ? "Verificando…" : "Usar llave de seguridad";
+
   return (
     <div className="space-y-3">
-      <button
-        className={buttonVariants()}
-        disabled={state === "working"}
-        onClick={approve}
-        type="button"
-      >
-        {state === "working" ? "Verificando…" : "Aprobar evaluación"}
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button
+          className={buttonVariants()}
+          disabled={pending !== undefined}
+          onClick={() => approve("local-device")}
+          type="button"
+        >
+          {localLabel}
+        </button>
+        <button
+          className={buttonVariants({ variant: "outline" })}
+          disabled={pending !== undefined}
+          onClick={() => approve("security-key")}
+          type="button"
+        >
+          {securityLabel}
+        </button>
+      </div>
       <p className="text-sm text-[var(--hud-muted)]">
-        Se solicitará Face ID, Touch ID, Windows Hello, PIN del dispositivo o
-        una llave de seguridad.
+        En esta computadora se usa Windows Hello, Touch ID o el PIN del equipo.
+        Google Workspace puede bloquear las passkeys del teléfono: no escanees
+        el código QR.
       </p>
       {error ? (
         <p className="text-sm text-red-300" role="alert">

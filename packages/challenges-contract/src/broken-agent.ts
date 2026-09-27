@@ -233,9 +233,10 @@ tu razonamiento ni tomar la decisión de release por ti. Si cambias
 \`scheduler.js\`, vuelve a revisar la evidencia antes de reemplazar el review.
 
 La primera ejecución de \`challenge evaluate\` crea un enlace corto de
-aprobación y **no consume** una evaluación. Abre ese enlace personalmente,
-revisa el review vinculado al SHA-256 exacto y confirma con Face ID, Touch ID,
-Windows Hello, PIN del dispositivo o una llave de seguridad. Después repite el
+aprobación y **no consume** una evaluación. Abre ese enlace en tu computadora,
+revisa el review vinculado al SHA-256 exacto y confirma con Windows Hello,
+Touch ID, PIN del equipo o una llave de seguridad. Google Workspace puede
+bloquear las passkeys del teléfono: no uses el código QR. Después repite el
 mismo comando para ejecutar la evaluación oficial. Cada evaluación requiere una
 aprobación nueva; la sesión OAuth del CLI no puede aprobarla.
 

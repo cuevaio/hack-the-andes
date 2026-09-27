@@ -116,7 +116,7 @@ const challengeQuickstart = {
       step: 10,
       action: "El participante aprueba en el navegador",
       command: "Abre approvalUrl personalmente",
-      note: "Revisa el razonamiento y confirma con Face ID, Touch ID, Windows Hello, PIN o llave de seguridad. El agente no puede completar este paso.",
+      note: "Abre el enlace en su computadora y confirma con Windows Hello, Touch ID, PIN o llave de seguridad. Google Workspace puede bloquear las passkeys del teléfono. El agente no puede completar este paso.",
     },
     {
       step: 11,
@@ -235,7 +235,7 @@ const evaluationErrorText = (error: CliError): string | undefined => {
     "INTERVENCIÓN DEL PARTICIPANTE REQUERIDA",
     "La evaluación todavía no consumió un intento.",
     "",
-    "El participante debe abrir personalmente este enlace, revisar sus respuestas y aprobar con Face ID, Touch ID, Windows Hello, PIN o llave de seguridad:",
+    "El participante debe abrir este enlace en su computadora, revisar sus respuestas y aprobar con Windows Hello, Touch ID, PIN o llave de seguridad. Google Workspace puede bloquear las passkeys del teléfono:",
     `  ${details.approvalUrl}`,
     "",
     "Después de aprobar, repite:",

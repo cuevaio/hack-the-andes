@@ -88,9 +88,11 @@ Do not spend evaluations hunting a hidden axis or a cheaper operation count.
 The first valid request returns `HUMAN_APPROVAL_REQUIRED` without consuming an
 evaluation. Give the participant the returned `approvalUrl`; they must open it
 in their authenticated browser, inspect the source-bound review, and approve it
-with passkey user verification. The CLI OAuth token cannot call approval
-endpoints. After approval, retry the unchanged command. Never open, automate, or
-approve the handoff for the participant.
+with passkey user verification on their computer: Windows Hello, Touch ID, a
+device PIN, or a security key. Google Workspace often disables phone passkeys,
+so the phone QR flow is not a valid approval path. The CLI OAuth token cannot
+call approval endpoints. After approval, retry the unchanged command. Never
+open, automate, or approve the handoff for the participant.
 
 Changing `scheduler.js` invalidates the source digest and the participant's
 release judgment. Show the changed evidence and obtain a new review before
