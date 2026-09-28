@@ -39,7 +39,10 @@ const approvalErrorMessages: Readonly<Record<string, string>> = {
   INVALID_APPROVAL_AUTHENTICATOR: "Elige este equipo o una llave de seguridad.",
 };
 
-type ApprovalAuthenticator = "local-device" | "security-key";
+type ApprovalAuthenticator =
+  | "local-device"
+  | "replace-local-device"
+  | "security-key";
 
 const responseErrorMessage = (
   document: ApprovalErrorResponse | { readonly ok: true },
@@ -76,6 +79,7 @@ export function EvaluationApprovalButton({
   const [state, setState] = useState<"idle" | "approved">("idle");
   const [pending, setPending] = useState<ApprovalAuthenticator>();
   const [error, setError] = useState<string>();
+  const [showLocalRecovery, setShowLocalRecovery] = useState(false);
 
   const approve = async (authenticator: ApprovalAuthenticator) => {
     setPending(authenticator);
@@ -131,6 +135,7 @@ export function EvaluationApprovalButton({
       setPending(undefined);
       setState("approved");
     } catch (cause) {
+      if (authenticator === "local-device") setShowLocalRecovery(true);
       setError(
         cause instanceof ApprovalUiError
           ? cause.message
@@ -158,6 +163,10 @@ export function EvaluationApprovalButton({
     pending === "local-device" ? "Verificando…" : "Aprobar en este equipo";
   const securityLabel =
     pending === "security-key" ? "Verificando…" : "Usar llave de seguridad";
+  const recoveryLabel =
+    pending === "replace-local-device"
+      ? "Registrando…"
+      : "Registrar este equipo";
 
   return (
     <div className="space-y-3">
@@ -178,11 +187,21 @@ export function EvaluationApprovalButton({
         >
           {securityLabel}
         </button>
+        {showLocalRecovery ? (
+          <button
+            className={buttonVariants({ variant: "outline" })}
+            disabled={pending !== undefined}
+            onClick={() => approve("replace-local-device")}
+            type="button"
+          >
+            {recoveryLabel}
+          </button>
+        ) : null}
       </div>
       <p className="text-sm text-[var(--hud-muted)]">
         En esta computadora Windows debe pedir el PIN, la huella o el rostro. Si
-        aparece un código QR, cancélalo: esa ventana es el teléfono y Google
-        Workspace puede bloquearla.
+        aparece un código QR, cancélalo y usa Registrar este equipo para
+        reemplazar la passkey del teléfono.
       </p>
       {error ? (
         <p className="text-sm text-red-300" role="alert">

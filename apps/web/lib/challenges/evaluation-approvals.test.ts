@@ -280,8 +280,57 @@ describe("Broken Agent evaluation approvals", () => {
     });
   });
 
+  test("can replace a phone passkey with a credential on this computer", async () => {
+    await client.query(
+      `insert into participant_passkeys (
+        participant_id,
+        credential_id,
+        public_key,
+        transports,
+        device_type,
+        backed_up
+      ) values ($1, 'phone-passkey', 'public-key', '["hybrid", "internal"]', 'multiDevice', true)`,
+      [participantId],
+    );
+    const approval = await createOrReuseEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+
+    const ceremony = await evaluationApprovalOptions(
+      "user_1",
+      "participant@example.com",
+      "Participant",
+      approval.id,
+      "https://hacktheandes.com",
+      "replace-local-device",
+      database,
+    );
+
+    expect(ceremony.kind).toBe("registration");
+    expect(ceremony.options).toMatchObject({
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        residentKey: "required",
+        requireResidentKey: true,
+        userVerification: "required",
+      },
+      hints: ["client-device"],
+    });
+    const stored = await client.query<{ ceremony_kind: string | null }>(
+      "select ceremony_kind from challenge_evaluation_approvals where id = $1",
+      [approval.id],
+    );
+    expect(stored.rows[0]?.ceremony_kind).toBe("replacement");
+  });
+
   test("rejects an authenticator that would send the participant to a phone passkey", () => {
     expect(parseApprovalAuthenticator("local-device")).toBe("local-device");
+    expect(parseApprovalAuthenticator("replace-local-device")).toBe(
+      "replace-local-device",
+    );
     try {
       parseApprovalAuthenticator("phone");
       throw new Error("expected the phone authenticator to be rejected");

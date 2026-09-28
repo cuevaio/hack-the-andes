@@ -274,12 +274,21 @@ const activeApproval = (row: ApprovalRow): void => {
   }
 };
 
-export type ApprovalAuthenticator = "local-device" | "security-key";
+export type ApprovalAuthenticator =
+  | "local-device"
+  | "replace-local-device"
+  | "security-key";
 
 export const parseApprovalAuthenticator = (
   value: unknown,
 ): ApprovalAuthenticator => {
-  if (value === "local-device" || value === "security-key") return value;
+  if (
+    value === "local-device" ||
+    value === "replace-local-device" ||
+    value === "security-key"
+  ) {
+    return value;
+  }
   throw new HttpError(
     400,
     "INVALID_APPROVAL_AUTHENTICATOR",
@@ -362,8 +371,12 @@ export const evaluationApprovalOptions = async (
   let options:
     | Awaited<ReturnType<typeof generateRegistrationOptions>>
     | Awaited<ReturnType<typeof generateAuthenticationOptions>>;
-  if (passkeys.rows.length === 0) {
+  let ceremonyKind: "authentication" | "registration" | "replacement";
+  const replaceExisting = authenticator === "replace-local-device";
+  if (passkeys.rows.length === 0 || replaceExisting) {
     kind = "registration";
+    ceremonyKind = "registration";
+    if (replaceExisting) ceremonyKind = "replacement";
     const preferences = registrationPreferences(authenticator);
     options = await generateRegistrationOptions({
       rpName: "Hack the Andes",
@@ -378,6 +391,7 @@ export const evaluationApprovalOptions = async (
     });
   } else {
     kind = "authentication";
+    ceremonyKind = "authentication";
     options = await generateAuthenticationOptions({
       rpID: relyingParty.rpID,
       timeout: ceremonyTimeoutMs,
@@ -393,7 +407,7 @@ export const evaluationApprovalOptions = async (
     update "challenge_evaluation_approvals"
     set
       "ceremony_challenge" = ${options.challenge},
-      "ceremony_kind" = ${kind},
+      "ceremony_kind" = ${ceremonyKind},
       "webauthn_origin" = ${relyingParty.origin},
       "relying_party_id" = ${relyingParty.rpID},
       "updated_at" = now()
@@ -440,6 +454,7 @@ const verifiedRegistration = async (
   const { registrationInfo } = verification;
   const credential = registrationInfo.credential;
   const publicKey = Buffer.from(credential.publicKey).toString("base64url");
+  const replaceExisting = approval.ceremony_kind === "replacement";
   const result = await client.execute<IdentifierRow>(sql`
     with stored_credential as (
       insert into "participant_passkeys" (
@@ -461,6 +476,14 @@ const verifiedRegistration = async (
       )
       on conflict ("credential_id") do nothing
       returning "credential_id"
+    ), removed_credentials as (
+      delete from "participant_passkeys" as existing
+      using stored_credential
+      where
+        ${replaceExisting}
+        and existing."participant_id" = ${approval.participant_id}
+        and existing."credential_id" <> stored_credential."credential_id"
+      returning existing."credential_id"
     )
     update "challenge_evaluation_approvals"
     set
@@ -573,7 +596,10 @@ export const verifyEvaluationApproval = async (
     );
   }
   try {
-    if (approval.ceremony_kind === "registration") {
+    if (
+      approval.ceremony_kind === "registration" ||
+      approval.ceremony_kind === "replacement"
+    ) {
       await verifiedRegistration(
         client,
         approval,
