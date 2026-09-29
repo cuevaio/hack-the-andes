@@ -1,6 +1,7 @@
 import { BrandPage } from "@chofex/ui/components/brand";
 
 import { LandingApply } from "@/components/landing/apply";
+import { LandingDevtoolCredits } from "@/components/landing/devtool-credits";
 import { LandingEvent } from "@/components/landing/event";
 import { LandingFaq } from "@/components/landing/faq";
 import { LandingFooter } from "@/components/landing/footer";
@@ -25,7 +26,7 @@ import "@/components/landing/landing.css";
  * live in `components/landing/dark.css` and `components/landing/landing.css`.
  *
  * Section order after the hero is locked:
- * Evento (#why) → Premios → Panel → Tracks → Challenges → Postular →
+ * Evento (#why) → Premios → Devtools → Panel → Tracks → Challenges → Postular →
  * FAQs → Organizadores. Do not restore a separate experiencia chapter.
  */
 export default function Home() {
@@ -44,6 +45,7 @@ export default function Home() {
         <LandingHero />
         <LandingEvent />
         <LandingPrizes />
+        <LandingDevtoolCredits />
         <LandingPeople />
         <LandingTracks />
         <LandingQualifierChallenges />

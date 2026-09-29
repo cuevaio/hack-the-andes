@@ -7,6 +7,8 @@ import {
   chromeCopy,
   cliInstallMethods,
   cliNextCommands,
+  devtoolCreditsCopy,
+  devtoolPartners,
   discordCopy,
   eventCopy,
   eventItems,
@@ -112,6 +114,39 @@ test("names the headquarters prize and its possible destinations", () => {
   expect(blob).toMatch(/Monterrey/);
   expect(blob).toMatch(/San Francisco/);
   expect(blob).not.toMatch(/viajar/i);
+});
+
+test("publishes devtool credits for participants and winners", () => {
+  expect(devtoolCreditsCopy.title).toBe("Devtool credits");
+  expect(devtoolPartners).toHaveLength(2);
+
+  const qatom = devtoolPartners.find((partner) => partner.id === "qatom");
+  expect(qatom?.participantBenefit).toEqual({
+    duration: "6 meses",
+    plan: "Plan Max",
+    value: "$300 USD/mes · $1,800 USD en total",
+  });
+  expect(qatom?.winnerPrizes).toEqual([
+    { place: "1.er puesto", prize: "1 año de Plan Max", value: "$3,600 USD" },
+    { place: "2.º puesto", prize: "1 año de Plan Pro", value: "$240 USD" },
+  ]);
+
+  const atomicMemory = devtoolPartners.find(
+    (partner) => partner.id === "atomic-memory",
+  );
+  expect(atomicMemory?.participantBenefit).toEqual({
+    duration: "5 meses",
+    plan: "Plan Pro",
+    value: "$19 USD/mes · $95 USD en total",
+  });
+  expect(atomicMemory?.winnerPrizes).toEqual([
+    { place: "1.er puesto", prize: "1 año de Plan Max", value: "$1,188 USD" },
+    {
+      place: "2.º y 3.er puesto",
+      prize: "1 año de Plan Pro",
+      value: "$228 USD c/u",
+    },
+  ]);
 });
 
 test("formats soles with the Peru locale", () => {
@@ -459,6 +494,7 @@ test("exposes skip links and section jumps for keyboard users", async () => {
   expect(sectionNav.map((item) => item.href)).toEqual([
     "#why",
     "#prizes",
+    "#devtool-credits",
     "#people",
     "#tracks",
     "#qualifier-challenges",
@@ -469,6 +505,7 @@ test("exposes skip links and section jumps for keyboard users", async () => {
   expect(sectionNav.map((item) => item.label)).toEqual([
     "Evento",
     "Premios",
+    "Devtools",
     "Panel",
     "Tracks",
     "Challenges",

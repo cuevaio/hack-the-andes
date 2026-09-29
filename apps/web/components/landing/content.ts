@@ -71,10 +71,11 @@ export const skipLinks = [
   { href: "#apply", label: "Saltar a aplicar" },
 ] as const;
 
-/** Locked jump order: Evento → Premios → Panel → Tracks → Challenges → Postular → FAQs → Organizadores. */
+/** Locked jump order: Evento → Premios → Devtools → Panel → Tracks → Challenges → Postular → FAQs → Organizadores. */
 export const sectionNav = [
   { href: "#why", label: "Evento" },
   { href: "#prizes", label: "Premios" },
+  { href: "#devtool-credits", label: "Devtools" },
   { href: "#people", label: "Panel" },
   { href: "#tracks", label: "Tracks" },
   { href: "#qualifier-challenges", label: "Challenges" },
@@ -321,6 +322,67 @@ export const prizesCopy = {
   tripLines: ["Viaje a", "Chofex", "Headquarters"],
 } as const;
 
+export const devtoolCreditsCopy = {
+  title: "Devtool credits",
+  lede: "Herramientas premium para construir durante el hackathon, más planes anuales para los equipos ganadores.",
+  participantsTitle: "Para participantes",
+  participantsNote: "Beneficio disponible al registrarte como participante.",
+  winnersTitle: "Para ganadores",
+} as const;
+
+export const devtoolPartners = [
+  {
+    id: "qatom",
+    name: "Qatom",
+    href: "https://www.qatom.ai/",
+    logoSrc: "/devtools/qatom.png",
+    logoWidth: 620,
+    logoHeight: 154,
+    participantBenefit: {
+      duration: "6 meses",
+      plan: "Plan Max",
+      value: "$300 USD/mes · $1,800 USD en total",
+    },
+    winnerPrizes: [
+      {
+        place: "1.er puesto",
+        prize: "1 año de Plan Max",
+        value: "$3,600 USD",
+      },
+      {
+        place: "2.º puesto",
+        prize: "1 año de Plan Pro",
+        value: "$240 USD",
+      },
+    ],
+  },
+  {
+    id: "atomic-memory",
+    name: "AtomicMemory Cloud",
+    href: "https://memory.atomicstrata.ai/",
+    logoSrc: "/devtools/atomic-memory.svg",
+    logoWidth: 1280,
+    logoHeight: 185.34,
+    participantBenefit: {
+      duration: "5 meses",
+      plan: "Plan Pro",
+      value: "$19 USD/mes · $95 USD en total",
+    },
+    winnerPrizes: [
+      {
+        place: "1.er puesto",
+        prize: "1 año de Plan Max",
+        value: "$1,188 USD",
+      },
+      {
+        place: "2.º y 3.er puesto",
+        prize: "1 año de Plan Pro",
+        value: "$228 USD c/u",
+      },
+    ],
+  },
+] as const;
+
 export const sponsorsCopy = {
   kicker: "quiénes lo hacen",
   title: "Chofex",
@@ -465,6 +527,7 @@ export const footerNavigation = [
     links: [
       { href: "#why", label: "El evento" },
       { href: "#prizes", label: "Premios" },
+      { href: "#devtool-credits", label: "Devtools" },
       { href: "#people", label: "Panel" },
     ],
   },
