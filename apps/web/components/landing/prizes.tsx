@@ -1,4 +1,5 @@
 import { BrandContainer } from "@chofex/ui/components/brand";
+import { cn } from "@chofex/ui/lib/utils";
 import Image from "next/image";
 
 import {
@@ -109,7 +110,10 @@ export function LandingPrizes() {
                   >
                     <Image
                       alt={partner.name}
-                      className="h-auto max-h-10 w-auto max-w-[min(100%,18rem)] object-contain object-left"
+                      className={cn(
+                        "w-auto max-w-[min(100%,18rem)] object-contain object-left",
+                        partner.logoClassName,
+                      )}
                       height={partner.logoHeight}
                       src={partner.logoSrc}
                       width={partner.logoWidth}

@@ -4,6 +4,7 @@ import {
   BrandSectionHeader,
   brandSectionClassName,
 } from "@chofex/ui/components/brand";
+import { cn } from "@chofex/ui/lib/utils";
 import Image from "next/image";
 
 import {
@@ -43,7 +44,7 @@ export function LandingParticipantPerks() {
           <div className="grid gap-px bg-[var(--hud-ink)]/15 md:grid-cols-3">
             {participantDevtoolPartners.map((partner) => (
               <a
-                className="flex min-h-52 flex-col bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8"
+                className="flex min-h-52 flex-col bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8 md:first:pl-0 md:last:pr-0"
                 href={partner.href}
                 key={partner.id}
                 rel="noreferrer"
@@ -52,7 +53,10 @@ export function LandingParticipantPerks() {
                 <div className="flex h-12 items-center">
                   <Image
                     alt={partner.name}
-                    className="h-auto max-h-10 w-auto max-w-[min(100%,19rem)] object-contain object-left"
+                    className={cn(
+                      "w-auto max-w-[min(100%,19rem)] object-contain object-left",
+                      partner.logoClassName,
+                    )}
                     height={partner.logoHeight}
                     src={partner.logoSrc}
                     width={partner.logoWidth}

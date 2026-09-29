@@ -212,12 +212,18 @@ test("aligns partner logos, prize rows, and the final participant perk", async (
   ]);
 
   expect(perksSource).toContain("h-12 items-center");
+  expect(perksSource).toContain("md:first:pl-0");
+  expect(perksSource).toContain("partner.logoClassName");
   expect(perksSource).toContain("sm:last:col-span-2");
   expect(prizesSource).toContain("min-h-12 items-center");
   expect(prizesSource).toContain("sm:min-h-12");
   expect(prizesSource.indexOf("partner.winnerNote")).toBeGreaterThan(
     prizesSource.indexOf("devtoolPartners.map"),
   );
+
+  expect(
+    participantDevtoolPartners.map((partner) => partner.logoClassName),
+  ).toEqual(["h-10", "h-8", "h-10"]);
 });
 
 test("formats soles with the Peru locale", () => {

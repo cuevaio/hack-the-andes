@@ -375,6 +375,7 @@ export const devtoolPartners = [
     logoSrc: "/devtools/qatom.png",
     logoWidth: 620,
     logoHeight: 154,
+    logoClassName: "h-10",
     participantBenefit: {
       duration: "6 meses",
       plan: "Plan Max",
@@ -402,6 +403,7 @@ export const devtoolPartners = [
     logoSrc: "/devtools/atomic-memory.svg",
     logoWidth: 1280,
     logoHeight: 185.34,
+    logoClassName: "h-8",
     participantBenefit: {
       duration: "5 meses",
       plan: "Plan Pro",
@@ -430,8 +432,9 @@ export const participantDevtoolPartners = [
     name: "Zavu",
     href: "https://www.zavu.dev/",
     logoSrc: "/devtools/zavu.svg",
-    logoWidth: 108,
+    logoWidth: 144,
     logoHeight: 40,
+    logoClassName: "h-10",
     participantBenefit: {
       duration: "3 meses",
       plan: "Plan Pro",
