@@ -41,7 +41,7 @@ COPY --from=pruner /app/out/full/ ./
 
 RUN test -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
 WORKDIR /app/apps/web
-RUN DATABASE_URL=postgresql://build:build@localhost/build \
+RUN NEW_DATABASE_URL=postgresql://build:build@localhost/build \
     node ../../node_modules/next/dist/bin/next build
 
 FROM node:24-bookworm-slim AS runner

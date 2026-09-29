@@ -213,7 +213,7 @@ the local web app.
 Start from [`apps/web/.env.example`](apps/web/.env.example). The main feature
 groups are:
 
-- **Core:** `DATABASE_URL`, Clerk publishable and secret keys,
+- **Core:** `NEW_DATABASE_URL`, Clerk publishable and secret keys,
   `CLERK_CLI_OAUTH_CLIENT_ID`, `CLERK_OAUTH_ISSUER`, and
   `CLERK_AUTHORIZED_PARTIES`. Funnel reminders additionally require a Clerk
   `session.created` webhook pointing to `/api/webhooks/clerk` and its
@@ -232,7 +232,7 @@ groups are:
 
 Badge generation and two-hour funnel reminders run in Trigger.dev and are not
 started by `bun dev`. Set `TRIGGER_SECRET_KEY` in the web environment, then set
-`DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, `AI_GATEWAY_API_KEY`, and
+`NEW_DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, `AI_GATEWAY_API_KEY`, and
 `RESEND_API_KEY` in the matching Trigger.dev environment. Run tasks locally or
 deploy them with:
 
@@ -297,7 +297,7 @@ window.
 bun test
 bun run lint
 bun run check-types
-DATABASE_URL=postgresql://user:pass@localhost:5432/db bun run build
+NEW_DATABASE_URL=postgresql://user:pass@localhost:5432/db bun run build
 ```
 
 ## License

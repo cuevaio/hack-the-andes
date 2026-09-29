@@ -4,8 +4,8 @@ import { defineConfig } from "drizzle-kit";
 config({ path: ".env.local", quiet: true });
 config({ quiet: true });
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required to run Drizzle Kit");
+if (!process.env.NEW_DATABASE_URL) {
+  throw new Error("NEW_DATABASE_URL is required to run Drizzle Kit");
 }
 
 export default defineConfig({
@@ -13,6 +13,6 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: process.env.NEW_DATABASE_URL,
   },
 });

@@ -15,7 +15,7 @@ describe("deployment environment selection", () => {
     const website: TestApplication = {
       name: "Website",
       domain: "hacktheandes.com",
-      environmentVariables: ["DATABASE_URL"],
+      environmentVariables: ["NEW_DATABASE_URL"],
       optionalEnvironmentVariables: [],
       serviceEnvironmentVariables: {
         CHALLENGE_ENGINE_URL: "Challenge Engine",
@@ -34,14 +34,14 @@ describe("deployment environment selection", () => {
     expect(
       selectedEnvironment(
         {
-          DATABASE_URL: "postgresql://database.example/chofex",
+          NEW_DATABASE_URL: "postgresql://database.example/chofex",
           CHALLENGE_ENGINE_URL: "https://andes-engine.cueva.io",
         },
         website,
         applications,
       ),
     ).toEqual({
-      DATABASE_URL: "postgresql://database.example/chofex",
+      NEW_DATABASE_URL: "postgresql://database.example/chofex",
       CHALLENGE_ENGINE_URL: "https://engine.hacktheandes.com",
     });
   });

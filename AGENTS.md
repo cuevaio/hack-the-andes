@@ -20,11 +20,11 @@ bun --filter chofex-cli test test/config.test.ts # package-relative focused test
 bun run lint
 bun run format
 bun run check-types                          # runs next typegen before Next.js tsc
-DATABASE_URL=postgresql://user:pass@localhost:5432/db bun run build
+NEW_DATABASE_URL=postgresql://user:pass@localhost:5432/db bun run build
 ```
 
 - Use `bun --filter <package> <script>` for package-scoped work.
-- After editing `packages/db/src/schema`, run `bun --filter @chofex/db db:generate`; generated migrations live in `packages/db/drizzle`. `db:generate`, `db:migrate`, and `db:studio` require `DATABASE_URL`.
+- After editing `packages/db/src/schema`, run `bun --filter @chofex/db db:generate`; generated migrations live in `packages/db/drizzle`. `db:generate`, `db:migrate`, and `db:studio` require `NEW_DATABASE_URL`.
 - The pre-commit hook runs `bunx --bun @biomejs/biome check --write` across the repository, including import organization. Run `bunx --bun @biomejs/biome check --write <changed paths>` first so the hook does not rewrite unrelated files.
 - GitHub Actions is release/deployment automation, not general CI: main pushes publish and may deploy the production web image. Run tests, lint, and type checks locally. The CLI publisher derives `0.1.<run_number>` from the approved default-branch tip; do not bump `apps/cli/package.json` manually for a release.
 - Before using the production `deploy:*` scripts, read `deploy/README.md`. They load only `.env.production.local` plus process overrides; database migrations stay explicit, and apply requires `--confirm-production`.

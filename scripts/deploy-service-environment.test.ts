@@ -6,7 +6,7 @@ import { reconcileServiceEnvironment } from "./deploy-service-environment";
 const website: ApplicationEnvironment = {
   name: "Website",
   domain: "hacktheandes.com",
-  environmentVariables: ["DATABASE_URL"],
+  environmentVariables: ["NEW_DATABASE_URL"],
   optionalEnvironmentVariables: [],
   serviceEnvironmentVariables: {
     CHALLENGE_ENGINE_URL: "Challenge Engine",
@@ -35,7 +35,7 @@ describe("Dokploy service environment reconciliation", () => {
           env: [
             'CHALLENGE_ENGINE_API_SECRET="private-secret"',
             'CHALLENGE_ENGINE_URL="https://andes-engine.cueva.io"',
-            'DATABASE_URL="postgresql://database.example/chofex"',
+            'NEW_DATABASE_URL="postgresql://database.example/chofex"',
             'PRIVATE_KEY="-----BEGIN PRIVATE KEY-----',
             "CHALLENGE_ENGINE_URL=https://embedded.example",
             "multiline-secret-content",
@@ -104,7 +104,7 @@ describe("Dokploy service environment reconciliation", () => {
       env: [
         'CHALLENGE_ENGINE_API_SECRET="private-secret"',
         'CHALLENGE_ENGINE_URL="https://engine.hacktheandes.com"',
-        'DATABASE_URL="postgresql://database.example/chofex"',
+        'NEW_DATABASE_URL="postgresql://database.example/chofex"',
         'PRIVATE_KEY="-----BEGIN PRIVATE KEY-----',
         "CHALLENGE_ENGINE_URL=https://embedded.example",
         "multiline-secret-content",

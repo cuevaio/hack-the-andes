@@ -15,7 +15,7 @@
       "port": 3000,
       "healthPath": "/api/health",
       "environmentVariables": [
-        "DATABASE_URL",
+        "NEW_DATABASE_URL",
         "CLERK_SECRET_KEY",
         "CLERK_CLI_OAUTH_CLIENT_ID",
         "CLERK_OAUTH_ISSUER",
