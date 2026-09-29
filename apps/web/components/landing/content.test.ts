@@ -124,15 +124,32 @@ test("publishes winner devtool prizes and participant credits separately", () =>
   expect(devtoolPartners).toHaveLength(2);
 
   const qatom = devtoolPartners.find((partner) => partner.id === "qatom");
+  expect(qatom?.href).toBe("https://www.qatom.ai/hack-the-andes");
   expect(qatom?.participantBenefit).toEqual({
     duration: "6 meses",
     plan: "Plan Max",
-    value: "$300 USD/mes · $1,800 USD en total",
+    value: "Gratis · sin tarjeta para comenzar",
   });
   expect(qatom?.winnerPrizes).toEqual([
-    { place: "1.er puesto", prize: "1 año de Plan Max", value: "$3,600 USD" },
-    { place: "2.º puesto", prize: "1 año de Plan Pro", value: "$240 USD" },
+    {
+      place: "1.er puesto",
+      prize: "12 meses de Plan Max para el equipo",
+      value: "$3,600 USD",
+    },
+    {
+      place: "2.º puesto",
+      prize: "7 meses de Plan Max para el equipo",
+      value: "$2,100 USD",
+    },
+    {
+      place: "3.er puesto",
+      prize: "7 meses de Plan Max para el equipo",
+      value: "$2,100 USD",
+    },
   ]);
+  expect(qatom?.winnerNote).toBe(
+    "Cada integrante de los equipos ganadores recibe además un voucher transferible de 12 meses de Plan Pro, valorado en $240 USD.",
+  );
 
   const atomicMemory = devtoolPartners.find(
     (partner) => partner.id === "atomic-memory",
@@ -168,7 +185,12 @@ test("publishes winner devtool prizes and participant credits separately", () =>
     "Energizantes",
     "Merch oficial",
     "Música y zonas de silencio",
+    "Demo y tutorial de Qatom",
   ]);
+  expect(participantPerks.at(-1)).toMatchObject({
+    href: "https://luma.com/830d5l83",
+    cta: "Registrarte en Luma",
+  });
 });
 
 test("separates winner prizes from perks for every participant", async () => {

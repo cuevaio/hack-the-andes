@@ -88,6 +88,16 @@ export function LandingParticipantPerks() {
                 <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--hud-muted)]">
                   {perk.body}
                 </p>
+                {perk.href && perk.cta && (
+                  <a
+                    className="mt-5 inline-flex font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-action)] underline-offset-4 hover:underline"
+                    href={perk.href}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {perk.cta}
+                  </a>
+                )}
               </div>
             </li>
           ))}

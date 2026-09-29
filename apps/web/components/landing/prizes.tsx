@@ -127,6 +127,11 @@ export function LandingPrizes() {
                     </div>
                   ))}
                 </dl>
+                {partner.winnerNote && (
+                  <p className="mt-7 border-[var(--hud-type)]/15 border-t pt-5 text-sm leading-relaxed text-[var(--hud-type)]/70">
+                    {partner.winnerNote}
+                  </p>
+                )}
               </article>
             ))}
           </div>

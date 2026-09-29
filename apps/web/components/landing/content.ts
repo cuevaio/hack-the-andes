@@ -324,7 +324,7 @@ export const prizesCopy = {
 
 export const devtoolCreditsCopy = {
   title: "Créditos para equipos ganadores",
-  lede: "Planes anuales de Qatom y AtomicMemory para seguir construyendo después del hackathon.",
+  lede: "Planes premium de Qatom y AtomicMemory para seguir construyendo después del hackathon.",
 } as const;
 
 export const participantPerksCopy = {
@@ -338,18 +338,32 @@ export const participantPerks = [
   {
     title: "Comida y bebidas",
     body: "Comida y bebidas durante las 30 horas para que puedas seguir construyendo.",
+    href: null,
+    cta: null,
   },
   {
     title: "Energizantes",
     body: "Energy drinks para acompañarte durante el hackathon.",
+    href: null,
+    cta: null,
   },
   {
     title: "Merch oficial",
     body: "Merch de Hack the Andes para cada participante.",
+    href: null,
+    cta: null,
   },
   {
     title: "Música y zonas de silencio",
     body: "Espacios con distintos ritmos para colaborar, concentrarte o descansar.",
+    href: null,
+    cta: null,
+  },
+  {
+    title: "Demo y tutorial de Qatom",
+    body: "Sesión en vivo de 90 minutos con Hassan Khan, CEO de Qatom. Viernes 2 de octubre a las 6:30 p. m. ET, por Zoom.",
+    href: "https://luma.com/830d5l83",
+    cta: "Registrarte en Luma",
   },
 ] as const;
 
@@ -357,27 +371,34 @@ export const devtoolPartners = [
   {
     id: "qatom",
     name: "Qatom",
-    href: "https://www.qatom.ai/",
+    href: "https://www.qatom.ai/hack-the-andes",
     logoSrc: "/devtools/qatom.png",
     logoWidth: 620,
     logoHeight: 154,
     participantBenefit: {
       duration: "6 meses",
       plan: "Plan Max",
-      value: "$300 USD/mes · $1,800 USD en total",
+      value: "Gratis · sin tarjeta para comenzar",
     },
     winnerPrizes: [
       {
         place: "1.er puesto",
-        prize: "1 año de Plan Max",
+        prize: "12 meses de Plan Max para el equipo",
         value: "$3,600 USD",
       },
       {
         place: "2.º puesto",
-        prize: "1 año de Plan Pro",
-        value: "$240 USD",
+        prize: "7 meses de Plan Max para el equipo",
+        value: "$2,100 USD",
+      },
+      {
+        place: "3.er puesto",
+        prize: "7 meses de Plan Max para el equipo",
+        value: "$2,100 USD",
       },
     ],
+    winnerNote:
+      "Cada integrante de los equipos ganadores recibe además un voucher transferible de 12 meses de Plan Pro, valorado en $240 USD.",
   },
   {
     id: "atomic-memory",
@@ -403,6 +424,7 @@ export const devtoolPartners = [
         value: "$228 USD c/u",
       },
     ],
+    winnerNote: null,
   },
 ] as const;
 
