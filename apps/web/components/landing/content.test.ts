@@ -21,6 +21,8 @@ import {
   legalCopy,
   metadataCopy,
   panelBrands,
+  participantPerks,
+  participantPerksCopy,
   partners,
   peopleCopy,
   prizeAmountsPen,
@@ -116,8 +118,8 @@ test("names the headquarters prize and its possible destinations", () => {
   expect(blob).not.toMatch(/viajar/i);
 });
 
-test("publishes devtool credits for participants and winners", () => {
-  expect(devtoolCreditsCopy.title).toBe("Devtool credits");
+test("publishes winner devtool prizes and participant credits separately", () => {
+  expect(devtoolCreditsCopy.title).toBe("Créditos para equipos ganadores");
   expect(devtoolPartners).toHaveLength(2);
 
   const qatom = devtoolPartners.find((partner) => partner.id === "qatom");
@@ -147,6 +149,30 @@ test("publishes devtool credits for participants and winners", () => {
       value: "$228 USD c/u",
     },
   ]);
+
+  expect(participantPerksCopy.title).toBe("Perks para participantes");
+  expect(participantPerks.map((perk) => perk.title)).toEqual([
+    "Comida y bebidas",
+    "Energizantes",
+    "Merch oficial",
+    "Música y zonas de silencio",
+  ]);
+});
+
+test("separates winner prizes from perks for every participant", async () => {
+  const [prizesSource, perksSource] = await Promise.all([
+    Bun.file(new URL("./prizes.tsx", import.meta.url)).text(),
+    Bun.file(new URL("./participant-perks.tsx", import.meta.url)).text(),
+  ]);
+
+  expect(prizesSource).toContain("partner.winnerPrizes");
+  expect(prizesSource).toContain("prizeAmountsPen.first");
+  expect(prizesSource).toContain("prizeAmountsPen.second");
+  expect(prizesSource).not.toContain("partner.participantBenefit");
+
+  expect(perksSource).toContain("partner.participantBenefit");
+  expect(perksSource).toContain("participantPerks.map");
+  expect(perksSource).not.toContain("partner.winnerPrizes");
 });
 
 test("formats soles with the Peru locale", () => {
@@ -428,7 +454,7 @@ test("ships one social preview card for every public link", async () => {
   expect(alt).toContain(brandName);
 });
 
-test("fits the prizes lockup inside one viewport column", async () => {
+test("keeps the cash and trip lockup ahead of winner credits", async () => {
   const source = await Bun.file(
     new URL("./prizes.tsx", import.meta.url),
   ).text();
@@ -437,18 +463,20 @@ test("fits the prizes lockup inside one viewport column", async () => {
   expect(source).toContain("prizesCopy.tripLocation");
   expect(source).toContain("minmax(0,1fr)");
   expect(source).toContain("landing-type-meta");
+  expect(source.indexOf("prizePoolHeadlinePen")).toBeLessThan(
+    source.indexOf("devtoolPartners.map"),
+  );
   expect(source).not.toMatch(/text-\[10px\]/);
 });
 
-test("keeps Premios dense on phones with a larger cash headline", async () => {
+test("keeps the cash headline dominant without forcing one viewport", async () => {
   const source = await Bun.file(
     new URL("./prizes.tsx", import.meta.url),
   ).text();
 
-  expect(source).toContain("md:min-h-svh");
-  expect(source).toContain("md:justify-center");
-  expect(source).not.toMatch(/className="flex min-h-svh flex-col/);
-  expect(source).toContain("py-6");
+  expect(source).not.toContain("min-h-svh");
+  expect(source).not.toContain("md:justify-center");
+  expect(source).toContain("py-10");
   expect(source).toContain("clamp(6rem,24vw,8.5rem)");
   expect(source).toContain("lg:text-[clamp(3.25rem,9vw,7.25rem)]");
 });
@@ -494,7 +522,7 @@ test("exposes skip links and section jumps for keyboard users", async () => {
   expect(sectionNav.map((item) => item.href)).toEqual([
     "#why",
     "#prizes",
-    "#devtool-credits",
+    "#participant-perks",
     "#people",
     "#tracks",
     "#qualifier-challenges",
@@ -505,7 +533,7 @@ test("exposes skip links and section jumps for keyboard users", async () => {
   expect(sectionNav.map((item) => item.label)).toEqual([
     "Evento",
     "Premios",
-    "Devtools",
+    "Perks",
     "Panel",
     "Tracks",
     "Challenges",

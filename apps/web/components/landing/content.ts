@@ -71,11 +71,11 @@ export const skipLinks = [
   { href: "#apply", label: "Saltar a aplicar" },
 ] as const;
 
-/** Locked jump order: Evento → Premios → Devtools → Panel → Tracks → Challenges → Postular → FAQs → Organizadores. */
+/** Locked jump order: Evento → Premios → Perks → Panel → Tracks → Challenges → Postular → FAQs → Organizadores. */
 export const sectionNav = [
   { href: "#why", label: "Evento" },
   { href: "#prizes", label: "Premios" },
-  { href: "#devtool-credits", label: "Devtools" },
+  { href: "#participant-perks", label: "Perks" },
   { href: "#people", label: "Panel" },
   { href: "#tracks", label: "Tracks" },
   { href: "#qualifier-challenges", label: "Challenges" },
@@ -310,7 +310,7 @@ export const applyCopy = {
 } as const;
 
 export const prizesCopy = {
-  title: "Premios",
+  title: "Premios para ganadores",
   lede: "Premios en efectivo para las soluciones que mejor conviertan un problema real en un producto funcionando.",
   totalSuffix: "en premios en efectivo",
   tripTitle: "Viaje a Chofex Headquarters",
@@ -323,12 +323,35 @@ export const prizesCopy = {
 } as const;
 
 export const devtoolCreditsCopy = {
-  title: "Devtool credits",
-  lede: "Herramientas premium para construir durante el hackathon, más planes anuales para los equipos ganadores.",
-  participantsTitle: "Para participantes",
-  participantsNote: "Beneficio disponible al registrarte como participante.",
-  winnersTitle: "Para ganadores",
+  title: "Créditos para equipos ganadores",
+  lede: "Planes anuales de Qatom y AtomicMemory para seguir construyendo después del hackathon.",
 } as const;
+
+export const participantPerksCopy = {
+  title: "Perks para participantes",
+  lede: "Todo lo que recibes por participar: herramientas premium para construir y una experiencia diseñada para mantenerte enfocado durante las 30 horas.",
+  creditsTitle: "Créditos al registrarte",
+  creditsNote: "Disponibles para todos los participantes.",
+} as const;
+
+export const participantPerks = [
+  {
+    title: "Comida y bebidas",
+    body: "Comida y bebidas durante las 30 horas para que puedas seguir construyendo.",
+  },
+  {
+    title: "Energizantes",
+    body: "Energy drinks para acompañarte durante el hackathon.",
+  },
+  {
+    title: "Merch oficial",
+    body: "Merch de Hack the Andes para cada participante.",
+  },
+  {
+    title: "Música y zonas de silencio",
+    body: "Espacios con distintos ritmos para colaborar, concentrarte o descansar.",
+  },
+] as const;
 
 export const devtoolPartners = [
   {
@@ -527,7 +550,7 @@ export const footerNavigation = [
     links: [
       { href: "#why", label: "El evento" },
       { href: "#prizes", label: "Premios" },
-      { href: "#devtool-credits", label: "Devtools" },
+      { href: "#participant-perks", label: "Perks" },
       { href: "#people", label: "Panel" },
     ],
   },

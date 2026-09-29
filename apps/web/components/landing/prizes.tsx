@@ -1,18 +1,24 @@
 import { BrandContainer } from "@chofex/ui/components/brand";
-import { prizePoolHeadlinePen, prizesCopy } from "@/components/landing/content";
+import Image from "next/image";
+
+import {
+  devtoolCreditsCopy,
+  devtoolPartners,
+  formatSoles,
+  prizeAmountsPen,
+  prizePoolHeadlinePen,
+  prizesCopy,
+} from "@/components/landing/content";
 import { PrizeCounter } from "@/components/landing/prize-counter";
 
 export function LandingPrizes() {
   return (
     <section
       aria-labelledby="prizes-heading"
-      // Full-viewport only from md up. On a ~390px phone, `min-h-svh` plus
-      // vertical centering leaves a black void above PREMIOS and below the
-      // trip lockup. Hug the copy there; keep the one-screen chapter on desktop.
-      className="flex min-h-0 flex-col bg-[var(--hud-field)] text-[var(--hud-type)] md:min-h-svh"
+      className="flex flex-col bg-[var(--hud-field)] text-[var(--hud-type)]"
       id="prizes"
     >
-      <BrandContainer className="flex flex-1 flex-col py-6 sm:py-12 md:justify-center md:py-16">
+      <BrandContainer className="flex flex-col py-10 sm:py-16">
         {/* Section title — small kicker, also the landmark label */}
         <h2
           className="landing-type-meta mb-5 text-[var(--hud-type)]/60 sm:mb-8 md:mb-10"
@@ -20,6 +26,9 @@ export function LandingPrizes() {
         >
           {prizesCopy.title}
         </h2>
+        <p className="mb-8 max-w-2xl text-lg leading-relaxed text-[var(--hud-type)]/70 md:mb-10">
+          {prizesCopy.lede}
+        </p>
 
         {/*
          * Two columns from lg up, stacked below. The trip lockup is three
@@ -35,6 +44,24 @@ export function LandingPrizes() {
             <p className="mt-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--hud-type)]/60 sm:mt-4">
               {prizesCopy.totalSuffix}
             </p>
+            <dl className="mt-6 grid max-w-md grid-cols-2 gap-px bg-[var(--hud-type)]/15">
+              <div className="bg-[#08070a]/80 p-4">
+                <dt className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-type)]/55">
+                  1.er puesto
+                </dt>
+                <dd className="mt-2 font-display text-3xl leading-none">
+                  {formatSoles(prizeAmountsPen.first)}
+                </dd>
+              </div>
+              <div className="bg-[#08070a]/80 p-4">
+                <dt className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-type)]/55">
+                  2.º puesto
+                </dt>
+                <dd className="mt-2 font-display text-3xl leading-none">
+                  {formatSoles(prizeAmountsPen.second)}
+                </dd>
+              </div>
+            </dl>
           </div>
 
           <p
@@ -56,6 +83,52 @@ export function LandingPrizes() {
             <p className="mt-3 font-mono text-xs tracking-[0.08em] text-[var(--hud-type)]/60 sm:mt-4">
               {prizesCopy.tripLocation}
             </p>
+          </div>
+        </div>
+
+        <div className="mt-12 border-[var(--hud-type)]/15 border-t pt-8 sm:mt-16 sm:pt-10">
+          <h3 className="font-display text-3xl uppercase leading-none sm:text-4xl">
+            {devtoolCreditsCopy.title}
+          </h3>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--hud-type)]/60">
+            {devtoolCreditsCopy.lede}
+          </p>
+
+          <div className="mt-7 grid gap-px bg-[var(--hud-type)]/15 lg:grid-cols-2">
+            {devtoolPartners.map((partner) => (
+              <article className="bg-[#08070a]/80 p-6 sm:p-8" key={partner.id}>
+                <a
+                  className="inline-flex min-h-10 items-center transition-opacity hover:opacity-75"
+                  href={partner.href}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <Image
+                    alt={partner.name}
+                    className="h-auto max-h-9 w-auto max-w-[min(100%,18rem)] object-contain object-left"
+                    height={partner.logoHeight}
+                    src={partner.logoSrc}
+                    width={partner.logoWidth}
+                  />
+                </a>
+
+                <dl className="mt-7 grid gap-5 sm:grid-cols-2">
+                  {partner.winnerPrizes.map((prize) => (
+                    <div key={prize.place}>
+                      <dt className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-action)]">
+                        {prize.place}
+                      </dt>
+                      <dd className="mt-2 text-base leading-snug">
+                        {prize.prize}
+                      </dd>
+                      <dd className="mt-1 text-sm text-[var(--hud-type)]/55">
+                        Valorado en {prize.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            ))}
           </div>
         </div>
       </BrandContainer>
