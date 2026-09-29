@@ -430,7 +430,7 @@ export const participantDevtoolPartners = [
     name: "Zavu",
     href: "https://www.zavu.dev/",
     logoSrc: "/devtools/zavu.svg",
-    logoWidth: 144,
+    logoWidth: 108,
     logoHeight: 40,
     participantBenefit: {
       duration: "3 meses",

@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="144" height="40" viewBox="0 0 144 40" fill="none" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="40" viewBox="4 4 108 32" fill="none" role="img" aria-labelledby="title">
   <title id="title">Zavu</title>
   <g transform="translate(2 8)" stroke="#f6f3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M7 7h10l-5 5"/>
     <path d="M12 12l5 5"/>
   </g>
-  <text x="37" y="29" fill="#f6f3ee" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="-1">zavu</text>
+  <text x="32" y="31" fill="#f6f3ee" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" letter-spacing="-1">zavu</text>
 </svg>

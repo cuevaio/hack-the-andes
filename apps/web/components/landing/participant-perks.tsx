@@ -43,20 +43,22 @@ export function LandingParticipantPerks() {
           <div className="grid gap-px bg-[var(--hud-ink)]/15 md:grid-cols-3">
             {participantDevtoolPartners.map((partner) => (
               <a
-                className="grid min-h-48 grid-rows-[3rem_auto] gap-7 bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8"
+                className="flex min-h-52 flex-col bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8"
                 href={partner.href}
                 key={partner.id}
                 rel="noreferrer"
                 target="_blank"
               >
-                <Image
-                  alt={partner.name}
-                  className="h-auto max-h-10 w-auto max-w-[min(100%,19rem)] object-contain object-left"
-                  height={partner.logoHeight}
-                  src={partner.logoSrc}
-                  width={partner.logoWidth}
-                />
-                <div>
+                <div className="flex h-12 items-center">
+                  <Image
+                    alt={partner.name}
+                    className="h-auto max-h-10 w-auto max-w-[min(100%,19rem)] object-contain object-left"
+                    height={partner.logoHeight}
+                    src={partner.logoSrc}
+                    width={partner.logoWidth}
+                  />
+                </div>
+                <div className="mt-7">
                   <p className="font-display text-4xl uppercase leading-none">
                     {partner.participantBenefit.duration}
                   </p>
@@ -75,7 +77,7 @@ export function LandingParticipantPerks() {
         <ul className="grid gap-px bg-[var(--hud-ink)]/15 sm:grid-cols-2">
           {participantPerks.map((perk, index) => (
             <li
-              className="grid min-h-44 grid-cols-[2.5rem_1fr] gap-4 bg-[var(--hud-paper)] p-6 sm:gap-6 sm:p-8"
+              className="grid min-h-44 grid-cols-[2.5rem_1fr] gap-4 bg-[var(--hud-paper)] p-6 sm:gap-6 sm:p-8 sm:last:col-span-2"
               key={perk.title}
             >
               <BrandKicker className="text-[var(--hud-status)]">

@@ -94,46 +94,60 @@ export function LandingPrizes() {
             {devtoolCreditsCopy.lede}
           </p>
 
-          <div className="mt-7 grid gap-px bg-[var(--hud-type)]/15 lg:grid-cols-2">
-            {devtoolPartners.map((partner) => (
-              <article className="bg-[#08070a]/80 p-6 sm:p-8" key={partner.id}>
-                <a
-                  className="inline-flex min-h-10 items-center transition-opacity hover:opacity-75"
-                  href={partner.href}
-                  rel="noreferrer"
-                  target="_blank"
+          <div className="mt-7">
+            <div className="grid gap-px bg-[var(--hud-type)]/15 lg:grid-cols-2">
+              {devtoolPartners.map((partner) => (
+                <article
+                  className="bg-[#08070a]/80 p-6 sm:p-8"
+                  key={partner.id}
                 >
-                  <Image
-                    alt={partner.name}
-                    className="h-auto max-h-9 w-auto max-w-[min(100%,18rem)] object-contain object-left"
-                    height={partner.logoHeight}
-                    src={partner.logoSrc}
-                    width={partner.logoWidth}
-                  />
-                </a>
+                  <a
+                    className="inline-flex min-h-12 items-center transition-opacity hover:opacity-75"
+                    href={partner.href}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <Image
+                      alt={partner.name}
+                      className="h-auto max-h-10 w-auto max-w-[min(100%,18rem)] object-contain object-left"
+                      height={partner.logoHeight}
+                      src={partner.logoSrc}
+                      width={partner.logoWidth}
+                    />
+                  </a>
 
-                <dl className="mt-7 grid gap-5 sm:grid-cols-2">
-                  {partner.winnerPrizes.map((prize) => (
-                    <div key={prize.place}>
-                      <dt className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-action)]">
-                        {prize.place}
-                      </dt>
-                      <dd className="mt-2 text-base leading-snug">
-                        {prize.prize}
-                      </dd>
-                      <dd className="mt-1 text-sm text-[var(--hud-type)]/55">
-                        Valorado en {prize.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                {partner.winnerNote && (
-                  <p className="mt-7 border-[var(--hud-type)]/15 border-t pt-5 text-sm leading-relaxed text-[var(--hud-type)]/70">
+                  <dl className="mt-7 grid gap-5 sm:grid-cols-2">
+                    {partner.winnerPrizes.map((prize) => (
+                      <div key={prize.place}>
+                        <dt className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-action)]">
+                          {prize.place}
+                        </dt>
+                        <dd className="mt-2 text-base leading-snug sm:min-h-12">
+                          {prize.prize}
+                        </dd>
+                        <dd className="mt-1 text-sm text-[var(--hud-type)]/55">
+                          Valorado en {prize.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </article>
+              ))}
+            </div>
+            {devtoolPartners.map(
+              (partner) =>
+                partner.winnerNote && (
+                  <p
+                    className="mt-px bg-[#08070a]/80 p-6 text-sm leading-relaxed text-[var(--hud-type)]/70 sm:px-8"
+                    key={partner.id}
+                  >
+                    <span className="font-mono uppercase tracking-[0.12em] text-[var(--hud-action)]">
+                      {partner.name} · Premio individual
+                    </span>{" "}
                     {partner.winnerNote}
                   </p>
-                )}
-              </article>
-            ))}
+                ),
+            )}
           </div>
         </div>
       </BrandContainer>

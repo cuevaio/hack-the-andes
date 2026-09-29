@@ -205,6 +205,21 @@ test("separates winner prizes from perks for every participant", async () => {
   expect(perksSource).not.toContain("partner.winnerPrizes");
 });
 
+test("aligns partner logos, prize rows, and the final participant perk", async () => {
+  const [prizesSource, perksSource] = await Promise.all([
+    Bun.file(new URL("./prizes.tsx", import.meta.url)).text(),
+    Bun.file(new URL("./participant-perks.tsx", import.meta.url)).text(),
+  ]);
+
+  expect(perksSource).toContain("h-12 items-center");
+  expect(perksSource).toContain("sm:last:col-span-2");
+  expect(prizesSource).toContain("min-h-12 items-center");
+  expect(prizesSource).toContain("sm:min-h-12");
+  expect(prizesSource.indexOf("partner.winnerNote")).toBeGreaterThan(
+    prizesSource.indexOf("devtoolPartners.map"),
+  );
+});
+
 test("formats soles with the Peru locale", () => {
   expect(formatSoles(6_700)).toContain("6");
   expect(formatSoles(6_700)).toContain("700");
