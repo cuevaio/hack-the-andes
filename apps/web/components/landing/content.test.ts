@@ -137,14 +137,9 @@ test("publishes winner devtool prizes and participant credits separately", () =>
       value: "$3,600 USD",
     },
     {
-      place: "2.º puesto",
+      place: "2.º y 3.er puesto",
       prize: "7 meses de Plan Max para el equipo",
-      value: "$2,100 USD",
-    },
-    {
-      place: "3.er puesto",
-      prize: "7 meses de Plan Max para el equipo",
-      value: "$2,100 USD",
+      value: "$2,100 USD c/u",
     },
   ]);
   expect(qatom?.winnerNote).toBe(
