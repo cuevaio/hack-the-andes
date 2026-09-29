@@ -12,6 +12,7 @@ import {
   evaluationApprovalForParticipant,
   evaluationApprovalOptions,
   parseApprovalAuthenticator,
+  releaseEvaluationApproval,
   reviewDigestFor,
 } from "./evaluation-approvals";
 
@@ -120,7 +121,7 @@ describe("Broken Agent evaluation approvals", () => {
         review,
         database,
       ),
-    ).toBe(false);
+    ).toBeUndefined();
     expect(
       await evaluationApprovalForParticipant(
         "user_1",
@@ -166,6 +167,95 @@ describe("Broken Agent evaluation approvals", () => {
     expect(next.id).not.toBe(approval.id);
   });
 
+  test("allows retry after an engine outage without another passkey ceremony", async () => {
+    const approval = await createOrReuseEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+    await client.query(
+      "update challenge_evaluation_approvals set approved_at = now() where id = $1",
+      [approval.id],
+    );
+    const claimed = await consumeEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+    expect(claimed).toBe(approval.id);
+    if (!claimed) throw new Error("Expected approved handoff");
+    await releaseEvaluationApproval(claimed, database);
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        review.sourceDigest,
+        review,
+        database,
+      ),
+    ).toBe(approval.id);
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        review.sourceDigest,
+        review,
+        database,
+      ),
+    ).toBeUndefined();
+  });
+
+  test("does not resurrect an expired or superseded approval after failure", async () => {
+    const approval = await createOrReuseEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+    await client.query(
+      "update challenge_evaluation_approvals set approved_at = now() where id = $1",
+      [approval.id],
+    );
+    await consumeEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+    const next = await createOrReuseEvaluationApproval(
+      attemptId,
+      review.sourceDigest,
+      review,
+      database,
+    );
+    await releaseEvaluationApproval(approval.id, database);
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        review.sourceDigest,
+        review,
+        database,
+      ),
+    ).toBeUndefined();
+    await client.query(
+      "delete from challenge_evaluation_approvals where id = $1",
+      [next.id],
+    );
+    await client.query(
+      "update challenge_evaluation_approvals set expires_at = now() - interval '1 second' where id = $1",
+      [approval.id],
+    );
+    await releaseEvaluationApproval(approval.id, database);
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        review.sourceDigest,
+        review,
+        database,
+      ),
+    ).toBeUndefined();
+  });
+
   test("does not consume expired approval or reuse it", async () => {
     const approval = await createOrReuseEvaluationApproval(
       attemptId,
@@ -187,7 +277,7 @@ describe("Broken Agent evaluation approvals", () => {
         review,
         database,
       ),
-    ).toBe(false);
+    ).toBeUndefined();
     const replacement = await createOrReuseEvaluationApproval(
       attemptId,
       review.sourceDigest,

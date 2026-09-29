@@ -5,7 +5,7 @@ const opaqueEngineEvaluationFailure =
 
 export const isConfirmedSolutionExecutionFailure = (
   error: unknown,
-): error is ChallengeEngineError => {
+): boolean => {
   if (
     !(error instanceof ChallengeEngineError) ||
     error.status !== 422 ||

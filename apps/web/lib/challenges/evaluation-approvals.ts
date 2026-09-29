@@ -191,7 +191,7 @@ export const consumeEvaluationApproval = async (
   sourceDigest: string,
   review: BrokenAgentHumanReview,
   database?: EvaluationApprovalDatabase,
-): Promise<boolean> => {
+): Promise<string | undefined> => {
   const client = await approvalDatabase(database);
   const reviewDigest = reviewDigestFor(review);
   const result = await client.execute<IdentifierRow>(sql`
@@ -213,7 +213,31 @@ export const consumeEvaluationApproval = async (
     )
     returning "id"
   `);
-  return result.rows.length === 1;
+  return result.rows[0]?.id;
+};
+
+export const releaseEvaluationApproval = async (
+  approvalId: string,
+  database?: EvaluationApprovalDatabase,
+): Promise<void> => {
+  const client = await approvalDatabase(database);
+  // A concurrent retry may already have created a new handoff. Never overwrite
+  // that handoff or resurrect an expired authorization.
+  await client.execute(sql`
+    update "challenge_evaluation_approvals" as approval
+    set "consumed_at" = null, "updated_at" = now()
+    where approval."id" = ${approvalId}
+      and approval."approved_at" is not null
+      and approval."expires_at" > now()
+      and not exists (
+        select 1 from "challenge_evaluation_approvals" as other
+        where other."attempt_id" = approval."attempt_id"
+          and other."source_digest" = approval."source_digest"
+          and other."review_digest" = approval."review_digest"
+          and other."consumed_at" is null
+          and other."id" <> approval."id"
+      )
+  `);
 };
 
 const approvalForParticipant = async (

@@ -47,6 +47,7 @@ import {
 import {
   consumeEvaluationApproval,
   createOrReuseEvaluationApproval,
+  releaseEvaluationApproval,
 } from "./evaluation-approvals";
 import { isConfirmedSolutionExecutionFailure } from "./failure-policy";
 import { requireChallengeParticipationOpen } from "./participation-policy";
@@ -77,6 +78,9 @@ const engineHttpError = (
   error: ChallengeEngineError,
   kind: "query" | "evaluation" = "evaluation",
 ): HttpError => {
+  if (error.status === 422 && error.code === "SOLUTION_DID_NOT_COMPLETE") {
+    return new HttpError(422, error.code, error.message, false);
+  }
   if (isConfirmedSolutionExecutionFailure(error)) {
     return new HttpError(422, error.code, error.message, false);
   }
@@ -877,13 +881,14 @@ export const evaluateChallenge = async (
     );
   }
 
+  let approvalId: string | undefined;
   if (brokenAgentReview && brokenAgentSourceDigest) {
-    const approved = await consumeEvaluationApproval(
+    approvalId = await consumeEvaluationApproval(
       attempt.id,
       brokenAgentSourceDigest,
       brokenAgentReview,
     );
-    if (!approved) {
+    if (!approvalId) {
       await releaseAfterFailure(reservation, "evaluation");
       const approval = await createOrReuseEvaluationApproval(
         attempt.id,
@@ -909,6 +914,20 @@ export const evaluateChallenge = async (
     }
   }
 
+  const releaseEvaluation = async (): Promise<void> => {
+    if (approvalId) {
+      try {
+        await releaseEvaluationApproval(approvalId);
+      } catch (error) {
+        console.error("Could not restore evaluation approval", {
+          approvalId,
+          error,
+        });
+      }
+    }
+    await releaseAfterFailure(reservation, "evaluation");
+  };
+
   let score: ChallengeScore;
   try {
     const challengeVersion = currentChallengeVersionFor(challenge.slug);
@@ -927,6 +946,7 @@ export const evaluateChallenge = async (
             await consumeFailedEvaluationReservation(reservation);
           if (!consumed) throw new Error("Evaluation reservation expired");
         } catch (persistenceError) {
+          await releaseEvaluation();
           console.error(
             "Could not persist failed challenge evaluation",
             persistenceError,
@@ -935,10 +955,15 @@ export const evaluateChallenge = async (
         }
         throw engineHttpError(error);
       }
-      await releaseAfterFailure(reservation, "evaluation");
+      await releaseEvaluation();
+      console.error("Challenge engine evaluation failed", {
+        attemptId: attempt.id,
+        code: error.code,
+        status: error.status,
+      });
       throw engineHttpError(error);
     }
-    await releaseAfterFailure(reservation, "evaluation");
+    await releaseEvaluation();
     console.error("Challenge engine evaluation failed", error);
     throw engineUnavailableError();
   }
@@ -951,10 +976,13 @@ export const evaluateChallenge = async (
       score,
     );
   } catch (error) {
-    await releaseAfterFailure(reservation, "evaluation");
+    await releaseEvaluation();
     throw error;
   }
-  if (!completed) throw engineUnavailableError();
+  if (!completed) {
+    await releaseEvaluation();
+    throw engineUnavailableError();
+  }
 
   let standing: { rank: number; competitorCount: number } | undefined;
   if (isChallengeRankingVisibleAt(challenge, now)) {
