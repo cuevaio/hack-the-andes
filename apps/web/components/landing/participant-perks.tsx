@@ -7,7 +7,7 @@ import {
 import Image from "next/image";
 
 import {
-  devtoolPartners,
+  participantDevtoolPartners,
   participantPerks,
   participantPerksCopy,
 } from "@/components/landing/content";
@@ -40,8 +40,8 @@ export function LandingParticipantPerks() {
             </p>
           </div>
 
-          <div className="grid gap-px bg-[var(--hud-ink)]/15 md:grid-cols-2">
-            {devtoolPartners.map((partner) => (
+          <div className="grid gap-px bg-[var(--hud-ink)]/15 md:grid-cols-3">
+            {participantDevtoolPartners.map((partner) => (
               <a
                 className="grid min-h-48 grid-rows-[3rem_auto] gap-7 bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8"
                 href={partner.href}

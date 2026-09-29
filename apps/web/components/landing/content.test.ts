@@ -21,6 +21,7 @@ import {
   legalCopy,
   metadataCopy,
   panelBrands,
+  participantDevtoolPartners,
   participantPerks,
   participantPerksCopy,
   partners,
@@ -150,6 +151,17 @@ test("publishes winner devtool prizes and participant credits separately", () =>
     },
   ]);
 
+  const zavu = participantDevtoolPartners.find(
+    (partner) => partner.id === "zavu",
+  );
+  expect(participantDevtoolPartners).toHaveLength(3);
+  expect(zavu?.participantBenefit).toEqual({
+    duration: "3 meses",
+    plan: "Plan Pro",
+    value: "$20 USD/mes · $60 USD en total",
+  });
+  expect(devtoolPartners.map((partner) => partner.id)).not.toContain("zavu");
+
   expect(participantPerksCopy.title).toBe("Perks para participantes");
   expect(participantPerks.map((perk) => perk.title)).toEqual([
     "Comida y bebidas",
@@ -170,6 +182,7 @@ test("separates winner prizes from perks for every participant", async () => {
   expect(prizesSource).toContain("prizeAmountsPen.second");
   expect(prizesSource).not.toContain("partner.participantBenefit");
 
+  expect(perksSource).toContain("participantDevtoolPartners.map");
   expect(perksSource).toContain("partner.participantBenefit");
   expect(perksSource).toContain("participantPerks.map");
   expect(perksSource).not.toContain("partner.winnerPrizes");

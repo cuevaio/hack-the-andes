@@ -406,6 +406,23 @@ export const devtoolPartners = [
   },
 ] as const;
 
+export const participantDevtoolPartners = [
+  ...devtoolPartners,
+  {
+    id: "zavu",
+    name: "Zavu",
+    href: "https://www.zavu.dev/",
+    logoSrc: "/devtools/zavu.svg",
+    logoWidth: 144,
+    logoHeight: 40,
+    participantBenefit: {
+      duration: "3 meses",
+      plan: "Plan Pro",
+      value: "$20 USD/mes · $60 USD en total",
+    },
+  },
+] as const;
+
 export const sponsorsCopy = {
   kicker: "quiénes lo hacen",
   title: "Chofex",
