@@ -63,11 +63,11 @@ const decisionCopy = (decision: ApplicationDecision) => {
       heading: "Estás dentro.",
       introduction:
         "Nos alegra ofrecerte un lugar en Hack the Andes, en Lima, el 17 y 18 de octubre.",
-      body: "Este es tu carnet predeterminado, hecho con el nombre, la foto y la presentación que vimos en tu postulación. Completa chofex confirm aunque quieras conservarlo: necesitamos tu nombre completo y DNI o pasaporte para autorizar tu ingreso al venue. Comparte también tu teléfono para que podamos contactarte por WhatsApp si hace falta. En ese mismo paso puedes cambiar el nombre del carnet, la foto y la presentación de una línea; al terminar generaremos uno nuevo.",
+      body: "Este es tu carnet predeterminado, hecho con el nombre, la foto y la presentación que vimos en tu postulación. Completa andes confirm aunque quieras conservarlo: necesitamos tu nombre completo y DNI o pasaporte para autorizar tu ingreso al venue. Comparte también tu teléfono para que podamos contactarte por WhatsApp si hace falta. En ese mismo paso puedes cambiar el nombre del carnet, la foto y la presentación de una línea; al terminar generaremos uno nuevo.",
       action: "Confirmar mi asistencia",
       url: CONFIRM_URL,
       commandLabel: "O desde tu terminal:",
-      command: "chofex confirm",
+      command: "andes confirm",
     };
   }
 
@@ -82,7 +82,7 @@ const decisionCopy = (decision: ApplicationDecision) => {
     action: "Volver a postular",
     url: APPLY_URL,
     commandLabel: "O desde tu terminal:",
-    command: "chofex register",
+    command: "andes register",
   };
 };
 

@@ -16,7 +16,7 @@ describe("buildDecisionEmail", () => {
 
     expect(email.subject).toBe("Estás dentro — bienvenida a Hack the Andes");
     expect(email.text).toContain("Hola Ada,");
-    expect(email.text).toContain("chofex confirm");
+    expect(email.text).toContain("andes confirm");
     expect(email.text).toContain("carnet predeterminado");
     expect(email.text).toContain("DNI o pasaporte");
     expect(email.text).toContain("WhatsApp");
@@ -34,7 +34,7 @@ describe("buildDecisionEmail", () => {
 
     expect(email.subject).toBe("Una actualización sobre tu postulación");
     expect(email.text).toContain("no podemos ofrecerte un lugar");
-    expect(email.text).toContain("chofex register");
+    expect(email.text).toContain("andes register");
     expect(email.html).toContain("Gracias por postular.");
   });
 

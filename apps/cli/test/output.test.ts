@@ -105,14 +105,14 @@ describe("registration output", () => {
   });
 
   test("shows the next command for an accepted participant", () => {
-    const expected = "Next command: chofex confirm";
+    const expected = "Next command: andes confirm";
 
     expect(requirementsOnlyText(acceptedResult)).toContain(expected);
     expect(registrationText(acceptedResult)).toContain(expected);
   });
 
   test("does not suggest confirmation after registration is complete", () => {
-    const unexpected = "chofex confirm";
+    const unexpected = "andes confirm";
 
     expect(requirementsOnlyText(completeResult)).not.toContain(unexpected);
     expect(registrationText(completeResult)).not.toContain(unexpected);
@@ -129,7 +129,7 @@ describe("registration output", () => {
 
     expect(output).toContain("A seat has not been assigned");
     expect(output).toContain("challenges técnicos son obligatorios");
-    expect(output).toContain("Next command: chofex challenge");
+    expect(output).toContain("Next command: andes challenge");
     expect(output).not.toContain("No action needed");
   });
 });

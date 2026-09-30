@@ -96,8 +96,8 @@ describe("challenge output", () => {
     ).toContain("está cerrado");
     const closedNotebook = notebookTableText([], true);
     expect(closedNotebook).toContain("challenge está cerrado");
-    expect(closedNotebook).toContain("chofex challenge ranking");
-    expect(closedNotebook).not.toContain("chofex challenge query");
+    expect(closedNotebook).toContain("andes challenge ranking");
+    expect(closedNotebook).not.toContain("andes challenge query");
   });
 
   test("prints official evaluation score details and a share card", () => {

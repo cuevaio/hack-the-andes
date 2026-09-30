@@ -14,57 +14,56 @@ Instala uno de los dos paquetes.
 
 ```sh
 andes register
-chofex register
 ```
 
 Para instalarlo dentro de un proyecto, usa `npm install hacktheandes-cli` y
-ejecuta `npx andes register` o `npx chofex register`.
+ejecuta `npx andes register`.
 
-Los ejemplos con `chofex` también funcionan con `andes`:
+El comando recomendado es `andes`. `chofex` sigue disponible por compatibilidad.
 
 ```sh
-chofex
-chofex whoami
-chofex update
-chofex upgrade
-chofex register
-chofex status
-chofex requirements
-chofex challenge list
-chofex challenge query --challenge black-box
-chofex challenge notebook --challenge black-box
-chofex challenge test --challenge black-box --source ./shipping.js
-chofex challenge evaluate --challenge black-box --source ./shipping.js
-chofex challenge ranking --challenge black-box
-chofex challenge init --challenge broken-agent
+andes
+andes whoami
+andes update
+andes upgrade
+andes register
+andes status
+andes requirements
+andes challenge list
+andes challenge query --challenge black-box
+andes challenge notebook --challenge black-box
+andes challenge test --challenge black-box --source ./shipping.js
+andes challenge evaluate --challenge black-box --source ./shipping.js
+andes challenge ranking --challenge black-box
+andes challenge init --challenge broken-agent
 cd broken-agent && npm test
-chofex challenge test --challenge broken-agent --source ./scheduler.js
-chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
-chofex challenge ranking --challenge broken-agent
-chofex confirm
-chofex badge
-chofex badge regenerate
+andes challenge test --challenge broken-agent --source ./scheduler.js
+andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
+andes challenge ranking --challenge broken-agent
+andes confirm
+andes badge
+andes badge regenerate
 ```
 
-`chofex update` and `chofex upgrade` are interchangeable; both update the CLI
+`andes update` and `andes upgrade` are interchangeable; both update the CLI
 to the latest published version.
 
 Las actualizaciones conservan el paquete instalado: `hacktheandes-cli` o
 `chofex-cli`, independientemente del comando que uses.
 
-Las copias instaladas también consultan npm cada vez que se inicia `chofex` e
+Las copias instaladas también consultan npm cada vez que se inicia `andes` e
 instalan una versión publicada más reciente antes de ejecutar el comando. Si
 npm o la red no están disponibles temporalmente, se continúa con la versión
 actual. Usa `CHOFEX_AUTO_UPDATE=0` para desactivar esta comprobación.
 
-`chofex register` collects and submits an application with full name, role,
+`andes register` collects and submits an application with full name, role,
 optional phone number, bio, portfolio URL, shipped project, LinkedIn and GitHub
 URLs, and Terms and Conditions. Use `--input` to submit a completed JSON
 application.
 Acceptance creates a default badge from the Clerk profile visible to reviewers.
-`chofex confirm` updates the public name, one-line description, and picture
+`andes confirm` updates the public name, one-line description, and picture
 while separately collecting the legal full name and venue details required for attendance. After confirmation,
-`chofex badge regenerate` can also update those public fields and the QR
+`andes badge regenerate` can also update those public fields and the QR
 destination without changing the submitted application.
 The technical challenges do not block application submission, but they are
 mandatory for admission. An application does not reserve a seat; organizers
@@ -75,19 +74,19 @@ version; legacy attempts do not count toward admission.
 
 The public ranking is read-only at `https://hacktheandes.com/challenges`.
 
-Run `chofex` for a compact retro welcome screen with a pixel Sacred Valley and
-the main commands. Run `chofex --help` for the full command reference. The
+Run `andes` for a compact retro welcome screen with a pixel Sacred Valley and
+the main commands. Run `andes --help` for the full command reference. The
 landscape uses colored terminal cells, with readable text that works with your
 terminal's line spacing. It adapts to the terminal width and has a plain ASCII
 fallback when color is disabled with `NO_COLOR`. JSON output and individual
 command results omit the welcome screen.
 
-For agent or script input, `chofex schema --stage application` and
-`chofex schema --stage acceptance` print complete templates containing every
+For agent or script input, `andes schema --stage application` and
+`andes schema --stage acceptance` print complete templates containing every
 accepted JSON key. Validate a completed input file locally before submitting it:
 
 ```sh
-chofex --output json validate --stage application --input application.json
+andes --output json validate --stage application --input application.json
 ```
 
 Validation does not contact the API, and a successful result does not echo input
@@ -95,12 +94,12 @@ values. Local validation errors include `acceptedFields` in JSON mode. The
 `status` response already includes both the registration and its requirements;
 use `requirements` only when requirements-only human output is preferred.
 
-Run `chofex login` to authenticate. For automation, provide an OAuth access
+Run `andes login` to authenticate. For automation, provide an OAuth access
 token with `CHOFEX_TOKEN`.
 
 ### Authentication troubleshooting
 
-If `chofex login` succeeds but `whoami` or an authenticated challenge command
+If `andes login` succeeds but `whoami` or an authenticated challenge command
 returns `AUTHENTICATION_REQUIRED`, first remove any token or API URL overrides
 from the shell. In Bash or Zsh:
 
@@ -117,7 +116,7 @@ Remove-Item Env:CHOFEX_TOKEN, Env:CHOFEX_API_URL -ErrorAction SilentlyContinue
 Update by repeating the installation method you originally used. For npm:
 
 ```sh
-npm install --global chofex-cli@latest
+npm install --global hacktheandes-cli@latest
 ```
 
 For the standalone installer:
@@ -129,10 +128,10 @@ curl -fsSL https://hacktheandes.com/install | bash
 Then renew the stored session and verify it:
 
 ```sh
-chofex --version
-chofex logout
-chofex login
-chofex --output json whoami
+andes --version
+andes logout
+andes login
+andes --output json whoami
 ```
 
 Versions before `0.1.140` used a retired API origin whose cross-origin redirect

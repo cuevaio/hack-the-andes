@@ -55,7 +55,7 @@ export function CopyAgentPrompt() {
   return (
     <div className="mt-6">
       <blockquote className="mb-5 border-current/25 border-l pl-5 text-base leading-relaxed text-[var(--hud-muted,#c5c8d0)]">
-        “Help me apply to Hack the Andes using the Chofex CLI. Ask me for every
+        “Help me apply to Hack the Andes using the andes CLI. Ask me for every
         answer and get my approval before submitting.”
       </blockquote>
       <Button type="button" size="lg" onClick={copyPrompt}>

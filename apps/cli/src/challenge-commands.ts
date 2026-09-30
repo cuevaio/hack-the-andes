@@ -59,13 +59,13 @@ const challengeQuickstart = {
     {
       step: 1,
       action: "Inicia sesión",
-      command: "chofex login",
+      command: "andes login",
       note: "Abre la autenticación de Clerk en tu navegador.",
     },
     {
       step: 2,
       action: "Crea el repositorio del challenge",
-      command: "chofex challenge init --challenge broken-agent",
+      command: "andes challenge init --challenge broken-agent",
       note: "Crea broken-agent/ con el contrato, el scheduler y siete tests públicos sin sobrescribir trabajo existente.",
     },
     {
@@ -77,7 +77,7 @@ const challengeQuickstart = {
     {
       step: 4,
       action: "Revisa tu presupuesto",
-      command: "chofex challenge show --challenge broken-agent",
+      command: "andes challenge show --challenge broken-agent",
       note: "Muestra las evaluaciones oficiales restantes y tu mejor puntaje.",
     },
     {
@@ -96,7 +96,7 @@ const challengeQuickstart = {
       step: 7,
       action: "Ejecuta los tests públicos",
       command:
-        "chofex challenge test --challenge broken-agent --source ./scheduler.js",
+        "andes challenge test --challenge broken-agent --source ./scheduler.js",
       note: "Es seguro repetirlos y no consumen evaluaciones oficiales.",
     },
     {
@@ -109,7 +109,7 @@ const challengeQuickstart = {
       step: 9,
       action: "Crea el handoff de evaluación",
       command:
-        "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
       note: "Devuelve un enlace de aprobación sin consumir una evaluación oficial.",
     },
     {
@@ -122,17 +122,17 @@ const challengeQuickstart = {
       step: 11,
       action: "Solicita el veredicto oculto",
       command:
-        "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
       note: "Repite el mismo comando antes de que venza la aprobación; recién entonces consume una evaluación.",
     },
     {
       step: 12,
       action: "Consulta el ranking",
-      command: "chofex challenge ranking --challenge broken-agent",
+      command: "andes challenge ranking --challenge broken-agent",
       note: "Se revela el 1 de octubre a las 15:00, hora de Perú.",
     },
   ],
-  helpCommand: "chofex challenge test --help",
+  helpCommand: "andes challenge test --help",
 } as const;
 
 const launchNoticeFor = (slug: string): string | undefined => {
@@ -163,11 +163,11 @@ const challengeQuickstartText = (
   const lines: Array<string> = [challengeQuickstart.title];
   if (launchNotice) lines.push("", "LAUNCH NOTICE", launchNotice);
   if (participationState === "closed") {
-    lines.push("", "RANKING FINAL", "  chofex challenge ranking");
+    lines.push("", "RANKING FINAL", "  andes challenge ranking");
     return lines.join("\n");
   }
   if (participationState === "scheduled") {
-    lines.push("", "PRÓXIMAMENTE", "  chofex challenge list");
+    lines.push("", "PRÓXIMAMENTE", "  andes challenge list");
     return lines.join("\n");
   }
   lines.push(
@@ -211,7 +211,7 @@ const reviewFlag = optionalString(
 );
 
 const officialEvaluateRetryCommand =
-  "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json";
+  "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json";
 
 const evaluationErrorText = (error: CliError): string | undefined => {
   if (error.code === "CHALLENGE_ENGINE_UNAVAILABLE") {
@@ -275,7 +275,7 @@ const challengeInitText = (result: ChallengeScaffoldResult): string => {
         "",
         "Siguiente: continúa endureciendo el scheduler y ejecuta los tests públicos",
         `  cd ${result.path} && npm test`,
-        "  chofex challenge test --challenge broken-agent --source ./scheduler.js",
+        "  andes challenge test --challenge broken-agent --source ./scheduler.js",
       ].join("\n");
     }
     return [
@@ -287,7 +287,7 @@ const challengeInitText = (result: ChallengeScaffoldResult): string => {
       `  cd ${result.path} && npm test`,
       "",
       "Luego repara scheduler.js y pruébalo sin consumir evaluaciones:",
-      "  chofex challenge test --challenge broken-agent --source ./scheduler.js",
+      "  andes challenge test --challenge broken-agent --source ./scheduler.js",
     ].join("\n");
   }
   if (result.status === "exists") {
@@ -295,8 +295,8 @@ const challengeInitText = (result: ChallengeScaffoldResult): string => {
       `${result.path} already exists. Left it unchanged.`,
       "",
       "Next: keep investigating, then test your current solution",
-      "  chofex challenge query",
-      `  chofex challenge test --source ./${result.path}`,
+      "  andes challenge query",
+      `  andes challenge test --source ./${result.path}`,
     ].join("\n");
   }
   return [
@@ -304,10 +304,10 @@ const challengeInitText = (result: ChallengeScaffoldResult): string => {
     "A documented baseline is ready for the rules you discover.",
     "",
     "Next: probe the machine",
-    "  chofex challenge query",
+    "  andes challenge query",
     "",
     `Then edit ${result.path} and test it safely:`,
-    `  chofex challenge test --source ./${result.path}`,
+    `  andes challenge test --source ./${result.path}`,
   ].join("\n");
 };
 
@@ -328,7 +328,7 @@ const listCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex challenge list",
+      command: "andes challenge list",
       description: "See which challenge is currently playable",
     },
   ]),
@@ -369,11 +369,11 @@ const initCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex challenge init --challenge broken-agent",
+      command: "andes challenge init --challenge broken-agent",
       description: "Prepara el repositorio de Broken Agent",
     },
     {
-      command: "chofex challenge init --challenge broken-agent",
+      command: "andes challenge init --challenge broken-agent",
       description: "Usa explícitamente el slug del challenge",
     },
   ]),
@@ -397,7 +397,7 @@ const showCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex challenge show",
+      command: "andes challenge show",
       description: "Revisa tu progreso antes de consumir intentos limitados",
     },
   ]),
@@ -454,12 +454,12 @@ const queryCommand = Command.make(
   Command.withExamples([
     {
       command:
-        "chofex challenge query --challenge black-box --distance 10 --weight 3 --hour 14 --fragile false --express false",
+        "andes challenge query --challenge black-box --distance 10 --weight 3 --hour 14 --fragile false --express false",
       description: "Spend one oracle query",
     },
     {
       command:
-        "chofex challenge query --challenge black-box --input shipment.json",
+        "andes challenge query --challenge black-box --input shipment.json",
       description: "Read the shipment fields from a JSON file",
     },
   ]),
@@ -492,12 +492,12 @@ const notebookCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex challenge notebook --challenge black-box",
+      command: "andes challenge notebook --challenge black-box",
       description: "Read observations in a terminal table",
     },
     {
       command:
-        "chofex challenge notebook --challenge black-box --format csv > observations.csv",
+        "andes challenge notebook --challenge black-box --format csv > observations.csv",
       description: "Save observations for a spreadsheet",
     },
   ]),
@@ -529,7 +529,7 @@ const testCommand = Command.make(
   Command.withExamples([
     {
       command:
-        "chofex challenge test --challenge broken-agent --source ./scheduler.js",
+        "andes challenge test --challenge broken-agent --source ./scheduler.js",
       description: "Ejecuta los tests públicos de Broken Agent",
     },
   ]),
@@ -571,7 +571,7 @@ const evaluateCommand = Command.make(
   Command.withExamples([
     {
       command:
-        "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
       description:
         "Consume una evaluación oficial cuando tu solución esté lista",
     },
@@ -595,7 +595,7 @@ const rankingCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex challenge ranking --challenge broken-agent",
+      command: "andes challenge ranking --challenge broken-agent",
       description: "Compara puntajes oficiales",
     },
   ]),
@@ -620,13 +620,13 @@ export const challengeCommand = Command.make(
       if (participationState === "closed") {
         const rankingStep = challengeQuickstart.workflow.at(-1);
         workflow = rankingStep ? [rankingStep] : [];
-        helpCommand = "chofex challenge ranking --help";
+        helpCommand = "andes challenge ranking --help";
         story = [];
         mission = "El Challenge 2 terminó. El ranking final sigue disponible.";
         rules = [];
       } else if (participationState === "scheduled") {
         workflow = [];
-        helpCommand = "chofex challenge list --help";
+        helpCommand = "andes challenge list --help";
         story = [];
         mission = "El challenge todavía no está disponible.";
         rules = [];
@@ -670,15 +670,15 @@ export const challengeCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex challenge",
+      command: "andes challenge",
       description: "Abre la guía de Broken Agent",
     },
     {
-      command: "chofex challenge init --challenge broken-agent",
+      command: "andes challenge init --challenge broken-agent",
       description: "Crea el repositorio de Broken Agent",
     },
     {
-      command: "chofex challenge test --help",
+      command: "andes challenge test --help",
       description: "Revisa cómo ejecutar los tests públicos",
     },
   ]),

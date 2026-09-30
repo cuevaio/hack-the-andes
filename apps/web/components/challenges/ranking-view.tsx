@@ -148,14 +148,14 @@ export function ChallengeRankingView({
   const { challenge, entries } = ranking;
   const brokenAgent = challenge.slug === brokenAgentChallengeSlug;
   const rankingVisible = isChallengeRankingVisibleAt(challenge, new Date(now));
-  let cliHint = "chofex challenge list";
+  let cliHint = "andes challenge list";
   if (challenge.closed) {
-    cliHint = `chofex challenge ranking --challenge ${challenge.slug}`;
+    cliHint = `andes challenge ranking --challenge ${challenge.slug}`;
   } else if (challenge.playable) {
-    cliHint = `chofex challenge query --challenge ${challenge.slug}`;
+    cliHint = `andes challenge query --challenge ${challenge.slug}`;
   }
   if (brokenAgent && !challenge.closed) {
-    cliHint = "chofex challenge init --challenge broken-agent";
+    cliHint = "andes challenge init --challenge broken-agent";
   }
   let challengeState = "En vivo";
   if (challenge.closed) {

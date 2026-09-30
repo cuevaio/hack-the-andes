@@ -199,7 +199,9 @@ describe("legacy CLI credential detection", () => {
       headers: { authorization: `Bearer ${token}` },
     });
 
-    expect(authenticationFailureMessage(request)).toContain("chofex update");
+    expect(authenticationFailureMessage(request)).toContain(
+      "npm install --global hacktheandes-cli@latest",
+    );
   });
 
   test("keeps the generic failure for missing or opaque credentials", () => {

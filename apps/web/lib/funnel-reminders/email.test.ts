@@ -4,11 +4,11 @@ import { buildFunnelReminderEmail } from "./email";
 
 describe("funnel reminder emails", () => {
   test.each([
-    ["registration", "chofex register", "Enviar mi postulación"],
-    ["challenge_start", "chofex challenge init", "Empezar el challenge"],
+    ["registration", "andes register", "Enviar mi postulación"],
+    ["challenge_start", "andes challenge init", "Empezar el challenge"],
     [
       "challenge_finish",
-      "chofex challenge evaluate --source ./shipping.js",
+      "andes challenge evaluate --source ./shipping.js",
       "Terminar el challenge",
     ],
   ] as const)("builds the %s call to action", (stage, command, action) => {

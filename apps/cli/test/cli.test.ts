@@ -106,8 +106,8 @@ describe("CLI JSON mode", () => {
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("BROKEN AGENT — THE SCHEDULER");
     expect(result.stdout).toContain("siete tests públicos");
-    expect(result.stdout).toContain("chofex challenge evaluate");
-    expect(result.stdout).not.toContain("chofex challenge query --distance");
+    expect(result.stdout).toContain("andes challenge evaluate");
+    expect(result.stdout).not.toContain("andes challenge query --distance");
   });
 
   test("returns the live challenge status as one JSON document", async () => {
@@ -128,7 +128,7 @@ describe("CLI JSON mode", () => {
     });
     expect(document.data.workflow[0]).toMatchObject({
       step: 1,
-      command: "chofex login",
+      command: "andes login",
     });
     expect(document.data.workflow).toHaveLength(12);
     expect(document.data.workflow).toEqual(
@@ -238,30 +238,30 @@ describe("CLI JSON mode", () => {
     expect(challengeHelp.stdout).toContain("challenge actual");
     expect(challengeHelp.stdout).toContain("Chofex API base URL");
     expect(challengeHelp.stdout).toContain(
-      "chofex challenge init --challenge broken-agent",
+      "andes challenge init --challenge broken-agent",
     );
 
     const expectedExamples = new Map([
-      ["list", "chofex challenge list"],
-      ["init", "chofex challenge init --challenge broken-agent"],
-      ["show", "chofex challenge show"],
+      ["list", "andes challenge list"],
+      ["init", "andes challenge init --challenge broken-agent"],
+      ["show", "andes challenge show"],
       [
         "query",
-        "chofex challenge query --challenge black-box --input shipment.json",
+        "andes challenge query --challenge black-box --input shipment.json",
       ],
       [
         "notebook",
-        "chofex challenge notebook --challenge black-box --format csv",
+        "andes challenge notebook --challenge black-box --format csv",
       ],
       [
         "test",
-        "chofex challenge test --challenge broken-agent --source ./scheduler.js",
+        "andes challenge test --challenge broken-agent --source ./scheduler.js",
       ],
       [
         "evaluate",
-        "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
       ],
-      ["ranking", "chofex challenge ranking --challenge broken-agent"],
+      ["ranking", "andes challenge ranking --challenge broken-agent"],
     ]);
 
     for (const [command, example] of expectedExamples) {
@@ -376,7 +376,7 @@ describe("CLI JSON mode", () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Observation #1 saved");
       expect(result.stdout).toContain("Change one variable at a time");
-      expect(result.stdout).toContain("chofex challenge notebook");
+      expect(result.stdout).toContain("andes challenge notebook");
     } finally {
       server.stop(true);
     }
@@ -456,7 +456,7 @@ describe("CLI JSON mode", () => {
       expect(result.stdout).not.toContain("\t");
       expect(result.stdout).toContain("One answer is a clue, not a rule");
       expect(result.stdout).toContain("Next: run a controlled experiment");
-      expect(result.stdout).toContain("chofex challenge init");
+      expect(result.stdout).toContain("andes challenge init");
 
       const status = await runCli(
         "--api-url",
@@ -560,7 +560,7 @@ describe("CLI JSON mode", () => {
       expect(official.exitCode).toBe(0);
       expect(official.stdout).toContain("OFFICIAL VERDICT");
       expect(official.stdout).toContain("Next: inspect the leaderboard");
-      expect(official.stdout).toContain("chofex challenge ranking");
+      expect(official.stdout).toContain("andes challenge ranking");
     } finally {
       server.stop(true);
       await unlink(sourcePath).catch(() => undefined);
@@ -743,7 +743,7 @@ describe("CLI JSON mode", () => {
                 expiresAt: "2026-09-25T23:00:00.000Z",
                 evaluationsRemaining: 5,
                 retryCommand:
-                  "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+                  "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
               },
             },
           },
@@ -853,7 +853,7 @@ describe("CLI JSON mode", () => {
       expect(result.stderr).toContain("No es un error de tu computadora");
       expect(result.stderr).toContain("este intento no se consumió");
       expect(result.stderr).toContain(
-        "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
       );
     } finally {
       server.stop(true);
@@ -1197,7 +1197,7 @@ describe("CLI JSON mode", () => {
         missing: [{ field: "phone", reason: "Required after acceptance" }],
       },
       expectedMessage:
-        "Already accepted. Run `chofex confirm` to complete your registration.",
+        "Already accepted. Run `andes confirm` to complete your registration.",
     },
     {
       name: "an accepted registration is complete",
@@ -1408,7 +1408,7 @@ describe("CLI JSON mode", () => {
         expect(result.exitCode).toBe(4);
         expect(result.stdout).toBe("");
         expect(result.stderr).toContain("No registration found.");
-        expect(result.stderr).toContain("Next command: chofex register");
+        expect(result.stderr).toContain("Next command: andes register");
         expect(result.stderr).toContain("Request ID: request-no-registration");
       } finally {
         server.stop(true);

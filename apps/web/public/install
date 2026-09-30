@@ -16,7 +16,7 @@ NC='\033[0m'
 
 usage() {
   cat <<'EOF'
-Chofex CLI installer
+Instalador de Hack the Andes CLI
 
 Usage: install [options]
 
@@ -86,8 +86,9 @@ trap cleanup EXIT
 
 install_binary() {
   local source="$1"
-  local staged="$INSTALL_DIR/.chofex-install-$$"
-  local destination="$INSTALL_DIR/$binary_name"
+  local name="$2"
+  local staged="$INSTALL_DIR/.$name-install-$$"
+  local destination="$INSTALL_DIR/$name"
   cp "$source" "$staged"
   chmod 755 "$staged"
   if [[ -n "$DEFER_UNTIL_PID" ]]; then
@@ -109,6 +110,15 @@ install_binary() {
   mv -f "$staged" "$destination"
 }
 
+install_commands() {
+  install_binary "$1" "$binary_name"
+  if [[ "$os" == "windows" ]]; then
+    install_binary "$1" "andes.exe"
+  else
+    ln -sfn "$binary_name" "$INSTALL_DIR/andes"
+  fi
+}
+
 raw_os="$(uname -s)"
 case "$raw_os" in
   Darwin*) os="darwin" ;;
@@ -124,7 +134,7 @@ fi
 
 if [[ -n "$BINARY_PATH" ]]; then
   [[ -f "$BINARY_PATH" ]] || fail "binary not found at $BINARY_PATH"
-  install_binary "$BINARY_PATH"
+  install_commands "$BINARY_PATH"
 else
   command -v curl >/dev/null 2>&1 || fail "curl is required"
   command -v tar >/dev/null 2>&1 || fail "tar is required"
@@ -168,7 +178,7 @@ else
   release_base="https://github.com/$REPOSITORY/releases/download/$release_tag"
 
   temporary_directory="$(mktemp -d "${TMPDIR:-/tmp}/chofex-install.XXXXXX")"
-  printf "\n%bInstalling %s for %s%b\n" "$MUTED" "$APP" "$target" "$NC"
+  printf "\n%bInstalando andes para %s%b\n" "$MUTED" "$target" "$NC"
   curl -fL --progress-bar -o "$temporary_directory/$archive" \
     "$release_base/$archive"
   curl -fsSL -o "$temporary_directory/checksums.txt" \
@@ -192,7 +202,7 @@ else
   tar -xzf "$temporary_directory/$archive" -C "$temporary_directory"
   [[ -f "$temporary_directory/$binary_name" ]] || \
     fail "release archive does not contain $binary_name"
-  install_binary "$temporary_directory/$binary_name"
+  install_commands "$temporary_directory/$binary_name"
 fi
 
 add_to_path() {
@@ -202,11 +212,11 @@ add_to_path() {
     return
   fi
   if [[ ! -w "$config_file" ]]; then
-    printf "%bAdd this line to %s:%b\n  %s\n" "$ORANGE" "$config_file" "$NC" "$command"
+    printf "%bAgrega esta línea a %s:%b\n  %s\n" "$ORANGE" "$config_file" "$NC" "$command"
     return
   fi
   printf "\n# chofex\n%s\n" "$command" >>"$config_file"
-  printf "%bAdded %s to PATH in %s%b\n" "$MUTED" "$APP" "$config_file" "$NC"
+  printf "%bPATH configurado en %s%b\n" "$MUTED" "$config_file" "$NC"
 }
 
 path_is_available=true
@@ -287,17 +297,14 @@ if [[ "$NO_MODIFY_PATH" != "true" && "$path_is_available" != "true" ]]; then
     done
   fi
   if [[ "$path_setup_incomplete" == "true" ]]; then
-    printf "%bCould not update every shell startup file. Add chofex to PATH manually:%b\n  %s\n" \
+    printf "%bNo se pudieron actualizar todos los archivos de inicio. Agrega andes al PATH:%b\n  %s\n" \
       "$ORANGE" "$NC" "$path_command"
   fi
 fi
 
-printf "\nInstalled %b%s%b to %s\n" \
-  "$ORANGE" "$APP" "$NC" "$INSTALL_DIR/$binary_name"
-if [[ "$path_is_available" == "true" ]]; then
-  printf "Run %bchofex login%b to get started.\n\n" "$ORANGE" "$NC"
-else
-  printf "To get started in this terminal, run:\n\n"
+printf "\n%bHack the Andes CLI instalado.%b\n" "$ORANGE" "$NC"
+printf "Para iniciar sesión y enviar tu postulación, ejecuta:\n\n"
+if [[ "$path_is_available" != "true" ]]; then
   printf "  %s\n" "$path_command"
-  printf "  chofex login\n\n"
 fi
+printf "  andes login\n  andes register\n\n"

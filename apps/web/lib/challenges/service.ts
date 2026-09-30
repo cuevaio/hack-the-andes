@@ -671,10 +671,10 @@ export const getChallengeAttempt = async (
   }
 
   let localTestHint =
-    "Test against your notebook with `chofex challenge test --challenge black-box --source ./shipping.js`. Official evaluation consumes one attempt.";
+    "Test against your notebook with `andes challenge test --challenge black-box --source ./shipping.js`. Official evaluation consumes one attempt.";
   if (challenge.slug === brokenAgentChallengeSlug) {
     localTestHint =
-      "Ejecuta `npm test` dentro de broken-agent y luego `chofex challenge test --challenge broken-agent --source ./scheduler.js`. Los tests públicos son ilimitados. Antes de evaluar, el participante debe elegir una traza de falla y completar su review vinculado al source.";
+      "Ejecuta `npm test` dentro de broken-agent y luego `andes challenge test --challenge broken-agent --source ./scheduler.js`. Los tests públicos son ilimitados. Antes de evaluar, el participante debe elegir una traza de falla y completar su review vinculado al source.";
   }
 
   return {
@@ -908,7 +908,7 @@ export const evaluateChallenge = async (
           evaluationsRemaining:
             attempt.evaluationsLimit - attempt.evaluationsUsed,
           retryCommand:
-            "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+            "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
         },
       );
     }

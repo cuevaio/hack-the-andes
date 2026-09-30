@@ -287,7 +287,7 @@ const jwtExpiry = (token: string): number | undefined => {
 
 const refresh = async (credentials: Credentials): Promise<Credentials> => {
   if (!credentials.refreshToken) {
-    throw new Error("Session expired. Run `chofex login` again.");
+    throw new Error("Session expired. Run `andes login` again.");
   }
   const body = await tokenRequest({
     grant_type: "refresh_token",
@@ -310,7 +310,7 @@ export const authentication = async (
     return { accessToken: process.env.CHOFEX_TOKEN };
   }
   const credentials = await readCredentials();
-  if (!credentials) throw new Error("Not logged in. Run `chofex login`.");
+  if (!credentials) throw new Error("Not logged in. Run `andes login`.");
   if (
     forceRefresh ||
     (credentials.expiresAt !== undefined &&
@@ -358,7 +358,7 @@ export const assertInteractiveLogin = (
 ): void => {
   if (!interactive) {
     throw new Error(
-      "OAuth login requires an interactive terminal. Run `chofex login` yourself in a local terminal and leave it open until the browser confirms login.",
+      "OAuth login requires an interactive terminal. Run `andes login` yourself in a local terminal and leave it open until the browser confirms login.",
     );
   }
 };

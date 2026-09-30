@@ -84,7 +84,7 @@ export const registrationLookupErrorText = (
   error: CliError,
 ): string | undefined => {
   if (error.code !== "REGISTRATION_NOT_FOUND") return undefined;
-  return "No registration found.\nNext command: chofex register";
+  return "No registration found.\nNext command: andes register";
 };
 
 const requirementsText = (result: RegistrationResult): string => {
@@ -100,7 +100,7 @@ const requirementsText = (result: RegistrationResult): string => {
     return [
       "Application received. A seat has not been assigned.",
       result.admission?.notice ?? challengeAdmissionNotice,
-      "Next command: chofex challenge",
+      "Next command: andes challenge",
     ].join("\n");
   }
   let feedback = "";
@@ -112,7 +112,7 @@ const requirementsText = (result: RegistrationResult): string => {
 
   let nextCommand = "";
   if (requirements.stage === "accepted") {
-    nextCommand = "\nNext command: chofex confirm";
+    nextCommand = "\nNext command: andes confirm";
   }
 
   let missing = "";
@@ -152,7 +152,7 @@ export const badgeText = (result: BadgeResult): string => {
     return "Tu carnet se está generando.";
   }
   if (result.status === "failed") {
-    return "No se pudo generar tu carnet. Ejecuta `chofex badge regenerate` para intentarlo de nuevo.";
+    return "No se pudo generar tu carnet. Ejecuta `andes badge regenerate` para intentarlo de nuevo.";
   }
   return "Todavía no tienes un carnet.";
 };

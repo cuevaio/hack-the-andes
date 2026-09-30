@@ -55,7 +55,7 @@ describe("email shell", () => {
       placement: "PARTICIPANT",
     });
 
-    expect(email.html).toContain("chofex confirm");
+    expect(email.html).toContain("andes confirm");
     expect(email.html).toContain("Confirmar mi asistencia");
     expect(email.subject).toContain("Estás dentro");
   });

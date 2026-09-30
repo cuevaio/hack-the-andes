@@ -1,11 +1,11 @@
 ---
 name: chofex-hackathon
-description: Apply to Hack the Andes for a human with the Chofex CLI, work through a challenge with them, check an existing application, or guide accepted-participant next steps. Use when a person wants an agent to apply, solve a Hack the Andes challenge, check status, understand requirements, reapply after rejection, or confirm attendance.
+description: Apply to Hack the Andes for a human with the andes CLI, work through a challenge with them, check an existing application, or guide accepted-participant next steps. Use when a person wants an agent to apply, solve a Hack the Andes challenge, check status, understand requirements, reapply after rejection, or confirm attendance.
 ---
 
 # Hack the Andes
 
-Use the Chofex CLI to act on the participant's behalf while keeping identity,
+Use the andes CLI to act on the participant's behalf while keeping identity,
 consent, and final submission decisions with the participant.
 
 ## Pace
@@ -39,14 +39,14 @@ personal answers.
 
 ## Command setup
 
-1. Check for the current CLI capabilities with `chofex --version` and
-   `chofex validate --help`.
+1. Check for the current CLI capabilities with `andes --version` and
+   `andes validate --help`.
 2. If either command is unavailable, install or upgrade proactively with
-   `npm install --global chofex-cli@latest`; do not delegate installation to the
-   participant.
+   `npm install --global hacktheandes-cli@latest`; do not delegate installation
+   to the participant.
 3. Verify both commands. If global installation is unsupported or fails for
-   lack of permission, use `npx --yes chofex-cli@latest` as the command prefix.
-   When working inside the Chofex repository,
+   lack of permission, use `npx --yes hacktheandes-cli@latest` as the command
+   prefix. When working inside the Hack the Andes repository,
    `bun run --filter chofex-cli dev --` is also an acceptable fallback. Ask the
    participant for help only when installation requires an interactive
    administrator or credential step that the agent cannot perform.
@@ -62,10 +62,10 @@ the Hack the Andes service, so use the default URL.
 Run:
 
 ```sh
-chofex --output json whoami
+andes --output json whoami
 ```
 
-If authentication is required, ask the participant to run `chofex login` in
+If authentication is required, ask the participant to run `andes login` in
 their own interactive terminal and finish the browser flow. Then run `whoami`
 again and ask them to confirm that the returned email is theirs. Login tokens
 belong in the operating-system credential store. Treat `CHOFEX_TOKEN` as a
@@ -79,7 +79,7 @@ confirms the email.
 First, check whether the participant already has an application:
 
 ```sh
-chofex --output json status
+andes --output json status
 ```
 
 If one exists, report its status and follow **Next steps**. Start an application
@@ -95,7 +95,7 @@ submitted application before being accepted.
 Get a fresh input template instead of relying on a memorized schema:
 
 ```sh
-chofex schema --stage application
+andes schema --stage application
 ```
 
 The output is an example shape, not an application draft. It contains every
@@ -158,7 +158,7 @@ Write only participant-provided answers to that file and omit unanswered optiona
 fields. Validate it locally before asking for submission approval:
 
 ```sh
-chofex --output json validate --stage application --input "$application_file"
+andes --output json validate --stage application --input "$application_file"
 ```
 
 Resolve validation errors before continuing. First state every low-risk
@@ -168,7 +168,7 @@ application now?** Run the submission only after an explicit yes given at this
 point.
 
 ```sh
-chofex --output json register --input "$application_file"
+andes --output json register --input "$application_file"
 ```
 
 A successful submission returns `status: "submitted"`. Keep the mode-600
@@ -186,8 +186,8 @@ a historical attempt as completion. List challenges, then inspect the currently
 available challenge:
 
 ```sh
-chofex --output json challenge list
-chofex --output json challenge show --challenge black-box
+andes --output json challenge list
+andes --output json challenge show --challenge black-box
 ```
 
 AI tools are allowed. The oracle is personalized, so a leaked solution will not
@@ -196,8 +196,8 @@ time, look for thresholds, then test combinations such as fragile and express
 together. Each `query` consumes one of 25 requests.
 
 ```sh
-chofex --output json challenge query --distance 1 --weight 1 --hour 12 --fragile false --express false
-chofex --output json challenge notebook --format json
+andes --output json challenge query --distance 1 --weight 1 --hour 12 --fragile false --express false
+andes --output json challenge notebook --format json
 ```
 
 After collecting observations, write `function calculateShipping(input)` in a
@@ -205,8 +205,8 @@ local file. Test against the notebook (does not consume an official evaluation),
 then evaluate against the hidden set (limited to 3 official attempts):
 
 ```sh
-chofex --output json challenge test --source "$PWD/shipping.js"
-chofex --output json challenge evaluate --source "$PWD/shipping.js"
+andes --output json challenge test --source "$PWD/shipping.js"
+andes --output json challenge evaluate --source "$PWD/shipping.js"
 ```
 
 Never ask the participant to paste a solution that they did not run. Application
@@ -219,13 +219,13 @@ earned through ranked challenge performance.
 Public rankings are read-only:
 
 ```sh
-chofex --output json challenge ranking --challenge black-box
+andes --output json challenge ranking --challenge black-box
 ```
 
 ## Broken Agent challenge
 
 When the participant asks to solve, submit, or evaluate challenge 2 or
-`broken-agent`—including when the default `chofex challenge` guide identifies
+`broken-agent`—including when the default `andes challenge` guide identifies
 Broken Agent—read and follow
 [`references/broken-agent.md`](references/broken-agent.md). It defines the
 required human–agent reasoning loop and the source-bound review needed before an
@@ -236,7 +236,7 @@ official evaluation.
 Read the application and server-calculated requirements together:
 
 ```sh
-chofex --output json status
+andes --output json status
 ```
 
 The `status` response includes `requirements`. Run the separate `requirements`
@@ -247,15 +247,15 @@ Interpret the returned state as follows:
 
 - `draft`: this is an application left by an older CLI flow. Show
   `requirements.parts` and missing fields, collect the complete application,
-  and use `chofex register` to submit it. Then continue to the open mandatory
+  and use `andes register` to submit it. Then continue to the open mandatory
   admission challenge; do not delay application submission for challenge work.
 - `submitted`, `under_review`, or `waitlisted`: report the exact status and
   requirements. Make clear that the application has been received but no seat
-  is assigned. Run `chofex challenge list`, identify the open challenge, and
+  is assigned. Run `andes challenge list`, identify the open challenge, and
   continue its required human–agent flow. Never tell the participant to merely
   wait while an admission challenge is open.
 - `rejected`: show the review feedback when present. Offer a new application
-  only if `canSubmitNewApplication` is true. Interactive `chofex register`
+  only if `canSubmitNewApplication` is true. Interactive `andes register`
   presents the rejected application's answers as editable defaults. Obtain a
   fresh submission approval rather than silently resubmitting old answers.
 - `accepted`: congratulate the participant and explain any `missing`
@@ -281,21 +281,21 @@ participant keep these values out of agent chat by running this themselves in
 an interactive terminal:
 
 ```sh
-chofex confirm
+andes confirm
 ```
 
 If the participant explicitly asks the agent to submit them instead, fetch a
-fresh template with `chofex schema --stage acceptance`, collect every required
+fresh template with `andes schema --stage acceptance`, collect every required
 value without guessing, store it in a mode-600 temporary file outside the
 project, and avoid printing its contents. `dateOfBirth` uses `YYYY-MM-DD` and
 must be a real date in the past. Shirt size is required for this in-person
 event. Validate the file with
-`chofex --output json validate --stage acceptance --input /path/to/private-attendance.json`;
+`andes --output json validate --stage acceptance --input /path/to/private-attendance.json`;
 the success response does not echo its contents. Resolve validation errors, then
 obtain a fresh **Submit these private attendance details now?** approval and run:
 
 ```sh
-chofex --output json confirm --input /path/to/private-attendance.json
+andes --output json confirm --input /path/to/private-attendance.json
 ```
 
 When `pictureSource` is `upload`, ask for the image's path on the participant's

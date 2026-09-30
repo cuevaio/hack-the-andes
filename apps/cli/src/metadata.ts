@@ -4,6 +4,8 @@ import { Schema } from "effect";
 
 declare const CHOFEX_VERSION: string | undefined;
 
+export const isStandaloneBuild = typeof CHOFEX_VERSION !== "undefined";
+
 const readMetadata = () => {
   if (typeof CHOFEX_VERSION !== "undefined") {
     return { name: "chofex-cli", version: CHOFEX_VERSION };
@@ -24,7 +26,9 @@ const readMetadata = () => {
 const metadata = readMetadata();
 export const cliVersion = metadata.version;
 export const cliPackageName = metadata.name;
-const invokedAsAndes = /^andes(?:\.cmd|\.exe)?$/.test(
-  basename(process.argv[1] ?? ""),
-);
+let commandPath = process.argv[1] ?? "";
+if (isStandaloneBuild) {
+  commandPath = process.argv0;
+}
+const invokedAsAndes = /^andes(?:\.cmd|\.exe)?$/.test(basename(commandPath));
 export const cliCommandName = invokedAsAndes ? "andes" : "chofex";

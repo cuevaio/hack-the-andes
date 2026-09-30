@@ -170,7 +170,7 @@ de la evidencia, no un accidente que haya que recortar.
 
 Y el **filtro sigue siendo argumento**, solo que ya no como sustituto de nada:
 
-- Aplicación por CLI (`chofex register`) o por agent — el formulario ya es un
+- Aplicación por CLI (`andes register`) o por agent — el formulario ya es un
   filtro técnico.
 - Se revisa **lo que la persona ya construyó**, no su CV.
 - Corte explícito en 100: no es un evento abierto.
@@ -268,7 +268,7 @@ sección para la composición completa del podio.
 | Cupo | **100** (`seatCount`, publicado) |
 | Premios | 1º US$2.000 Chofex · 2º US$500 Chofex · 3º créditos de un sponsor devtool |
 | Historial del equipo | Guatemala · El Salvador · Colombia · Perú · más de 500 builders |
-| Aplicación | CLI (`chofex register`) o agent |
+| Aplicación | CLI (`andes register`) o agent |
 | Selección | lo que ya construiste, cómo lo explicas, qué propuesta traes |
 | Consejo | 5 jurados + 5 mentores, roster sin anunciar |
 | Challenges | **3, sellados** hasta el kickoff del 17 oct ⚠️ ver §9 |

@@ -71,7 +71,7 @@ describe("CLI authentication", () => {
 
   test("requires a terminal that can keep the OAuth callback alive", () => {
     expect(() => assertInteractiveLogin(false)).toThrow(
-      "OAuth login requires an interactive terminal. Run `chofex login` yourself in a local terminal and leave it open until the browser confirms login.",
+      "OAuth login requires an interactive terminal. Run `andes login` yourself in a local terminal and leave it open until the browser confirms login.",
     );
     expect(() => assertInteractiveLogin(true)).not.toThrow();
   });

@@ -46,21 +46,20 @@ test("offers curl and npm installation before the shared CLI flow", () => {
       id: "curl",
       label: "curl",
       description: "Recomendado · no requiere Node.js",
-      hint: "Configura PATH y recarga tu terminal automáticamente.",
-      command:
-        "bash -o pipefail -c 'curl -fsSL https://hacktheandes.com/install | bash' && exec \"$SHELL\" -l",
+      hint: "Al terminar, sigue los pasos que muestra el instalador.",
+      command: "curl -fsSL https://hacktheandes.com/install | bash",
     },
     {
       id: "npm",
       label: "npm",
       description: "Requiere Node.js 20 o superior",
-      command: "npm install --global chofex-cli@latest",
+      command: "npm install --global hacktheandes-cli@latest",
     },
   ]);
   expect(cliNextCommands).toEqual([
-    "chofex login",
-    "chofex register",
-    "chofex status",
+    "andes login",
+    "andes register",
+    "andes status",
   ]);
 });
 
@@ -434,7 +433,7 @@ test("answers application deadline, eligibility, and review questions", () => {
     /registrarme.*postular/i.test(item.question),
   );
   expect(registrationFaq?.answer).toMatch(/no/i);
-  expect(registrationFaq?.answer).toMatch(/chofex register/i);
+  expect(registrationFaq?.answer).toMatch(/andes register/i);
   expect(registrationFaq?.answer).toMatch(/challenge/i);
   expect(registrationFaq?.answer).toMatch(/primero envía tu postulación/i);
 

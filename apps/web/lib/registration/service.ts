@@ -632,7 +632,7 @@ export const submitAcceptedDetails = async (
  * that into the `pictureUrl` the card draws.
  *
  * Refuses anybody who has not confirmed attendance yet, because for them
- * `chofex confirm` is the flow and it sets this as part of a larger
+ * `andes confirm` is the flow and it sets this as part of a larger
  * whole.
  */
 export const changePictureSource = async (

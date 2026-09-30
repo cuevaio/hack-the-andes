@@ -10,7 +10,7 @@ export const retiredCliOAuthClientId = "1YfuXKgOXkdH094s";
 export const retiredClerkIssuer = "https://close-newt-8265.clerk.accounts.dev";
 
 export const legacyCliAuthenticationMessage =
-  "This CLI is signed in to a retired Clerk application. Update with `chofex update` or `npm install --global chofex-cli@latest`, then run `chofex logout` and `chofex login`.";
+  "Este CLI inició sesión en una aplicación de Clerk retirada. Actualiza con `npm install --global hacktheandes-cli@latest`, luego ejecuta `andes logout` y `andes login`.";
 
 const normalizeIssuer = (value: string): string => value.replace(/\/+$/, "");
 

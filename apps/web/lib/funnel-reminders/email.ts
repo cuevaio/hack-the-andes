@@ -36,7 +36,7 @@ const copyFor = (stage: FunnelReminderStage) => {
         "Ya diste el primer paso al entrar. Ahora completa y envía tu postulación para acercarte al grupo de hackers que construirá lo que el Perú necesita.",
       action: "Enviar mi postulación",
       url: "https://hacktheandes.com/?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=registration#apply",
-      command: "chofex register",
+      command: "andes register",
     };
   }
 
@@ -51,7 +51,7 @@ const copyFor = (stage: FunnelReminderStage) => {
         "Tu postulación ya está en carrera. El challenge es tu oportunidad de demostrar cómo piensas, construyes y resuelves problemas reales junto a una comunidad excepcional.",
       action: "Empezar el challenge",
       url: "https://hacktheandes.com/challenges/black-box?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=challenge_start",
-      command: "chofex challenge init",
+      command: "andes challenge init",
     };
   }
 
@@ -64,7 +64,7 @@ const copyFor = (stage: FunnelReminderStage) => {
       "Ya abriste la caja y empezaste a investigar. No dejes tu trabajo a medias: envía una evaluación oficial y demuestra que tienes lo necesario para construir lo que el Perú necesita.",
     action: "Terminar el challenge",
     url: "https://hacktheandes.com/challenges/black-box?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=challenge_finish",
-    command: "chofex challenge evaluate --source ./shipping.js",
+    command: "andes challenge evaluate --source ./shipping.js",
   };
 };
 

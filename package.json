@@ -8,7 +8,7 @@
     "deploy:plan": "bun scripts/deploy.ts plan",
     "deploy:status": "bun scripts/deploy.ts status",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "lint": "bun --filter chofex-cli check-examples && turbo run lint",
     "format": "biome format --write .",
     "check-types": "turbo run check-types",
     "deck:pdf": "node scripts/export-deck-pdf.mjs",

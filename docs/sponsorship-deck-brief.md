@@ -37,7 +37,7 @@ debe leer de ahí, no inventar cifras paralelas. Capturas de la landing en
 | Equipos | 1–4 personas, solos OK | `facts` |
 | Premios | US$2.000 (1º) · US$500 (2º) — **$2.500 total** | `prizeAmountsUsd` |
 | Premios en soles | S/ 6,700 · S/ 1,675 | `prizeAmountsPen` |
-| Aplicación | vía CLI (`chofex register`) o vía agent | `applyCopy`, `cliCommands` |
+| Aplicación | vía CLI (`andes register`) o vía agent | `applyCopy`, `cliCommands` |
 | Selección | lo ya construido, el criterio al explicarlo, la propuesta | `faqCopy` |
 | Consejo | **5 jurados + 5 mentores**, roster sin anunciar | `judgeCount`, `mentorCount`, `peopleCopy` |
 | Challenges | **3, sellados** hasta el kickoff del 17 oct | `challengeCount`, `challengesCopy`, `challengeSeats` |

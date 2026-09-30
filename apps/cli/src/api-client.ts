@@ -43,7 +43,7 @@ export const authenticationRecoveryMessage = (
 ): string => {
   if (code !== "AUTHENTICATION_REQUIRED") return message;
   if (message !== "Authentication failed") return message;
-  return `${message}. If login just succeeded, update the CLI with \`chofex update\` or \`npm install --global chofex-cli@latest\`, then run \`chofex logout\` and \`chofex login\`.`;
+  return `${message}. If login just succeeded, update the CLI with \`andes update\` or \`npm install --global hacktheandes-cli@latest\`, then run \`andes logout\` and \`andes login\`.`;
 };
 
 export interface ApiClientOptions {

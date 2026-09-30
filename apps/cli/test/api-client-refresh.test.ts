@@ -26,7 +26,7 @@ test("keeps the original 401 when a legacy refresh against the current issuer fa
         error: {
           code: "AUTHENTICATION_REQUIRED",
           message:
-            "This CLI is signed in to a retired Clerk application. Update with `chofex update` or `npm install --global chofex-cli@latest`, then run `chofex logout` and `chofex login`.",
+            "This CLI is signed in to a retired Clerk application. Update with `andes update` or `npm install --global hacktheandes-cli@latest`, then run `andes logout` and `andes login`.",
           retryable: false,
         },
       },
@@ -49,5 +49,5 @@ test("keeps the original 401 when a legacy refresh against the current issuer fa
 
   expect(error.code).toBe("AUTHENTICATION_REQUIRED");
   expect(error.requestId).toBe("request-legacy-401");
-  expect(error.message).toContain("chofex update");
+  expect(error.message).toContain("andes update");
 });

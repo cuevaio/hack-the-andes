@@ -200,6 +200,9 @@ jobs:
           done
           tar -xzf artifacts/chofex-linux-x64.tar.gz -C standalone
           test "$(standalone/chofex --version)" = "chofex v${RELEASE_VERSION}"
+          bash apps/web/public/install --binary standalone/chofex --install-dir "$RUNNER_TEMP/andes-smoke" --no-modify-path
+          test "$(CHOFEX_AUTO_UPDATE=0 "$RUNNER_TEMP/andes-smoke/andes" --version)" = "andes v${RELEASE_VERSION}"
+          test "$(CHOFEX_AUTO_UPDATE=0 "$RUNNER_TEMP/andes-smoke/chofex" --version)" = "chofex v${RELEASE_VERSION}"
           rm standalone/chofex
           cd artifacts
           sha256sum chofex-*.tar.gz > checksums.txt

@@ -28,7 +28,7 @@ describe("badge-ready email", () => {
     expect(email.subject).toBe("Estás dentro — bienvenida a Hack the Andes");
     expect(email.text).toContain("BLACK BOX · #01");
     expect(email.text).toContain("carnet predeterminado");
-    expect(email.text).toContain("chofex confirm");
+    expect(email.text).toContain("andes confirm");
     expect(email.text).toContain("nombre");
     expect(email.text).toContain("foto");
     expect(email.text).toContain("presentación");
@@ -62,8 +62,8 @@ describe("badge-ready email", () => {
       requiresConfirmation: false,
     });
 
-    expect(email.text).toContain("chofex badge regenerate");
-    expect(email.text).not.toContain("chofex confirm");
+    expect(email.text).toContain("andes badge regenerate");
+    expect(email.text).not.toContain("andes confirm");
     expect(email.text).not.toContain("carnet predeterminado");
     expect(email.text).not.toContain("¡Felicitaciones!");
   });
@@ -105,7 +105,7 @@ describe("badge-ready email", () => {
     expect(body.html).toContain("a=1&amp;b=2");
     // The face, and a way to the card — not a flattened picture of one.
     expect(body.html).toContain("https://hacktheandes.com/badge");
-    expect(body.html).toContain("chofex confirm");
+    expect(body.html).toContain("andes confirm");
     expect(body.html).toContain("Trae tus mejores ideas.");
     expect(body.subject).toBe("Estás dentro — bienvenida a Hack the Andes");
   });

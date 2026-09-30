@@ -5,7 +5,7 @@ import { ShellCommand } from "@/components/shell-command";
 const workflow = [
   {
     title: "Crea el repositorio",
-    command: "chofex challenge init --challenge broken-agent",
+    command: "andes challenge init --challenge broken-agent",
     body: "La CLI crea broken-agent/ con el contrato normativo, una implementación plausible pero defectuosa y siete tests públicos.",
   },
   {
@@ -26,7 +26,7 @@ const workflow = [
   {
     title: "Protege el comportamiento visible",
     command:
-      "chofex challenge test --challenge broken-agent --source ./scheduler.js",
+      "andes challenge test --challenge broken-agent --source ./scheduler.js",
     body: "Los tests públicos son ilimitados. No uses una evaluación oficial mientras tengas regresiones visibles.",
   },
   {
@@ -37,7 +37,7 @@ const workflow = [
   {
     title: "Crea el handoff de evaluación",
     command:
-      "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+      "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
     body: "La primera llamada devuelve un enlace corto y todavía no consume una evaluación.",
   },
   {
@@ -48,7 +48,7 @@ const workflow = [
   {
     title: "Solicita el veredicto oculto",
     command:
-      "chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+      "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
     body: "Repite el comando antes de que venza la aprobación. Esta vez consume 1 de 5 evaluaciones oficiales y devuelve un solo puntaje.",
   },
 ] as const;

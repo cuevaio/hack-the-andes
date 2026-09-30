@@ -206,7 +206,7 @@ describe("registration API client", () => {
         "AUTHENTICATION_REQUIRED",
         "Authentication failed",
       ),
-    ).toContain("chofex update");
+    ).toContain("andes update");
 
     globalThis.fetch = async () =>
       Response.json(
@@ -234,7 +234,7 @@ describe("registration API client", () => {
 
     expect(error.code).toBe("AUTHENTICATION_REQUIRED");
     expect(error.requestId).toBe("request-auth-failed");
-    expect(error.message).toContain("chofex logout");
+    expect(error.message).toContain("andes logout");
   });
 
   test("ignores additive fields in a v1 response", async () => {

@@ -2,11 +2,11 @@
 
 Hack the Andes is an in-person hackathon in Lima, organized by Chofex. This
 repository contains the public participant site, application and review flows,
-technical qualification challenges, the `/api/v1` API, and the `chofex` CLI.
+technical qualification challenges, the `/api/v1` API, and the `andes` CLI.
 
 - Website: [hacktheandes.com](https://hacktheandes.com)
 - Challenges and rankings: [hacktheandes.com/challenges](https://hacktheandes.com/challenges)
-- CLI package: [chofex-cli](https://www.npmjs.com/package/chofex-cli)
+- CLI package: [hacktheandes-cli](https://www.npmjs.com/package/hacktheandes-cli)
 
 ## Participant quick start
 
@@ -16,13 +16,13 @@ npm:
 ```sh
 curl -fsSL https://hacktheandes.com/install | bash
 export PATH="$HOME/.chofex/bin:$PATH"
-chofex login
-chofex whoami
-chofex register
+andes login
+andes whoami
+andes register
 ```
 
 The installer detects Apple silicon, Intel macOS, glibc Linux, musl Linux, and
-Windows on Arm or x64. It verifies the release checksum and installs `chofex` in
+Windows on Arm or x64. It verifies the release checksum and installs `andes` in
 `~/.chofex/bin`. To pin a release, pass `--version` after `bash -s --`:
 
 ```sh
@@ -32,36 +32,39 @@ curl -fsSL https://hacktheandes.com/install | bash -s -- --version 0.1.146
 Alternatively, the npm package supports Node.js 20 and newer:
 
 ```sh
-npm install --global chofex-cli@latest
-chofex login
-chofex whoami
-chofex register
+npm install --global hacktheandes-cli@latest
+andes login
+andes whoami
+andes register
 ```
+
+The `chofex-cli` package and `chofex` command remain supported. Both packages
+install `andes` and `chofex` with the same commands and saved login.
 
 The CLI authenticates through Clerk OAuth with PKCE. Access and refresh tokens
 are stored in Keychain on macOS, Secret Service on Linux, or Password Vault on
-Windows. Run `chofex logout` to revoke and remove stored credentials, or
-`chofex update` to install the latest release through the same installation
+Windows. Run `andes logout` to revoke and remove stored credentials, or
+`andes update` to install the latest release through the same installation
 method you originally used.
 
 ### Application flow
 
 ```sh
 # Complete and submit an application interactively
-chofex register
+andes register
 
 # Check the latest application and any next steps
-chofex status
-chofex requirements
+andes status
+andes requirements
 
 # After acceptance, personalize the default badge and provide attendance details
-chofex confirm
+andes confirm
 
 # Check background badge generation
-chofex badge
+andes badge
 
 # Change the badge name, one-liner, photo, or QR destination
-chofex badge regenerate
+andes badge regenerate
 ```
 
 Registration is for the on-site event in Lima. The application uses the
@@ -75,20 +78,20 @@ answers; press Enter to keep an answer or Ctrl+U to clear and replace it.
 
 Acceptance immediately creates a default badge from the Clerk name, one-line
 role, and picture visible to reviewers, including the participant's best exact
-challenge placement. `chofex confirm` can replace the badge name, one-liner,
+challenge placement. `andes confirm` can replace the badge name, one-liner,
 and picture while collecting the separate full legal name, ID, and other required
 attendance details. A phone number is optional but encouraged for WhatsApp
 coordination. Custom uploads accept JPEG, PNG, or WebP files up to 5 MB:
 
 ```sh
-chofex confirm --input attendance.json --picture /path/to/picture.png
+andes confirm --input attendance.json --picture /path/to/picture.png
 ```
 
 For that non-interactive upload, set `pictureSource` to `upload` in
 `attendance.json`.
 
 The QR destination is chosen from portfolio, GitHub, then LinkedIn.
-`chofex badge regenerate` remains available after confirmation to override the
+`andes badge regenerate` remains available after confirmation to override the
 public name, one-line description, QR destination, and confirmed picture
 without changing the historical application.
 
@@ -121,21 +124,21 @@ latest configured versions; legacy attempts remain historical and cannot satisfy
 admission eligibility.
 
 ```sh
-chofex challenge
-chofex challenge list
-chofex challenge init --challenge black-box
-chofex challenge show --challenge black-box
-chofex challenge query --challenge black-box --distance 10 --weight 3 --hour 14 --fragile false --express false
-chofex challenge notebook --challenge black-box
-chofex challenge test --challenge black-box --source ./shipping.js
-chofex challenge evaluate --challenge black-box --source ./shipping.js
-chofex challenge ranking --challenge black-box
+andes challenge
+andes challenge list
+andes challenge init --challenge black-box
+andes challenge show --challenge black-box
+andes challenge query --challenge black-box --distance 10 --weight 3 --hour 14 --fragile false --express false
+andes challenge notebook --challenge black-box
+andes challenge test --challenge black-box --source ./shipping.js
+andes challenge evaluate --challenge black-box --source ./shipping.js
+andes challenge ranking --challenge black-box
 
-chofex challenge init --challenge broken-agent
+andes challenge init --challenge broken-agent
 cd broken-agent && npm test
-chofex challenge test --challenge broken-agent --source ./scheduler.js
-chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
-chofex challenge ranking --challenge broken-agent
+andes challenge test --challenge broken-agent --source ./scheduler.js
+andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
+andes challenge ranking --challenge broken-agent
 ```
 
 `list` and `ranking` are public. The other networked challenge commands require
@@ -151,14 +154,14 @@ Generate complete templates, validate them locally, and request JSON output for
 automation:
 
 ```sh
-chofex schema --stage application > application-template.json
-chofex --output json validate --stage application --input application.json
-chofex --output json register --input application.json
-chofex --output json status
+andes schema --stage application > application-template.json
+andes --output json validate --stage application --input application.json
+andes --output json register --input application.json
+andes --output json status
 
-chofex schema --stage acceptance > attendance-template.json
-chofex --output json validate --stage acceptance --input attendance.json
-chofex --output json confirm --input attendance.json
+andes schema --stage acceptance > attendance-template.json
+andes --output json validate --stage acceptance --input attendance.json
+andes --output json confirm --input attendance.json
 ```
 
 Use `--input -` to read JSON from stdin. In JSON mode, stdout contains exactly
@@ -248,7 +251,7 @@ For production infrastructure, see [`deploy/README.md`](deploy/README.md).
 | Path | Purpose |
 | --- | --- |
 | `apps/web` | Next.js participant site, admin UI, API, and Trigger.dev task host |
-| `apps/cli` | Published `chofex` executable built with Effect |
+| `apps/cli` | Published `andes` and compatibility `chofex` executables built with Effect |
 | `packages/registration-contract` | Shared registration schemas and API envelopes |
 | `packages/challenges-contract` | Shared challenge catalog, schemas, and scoring types |
 | `packages/db` | Drizzle schema, migrations, and database clients |
@@ -258,7 +261,7 @@ For production infrastructure, see [`deploy/README.md`](deploy/README.md).
 ## API
 
 Participant endpoints accept Clerk browser session tokens or OAuth tokens issued
-to the Chofex CLI. Responses use a versioned
+to the Andes CLI. Responses use a versioned
 `{ version, ok, requestId, data | error }` envelope. Authentication failures
 advertise OAuth discovery through `/.well-known/oauth-protected-resource`.
 

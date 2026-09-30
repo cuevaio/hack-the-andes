@@ -17,8 +17,8 @@ and rank only through the current CLI/API response.
 Start with:
 
 ```sh
-chofex --output json challenge show --challenge broken-agent
-chofex --output json challenge init --challenge broken-agent
+andes --output json challenge show --challenge broken-agent
+andes --output json challenge init --challenge broken-agent
 ```
 
 Read `broken-agent/README.md`, `scheduler.js`, and the public tests. Before
@@ -71,14 +71,14 @@ purpose of a mandatory admission challenge and cannot secure a seat.
 Run the public test freely:
 
 ```sh
-chofex --output json challenge test --challenge broken-agent --source ./scheduler.js
+andes --output json challenge test --challenge broken-agent --source ./scheduler.js
 ```
 
 Only after the participant confirms the review may you request an official
 evaluation:
 
 ```sh
-chofex --output json challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
+andes --output json challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
 ```
 
 The official result is one score out of 100. It does not include a capability

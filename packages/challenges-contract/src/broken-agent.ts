@@ -178,8 +178,8 @@ Repara \`scheduler.js\` sin cambiar la interfaz exportada
 
 \`\`\`sh
 npm test
-chofex challenge test --challenge broken-agent --source ./scheduler.js
-chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
+andes challenge test --challenge broken-agent --source ./scheduler.js
+andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json
 \`\`\`
 
 Los tests locales y públicos son ilimitados. Tienes **5 evaluaciones oficiales**

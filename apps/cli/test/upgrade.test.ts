@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { stat } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   autoUpdateCli,
@@ -10,6 +13,50 @@ import {
 } from "../src/upgrade.js";
 
 describe("automatic CLI updates", () => {
+  test("restarts a standalone command with its original arguments", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "andes-restart-"));
+    const entry = join(directory, "entry.ts");
+    const executable = join(directory, "andes");
+    const upgradeModule = fileURLToPath(
+      new URL("../src/upgrade.ts", import.meta.url),
+    );
+    const metadataModule = fileURLToPath(
+      new URL("../src/metadata.ts", import.meta.url),
+    );
+    try {
+      await writeFile(
+        entry,
+        `
+import { runUpdatedCli, isStandaloneExecutable } from ${JSON.stringify(upgradeModule)};
+import { cliCommandName } from ${JSON.stringify(metadataModule)};
+if (process.env.CHOFEX_AUTO_UPDATE === "0") {
+  process.stdout.write(JSON.stringify({ command: cliCommandName, standalone: isStandaloneExecutable(), arguments: process.argv.slice(2) }));
+} else {
+  process.exitCode = await runUpdatedCli();
+}
+`,
+      );
+      execFileSync(process.execPath, [
+        "build",
+        entry,
+        "--compile",
+        '--define=CHOFEX_VERSION="0.1.999"',
+        `--outfile=${executable}`,
+      ]);
+      const output = execFileSync(executable, ["--output", "json", "status"], {
+        encoding: "utf8",
+        env: { ...process.env, CHOFEX_AUTO_UPDATE: "1" },
+      });
+      expect(JSON.parse(output)).toEqual({
+        command: "andes",
+        standalone: true,
+        arguments: ["--output", "json", "status"],
+      });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("installs a newer version published to npm", async () => {
     const upgrades: string[] = [];
 

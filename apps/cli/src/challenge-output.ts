@@ -83,7 +83,7 @@ export const challengeListText = (
     (challenge) => challenge.open && challenge.playable,
   );
   if (hasOpenChallenge) {
-    lines.push("Empieza el challenge abierto: chofex challenge");
+    lines.push("Empieza el challenge abierto: andes challenge");
   } else {
     lines.push(
       "No hay un challenge abierto. Los rankings finales siguen visibles.",
@@ -127,7 +127,7 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
       "SIGUIENTE PASO",
       "Lee el contrato. Antes de editar, discute tres trazas de falla y elige cuál investigar primero.",
       "  cd broken-agent && npm test",
-      "  chofex challenge test --challenge broken-agent --source ./scheduler.js",
+      "  andes challenge test --challenge broken-agent --source ./scheduler.js",
     );
     return lines.join("\n");
   }
@@ -167,8 +167,8 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
       "",
       "SIGUIENTE PASO",
       "Revisa tu historial y el ranking final.",
-      "  chofex challenge notebook",
-      "  chofex challenge ranking",
+      "  andes challenge notebook",
+      "  andes challenge ranking",
     );
     return lines.join("\n");
   }
@@ -176,21 +176,21 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
   if (attempt.observations.length === 0) {
     lines.push(
       "Ask the machine to price one ordinary shipment.",
-      "  chofex challenge query",
+      "  andes challenge query",
     );
   } else if (attempt.latestEvaluation === undefined) {
     lines.push(
       "Run controlled experiments, study the notebook, then test your model.",
-      "  chofex challenge query",
-      "  chofex challenge notebook",
-      "  chofex challenge init",
-      "  chofex challenge test --source ./shipping.js",
+      "  andes challenge query",
+      "  andes challenge notebook",
+      "  andes challenge init",
+      "  andes challenge test --source ./shipping.js",
     );
   } else {
     lines.push(
       "Inspect your rank, then use remaining attempts only after improving your model.",
-      "  chofex challenge ranking",
-      "  chofex challenge test --source ./shipping.js",
+      "  andes challenge ranking",
+      "  andes challenge test --source ./shipping.js",
     );
   }
   return lines.join("\n");
@@ -210,7 +210,7 @@ export const challengeQueryText = (result: ChallengeQueryResult): string => {
     lines.push(
       "Next experiment",
       "Change one variable at a time. Keep the others fixed so the output difference means something.",
-      "  chofex challenge query",
+      "  andes challenge query",
       "",
     );
   } else {
@@ -221,8 +221,8 @@ export const challengeQueryText = (result: ChallengeQueryResult): string => {
   }
   lines.push(
     "Review your evidence",
-    "  chofex challenge notebook",
-    "  chofex challenge notebook --format csv > observations.csv",
+    "  andes challenge notebook",
+    "  andes challenge notebook --format csv > observations.csv",
   );
   return lines.join("\n");
 };
@@ -266,14 +266,14 @@ export const notebookTableText = (
         "CASE FILE: no observations",
         "El challenge está cerrado. Revisa el ranking final.",
         "",
-        "Siguiente: chofex challenge ranking",
+        "Siguiente: andes challenge ranking",
       ].join("\n");
     }
     return [
       "CASE FILE: no observations yet",
       "The machine has not revealed anything. Start with one ordinary shipment.",
       "",
-      "Next: chofex challenge query",
+      "Next: andes challenge query",
     ].join("\n");
   }
   let observationLabel = `${observations.length} observations`;
@@ -303,7 +303,7 @@ export const notebookTableText = (
   if (challengeClosed) {
     lines.push(
       "El challenge está cerrado. Este cuaderno queda disponible como historial.",
-      "Siguiente: chofex challenge ranking",
+      "Siguiente: andes challenge ranking",
     );
     return lines.join("\n");
   }
@@ -311,21 +311,21 @@ export const notebookTableText = (
     lines.push(
       "One answer is a clue, not a rule.",
       "Next: run a controlled experiment. Change one field and keep the other four fixed.",
-      "  chofex challenge query",
+      "  andes challenge query",
       "",
     );
   } else {
     lines.push(
       "Look for thresholds, fixed surcharges, and interactions between fields.",
       "Next: test a hypothesis with a controlled query, or encode it in your solution.",
-      "  chofex challenge query",
+      "  andes challenge query",
       "",
     );
   }
   lines.push(
     "Prepare your replacement",
-    "  chofex challenge init",
-    "  chofex challenge test --source ./shipping.js",
+    "  andes challenge init",
+    "  andes challenge test --source ./shipping.js",
   );
   return lines.join("\n");
 };
@@ -364,7 +364,7 @@ export const challengeTestText = (result: ChallengeLocalTestResult): string => {
         "",
         "Siguiente: discutan una traza de falla concreta y creen review.json con las palabras del participante.",
         "Luego usa una evaluación oficial solo si su decisión lo permite",
-        "  chofex challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "  andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
       );
       return lines.join("\n");
     }
@@ -404,13 +404,13 @@ export const challengeTestText = (result: ChallengeLocalTestResult): string => {
       "",
       "Your model explains the notebook. That is necessary, but hidden cases may expose missing rules.",
       "Next: evaluate only when your experiments cover meaningful boundaries",
-      "  chofex challenge evaluate --source ./shipping.js",
+      "  andes challenge evaluate --source ./shipping.js",
     );
   } else {
     lines.push(
       "",
       "Next: edit shipping.js, explain the mismatches, and test again for free",
-      "  chofex challenge test --source ./shipping.js",
+      "  andes challenge test --source ./shipping.js",
     );
   }
   return lines.join("\n");
@@ -433,13 +433,13 @@ export const challengeEvaluateText = (
       result.shareText,
       "",
       "Siguiente: consulta el ranking",
-      "  chofex challenge ranking --challenge broken-agent",
+      "  andes challenge ranking --challenge broken-agent",
     );
     if (result.evaluationsRemaining > 0) {
       lines.push(
         "",
         "El veredicto es un solo puntaje. No dice qué caso falló. Razona antes de volver a enviar.",
-        "  chofex challenge test --challenge broken-agent --source ./scheduler.js",
+        "  andes challenge test --challenge broken-agent --source ./scheduler.js",
       );
     }
     return lines.join("\n");
@@ -460,13 +460,13 @@ export const challengeEvaluateText = (
     result.shareText,
     "",
     "Next: inspect the leaderboard",
-    "  chofex challenge ranking",
+    "  andes challenge ranking",
   );
   if (result.evaluationsRemaining > 0) {
     lines.push(
       "",
       "Before spending another evaluation, improve and retest your model against the notebook.",
-      "  chofex challenge test --source ./shipping.js",
+      "  andes challenge test --source ./shipping.js",
     );
   }
   return lines.join("\n");
@@ -534,9 +534,9 @@ export const registrationPartsText = (result: RegistrationResult): string => {
     lines.push(`  ${mark} ${part.title}${detail}`);
   }
   if (result.requirements.canSubmitApplication) {
-    lines.push("", "Ready to submit: chofex register");
+    lines.push("", "Ready to submit: andes register");
   } else if (result.requirements.stage === "draft") {
-    lines.push("", "Complete and submit with `chofex register`.");
+    lines.push("", "Complete and submit with `andes register`.");
   }
   return lines.join("\n");
 };

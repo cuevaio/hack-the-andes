@@ -99,13 +99,13 @@ describe("portrait-picker", () => {
   });
 
   test("says what to do when attendance is not confirmed yet", async () => {
-    // Changing a picture is only possible after `chofex confirm`, which
+    // Changing a picture is only possible after `andes confirm`, which
     // is where the source is first set. "No pudimos guardar la foto" for
     // that case sends somebody looking for a bug instead of a command.
     const picker = await read("portrait-picker.tsx");
 
     expect(picker).toContain("ATTENDANCE_NOT_CONFIRMED");
-    expect(picker).toContain("chofex confirm");
+    expect(picker).toContain("andes confirm");
   });
 
   test("writes through the endpoint, never the columns", async () => {

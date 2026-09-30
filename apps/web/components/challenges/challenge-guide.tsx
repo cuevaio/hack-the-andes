@@ -9,28 +9,28 @@ const workflow = [
   },
   {
     title: "Inicia sesión y prepara tu archivo",
-    command: "chofex login && chofex challenge init",
+    command: "andes login && andes challenge init",
     body: "La CLI crea shipping.js sin sobrescribir archivos existentes.",
   },
   {
     title: "Interroga la máquina",
     command:
-      "chofex challenge query --distance 10 --weight 3 --hour 14 --fragile false --express false",
+      "andes challenge query --distance 10 --weight 3 --hour 14 --fragile false --express false",
     body: "Cambia una variable a la vez. Cada respuesta exitosa consume una de tus 25 queries.",
   },
   {
     title: "Estudia tus observaciones",
-    command: "chofex challenge notebook",
+    command: "andes challenge notebook",
     body: "Busca umbrales, recargos fijos e interacciones entre los cinco inputs.",
   },
   {
     title: "Implementa y prueba gratis",
-    command: "chofex challenge test --source ./shipping.js",
+    command: "andes challenge test --source ./shipping.js",
     body: "Exporta calculateShipping(input) desde shipping.js. Los tests contra tu notebook no consumen evaluaciones.",
   },
   {
     title: "Envía una evaluación oficial",
-    command: "chofex challenge evaluate --source ./shipping.js",
+    command: "andes challenge evaluate --source ./shipping.js",
     body: "La evaluación usa envíos ocultos y consume uno de tus 3 intentos oficiales. Hazlo cuando tu modelo esté listo.",
   },
 ] as const;

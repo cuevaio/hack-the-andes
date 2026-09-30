@@ -36,6 +36,7 @@
     "build": "rm -rf dist && bun build src/index.ts --target=node --outfile=dist/index.js",
     "prepare-packages": "bun scripts/prepare-packages.ts",
     "verify-packages": "bun scripts/verify-packages.ts",
+    "check-examples": "bun scripts/check-examples.ts",
     "dev": "bun src/index.ts",
     "lint": "biome lint --error-on-warnings .",
     "format": "biome format --write .",

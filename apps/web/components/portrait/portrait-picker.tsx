@@ -178,7 +178,7 @@ export function PortraitPicker({
         const reason = await confirmedSource.json().catch(() => null);
         if (reason?.error?.code === "ATTENDANCE_NOT_CONFIRMED") {
           setMessage(
-            "Confirma tu asistencia con `chofex confirm` antes de cambiar la foto.",
+            "Confirma tu asistencia con `andes confirm` antes de cambiar la foto.",
           );
           setStage("failed");
           return;

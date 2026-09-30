@@ -46,8 +46,8 @@ test("the live challenge page includes the brief and CLI instructions", async ()
   expect(guide).toContain("3 evaluaciones oficiales");
   expect(guide).toContain("calculateShipping(input)");
   expect(guide).toContain("curl -fsSL https://hacktheandes.com/install | bash");
-  expect(guide).toContain("chofex challenge query");
-  expect(guide).toContain("chofex challenge evaluate --source ./shipping.js");
+  expect(guide).toContain("andes challenge query");
+  expect(guide).toContain("andes challenge evaluate --source ./shipping.js");
   expect(guide).toContain("técnicos son obligatorios");
   expect(guide).toContain("no reserva una plaza");
   expect(guide).toContain("intentos legacy no cuentan");
@@ -59,7 +59,7 @@ test("a closed challenge keeps its ranking without participation instructions", 
 
   expect(ranking).toContain('challengeState = "Cerrado"');
   expect(ranking).toContain("&& !challenge.closed");
-  expect(ranking).toContain("chofex challenge ranking");
+  expect(ranking).toContain("andes challenge ranking");
 });
 
 test("the public ranking does not reveal the hidden competitor count", async () => {

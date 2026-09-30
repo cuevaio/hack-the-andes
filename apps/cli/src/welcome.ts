@@ -171,10 +171,10 @@ export const welcomeFormatter = (
       if (!options.home) return `${welcome}\n${help}`;
       const width = Math.max(1, Math.min(options.columns ?? 80, 72));
       const shortcuts = [
-        "chofex login     Sign in",
-        "chofex register  Apply",
-        "chofex status    Check your application",
-        "chofex --help    All commands",
+        "andes login     Sign in",
+        "andes register  Apply",
+        "andes status    Check your application",
+        "andes --help    All commands",
       ];
       return `${welcome}\n${shortcuts.flatMap((line) => wrap(line, width)).join("\n")}\n`;
     },

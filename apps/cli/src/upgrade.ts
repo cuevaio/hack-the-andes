@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
 import { rootValueFlagNames } from "./cli-root.js";
-import { cliPackageName } from "./metadata.js";
+import { cliPackageName, isStandaloneBuild } from "./metadata.js";
 
 export { cliPackageName } from "./metadata.js";
 export const upgradeVersion = "latest";
@@ -156,8 +156,7 @@ const runInstaller: InstallerRunner = async (installDirectory, version) => {
   return runProcess("bash", arguments_, script);
 };
 
-export const isStandaloneExecutable = (): boolean =>
-  typeof Bun !== "undefined" && Bun.isStandaloneExecutable;
+export const isStandaloneExecutable = (): boolean => isStandaloneBuild;
 
 const assertSuccessful = (result: ProcessResult, program: string): void => {
   if (result.exitCode === 0) return;
@@ -376,7 +375,9 @@ export const shouldAutoUpdateCli = async ({
 
 export const runUpdatedCli = (): Promise<number> =>
   new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, process.argv.slice(1), {
+    const arguments_ = process.argv.slice(isStandaloneBuild ? 2 : 1);
+    const child = spawn(process.execPath, arguments_, {
+      argv0: process.argv0,
       env: { ...process.env, CHOFEX_AUTO_UPDATE: "0" },
       stdio: "inherit",
     });

@@ -69,16 +69,16 @@ export const buildBadgeReadyEmail = (
   let introduction =
     "Tu nuevo carnet ya está listo con los cambios que elegiste.";
   let body =
-    "Puedes volver a personalizar el nombre, la foto, la presentación de una línea o el enlace del QR con chofex badge regenerate.";
-  let terminalCommand = "chofex badge regenerate";
-  let terminalInstruction = "Personalizar y regenerar: chofex badge regenerate";
+    "Puedes volver a personalizar el nombre, la foto, la presentación de una línea o el enlace del QR con andes badge regenerate.";
+  let terminalCommand = "andes badge regenerate";
+  let terminalInstruction = "Personalizar y regenerar: andes badge regenerate";
   if (input.requiresConfirmation) {
     introduction =
       "Tu carnet predeterminado ya está hecho con el nombre, la foto y la presentación que teníamos al aceptar tu postulación.";
     body =
-      "Ejecuta chofex confirm para cambiar el nombre del carnet, la foto o la presentación de una línea y generar uno nuevo. Completa el comando aunque quieras conservar este carnet: necesitamos tu nombre completo y DNI o pasaporte para autorizar tu ingreso al venue. Comparte también tu teléfono para que podamos contactarte por WhatsApp si necesitamos coordinar contigo.";
-    terminalCommand = "chofex confirm";
-    terminalInstruction = "Confirmar, personalizar y regenerar: chofex confirm";
+      "Ejecuta andes confirm para cambiar el nombre del carnet, la foto o la presentación de una línea y generar uno nuevo. Completa el comando aunque quieras conservar este carnet: necesitamos tu nombre completo y DNI o pasaporte para autorizar tu ingreso al venue. Comparte también tu teléfono para que podamos contactarte por WhatsApp si necesitamos coordinar contigo.";
+    terminalCommand = "andes confirm";
+    terminalInstruction = "Confirmar, personalizar y regenerar: andes confirm";
   }
   let congratulation: string | undefined;
   if (input.placement.endsWith("· #01")) {

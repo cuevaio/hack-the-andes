@@ -48,22 +48,21 @@ export const cliInstallMethods = [
     id: "curl",
     label: "curl",
     description: "Recomendado · no requiere Node.js",
-    hint: "Configura PATH y recarga tu terminal automáticamente.",
-    command:
-      "bash -o pipefail -c 'curl -fsSL https://hacktheandes.com/install | bash' && exec \"$SHELL\" -l",
+    hint: "Al terminar, sigue los pasos que muestra el instalador.",
+    command: "curl -fsSL https://hacktheandes.com/install | bash",
   },
   {
     id: "npm",
     label: "npm",
     description: "Requiere Node.js 20 o superior",
-    command: "npm install --global chofex-cli@latest",
+    command: "npm install --global hacktheandes-cli@latest",
   },
 ] as const;
 
 export const cliNextCommands = [
-  "chofex login",
-  "chofex register",
-  "chofex status",
+  "andes login",
+  "andes register",
+  "andes status",
 ] as const;
 
 export const skipLinks = [
@@ -523,7 +522,7 @@ export const faqItems = [
   {
     question: "¿Registrarme ya cuenta como postular?",
     answer:
-      "No. Registrarte o iniciar sesión solo crea tu cuenta. Para poder ser aceptado, primero envía tu postulación con chofex register. Luego participa en un challenge: los mejores resultados obtienen pase directo.",
+      "No. Registrarte o iniciar sesión solo crea tu cuenta. Para poder ser aceptado, primero envía tu postulación con andes register. Luego participa en un challenge: los mejores resultados obtienen pase directo.",
   },
   {
     question: "¿Necesito experiencia previa o un tipo de proyecto específico?",

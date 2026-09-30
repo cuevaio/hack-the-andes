@@ -78,6 +78,9 @@ describe("curl installer", () => {
       "#!/bin/sh\necho chofex-test\n",
     );
     expect((await execFileAsync(installed)).stdout.trim()).toBe("chofex-test");
+    expect(
+      (await execFileAsync(join(installDirectory, "andes"))).stdout.trim(),
+    ).toBe("chofex-test");
     const pathCommand = result.stdout
       .split("\n")
       .map((line) => line.trim())
@@ -87,6 +90,46 @@ describe("curl installer", () => {
     expect((await execFileAsync("bash", ["-c", command])).stdout.trim()).toBe(
       "chofex-test",
     );
+  });
+
+  test("prints working next steps for a fresh terminal and keeps both commands updated", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "andes-first-install-"));
+    temporaryDirectories.push(directory);
+    const source = join(directory, "source-cli");
+    const installDirectory = join(directory, "installed cli");
+    await writeFile(source, '#!/bin/sh\nprintf "first:%s\\n" "$*"\n');
+
+    const result = await installForBash({
+      home: directory,
+      installDirectory,
+      path: "/usr/bin:/bin",
+      source,
+    });
+    const nextSteps = result.stdout
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => /^(export PATH=|andes )/.test(line));
+    expect(nextSteps.slice(1)).toEqual(["andes login", "andes register"]);
+    const started = await execFileAsync("bash", ["-c", nextSteps.join("\n")], {
+      env: { ...process.env, PATH: "/usr/bin:/bin" },
+    });
+    expect(started.stdout).toBe("first:login\nfirst:register\n");
+
+    await writeFile(source, '#!/bin/sh\nprintf "updated:%s\\n" "$*"\n');
+    const updated = await installForBash({
+      home: directory,
+      installDirectory,
+      path: `${installDirectory}:/usr/bin:/bin`,
+      source,
+    });
+    expect(updated.stdout).toContain("  andes login\n  andes register");
+    expect(updated.stdout).not.toContain("export PATH=");
+    for (const command of ["andes", "chofex"]) {
+      const output = await execFileAsync(join(installDirectory, command), [
+        "status",
+      ]);
+      expect(output.stdout).toBe("updated:status\n");
+    }
   });
 
   test("replaces a Windows executable after its parent exits", async () => {
@@ -265,7 +308,7 @@ exec /bin/mv "$@"
       "chofex",
     );
     expect(result.stdout).toContain(
-      "Could not update every shell startup file",
+      "No se pudieron actualizar todos los archivos de inicio",
     );
     expect(result.stdout).toContain(`export PATH=${installDirectory}:$PATH`);
   });

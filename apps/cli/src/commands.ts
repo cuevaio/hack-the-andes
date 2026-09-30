@@ -87,7 +87,7 @@ const rejectIfApplicationLocked = Effect.fn("rejectIfApplicationLocked")(
       message = "Already accepted. Your registration is complete.";
       if (requirements.stage === "accepted") {
         message =
-          "Already accepted. Run `chofex confirm` to complete your registration.";
+          "Already accepted. Run `andes confirm` to complete your registration.";
       }
     }
     return yield* cliError("ACTIVE_APPLICATION_EXISTS", message, false, {
@@ -127,11 +127,11 @@ const registerCommand = Command.make(
   Command.withDescription("Complete and submit an application for review"),
   Command.withExamples([
     {
-      command: "chofex register",
+      command: "andes register",
       description: "Fill or resume the application interactively",
     },
     {
-      command: "chofex --output json register --input application.json",
+      command: "andes --output json register --input application.json",
       description: "Submit an application from an agent or script",
     },
   ]),
@@ -348,11 +348,11 @@ const confirmCommand = Command.make(
   ),
   Command.withExamples([
     {
-      command: "chofex confirm",
+      command: "andes confirm",
       description: "Complete accepted-participant details interactively",
     },
     {
-      command: "chofex --output json confirm --input attendance.json",
+      command: "andes --output json confirm --input attendance.json",
       description: "Submit accepted-participant details from JSON",
     },
   ]),
@@ -513,7 +513,7 @@ const validateCommand = Command.make(
   Command.withExamples([
     {
       command:
-        "chofex --output json validate --stage application --input application.json",
+        "andes --output json validate --stage application --input application.json",
       description: "Validate an application file locally",
     },
   ]),
@@ -562,7 +562,7 @@ const schemaCommand = Command.make(
   Command.withDescription("Print a complete machine-readable input template"),
   Command.withExamples([
     {
-      command: "chofex schema --stage acceptance",
+      command: "andes schema --stage acceptance",
       description: "Print the post-acceptance input template",
     },
   ]),
