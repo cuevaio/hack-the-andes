@@ -37,19 +37,21 @@ export interface DecisionEmail {
   readonly html: string;
 }
 
-/**
- * Where an accepted participant is sent next.
- *
- * Confirming attendance is the one thing this email exists to get done,
- * so it is the button as well as the command — the terminal is how this
- * event expects to be talked to, but somebody reading on a phone at a bus
- * stop needs somewhere to tap.
- */
+/** The primary action, available on mobile as well as through the CLI. */
 const CONFIRM_URL =
   "https://hacktheandes.com/welcome?utm_source=resend&utm_medium=email&utm_campaign=decision&utm_content=confirm";
 
 const APPLY_URL =
   "https://hacktheandes.com/?utm_source=resend&utm_medium=email&utm_campaign=decision&utm_content=reapply#apply";
+
+const transportSupport = {
+  title: "Apoyo para transporte",
+  body: "Si viajas a Lima desde otra ciudad del Perú y necesitas apoyo económico para tus pasajes, completa este formulario. Cuéntanos cuánto cuesta tu viaje de ida y vuelta y cuánto puedes cubrir por tu cuenta. Priorizaremos a quienes no podrían participar por el costo del transporte.",
+  conditions:
+    "El apoyo es solo para viajes dentro del Perú y está sujeto al presupuesto disponible. Completar el formulario no garantiza recibir apoyo. Nos comunicaremos directamente con las personas seleccionadas.",
+  action: "Solicitar apoyo",
+  url: "https://forms.gle/TEHC6uc7PWeuwbKi6",
+};
 
 const decisionCopy = (decision: ApplicationDecision) => {
   if (decision === "accepted") {
@@ -97,6 +99,18 @@ export const buildDecisionEmail = (
   }
   const sharing =
     "Celebra este logro compartiendo tu carnet en LinkedIn e Instagram.";
+  const acceptedNextSteps: string[] = [];
+  if (input.decision === "accepted") {
+    acceptedNextSteps.push(
+      "",
+      sharing,
+      "",
+      transportSupport.title,
+      transportSupport.body,
+      transportSupport.conditions,
+      `${transportSupport.action}: ${transportSupport.url}`,
+    );
+  }
 
   const text = [
     greeting,
@@ -108,7 +122,7 @@ export const buildDecisionEmail = (
     "",
     `${copy.action}: ${copy.url}`,
     `${copy.commandLabel} ${copy.command}`,
-    ...(input.decision === "accepted" ? ["", sharing] : []),
+    ...acceptedNextSteps,
     ...(input.message
       ? ["", "Una nota del equipo de revisión:", input.message]
       : []),
@@ -137,7 +151,14 @@ export const buildDecisionEmail = (
     button(copy.action, copy.url),
     command(copy.commandLabel, copy.command),
   );
-  if (input.decision === "accepted") blocks.push(paragraph(sharing));
+  if (input.decision === "accepted") {
+    blocks.push(
+      paragraph(sharing),
+      note(transportSupport.title, transportSupport.body),
+      paragraph(transportSupport.conditions),
+      button(transportSupport.action, transportSupport.url),
+    );
+  }
   if (input.message) {
     blocks.push(note("Una nota del equipo de revisión", input.message));
   }
