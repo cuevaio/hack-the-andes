@@ -4,8 +4,9 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
 import { rootValueFlagNames } from "./cli-root.js";
+import { cliPackageName } from "./metadata.js";
 
-export const cliPackageName = "chofex-cli";
+export { cliPackageName } from "./metadata.js";
 export const upgradeVersion = "latest";
 export const skillName = "chofex-hackathon";
 const skillRepository = "https://github.com/crafter-station/hack-the-andes";

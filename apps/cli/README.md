@@ -1,14 +1,26 @@
-# chofex-cli
+# Hack the Andes CLI
 
 Command-line client for Hack the Andes.
 
 ## Install
 
 ```sh
-npm install --global chofex-cli@latest
+npm install --global hacktheandes-cli@latest
 ```
 
-The installed command is `chofex`:
+También puedes instalar `chofex-cli`. Ambos paquetes instalan los comandos
+`andes` y `chofex`, con los mismos subcomandos, configuración y sesión guardada.
+Instala uno de los dos paquetes.
+
+```sh
+andes register
+chofex register
+```
+
+Para instalarlo dentro de un proyecto, usa `npm install hacktheandes-cli` y
+ejecuta `npx andes register` o `npx chofex register`.
+
+Los ejemplos con `chofex` también funcionan con `andes`:
 
 ```sh
 chofex
@@ -36,6 +48,9 @@ chofex badge regenerate
 
 `chofex update` and `chofex upgrade` are interchangeable; both update the CLI
 to the latest published version.
+
+Las actualizaciones conservan el paquete instalado: `hacktheandes-cli` o
+`chofex-cli`, independientemente del comando que uses.
 
 Las copias instaladas también consultan npm cada vez que se inicia `chofex` e
 instalan una versión publicada más reciente antes de ejecutar el comando. Si
@@ -145,3 +160,18 @@ override the API URL when running against a local or preview Chofex instance.
 
 Registration links use `https://hacktheandes.com` by default. Local or preview
 environments can override that origin with `CHOFEX_PUBLIC_SITE_URL`.
+
+## Verificar los paquetes npm
+
+Desde la raíz del repositorio:
+
+```sh
+bun --filter chofex-cli build
+bun --filter chofex-cli prepare-packages
+bun --filter chofex-cli verify-packages
+```
+
+La verificación empaqueta e instala ambos paquetes en directorios temporales.
+Comprueba los dos comandos, la ayuda de registro, la salida JSON y el paquete
+que solicita cada actualización. El workflow de publicación ejecuta estos
+mismos pasos antes de publicar ambos paquetes con la misma versión.

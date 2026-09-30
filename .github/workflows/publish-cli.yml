@@ -79,6 +79,12 @@ jobs:
             exit 0
           fi
 
+          if ! andes_version="$(npm --prefix apps/cli --workspaces=false view hacktheandes-cli version)" || [[ "$andes_version" != "$npm_version" ]]; then
+            echo "The npm packages are not fully promoted."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           release_commit="$(gh release view "$latest_tag" --json targetCommitish --jq '.targetCommitish')"
           affected="$(
             TURBO_SCM_BASE="$release_commit" \
@@ -157,6 +163,12 @@ jobs:
       - name: Smoke test executable
         run: test "$(node apps/cli/dist/index.js --version)" = "chofex v${RELEASE_VERSION}"
 
+      - name: Prepare both npm packages
+        run: bun --filter chofex-cli prepare-packages
+
+      - name: Verify installed npm commands
+        run: bun --filter chofex-cli verify-packages
+
       - name: Build standalone executables
         run: |
           mkdir -p artifacts standalone
@@ -192,11 +204,13 @@ jobs:
           cd artifacts
           sha256sum chofex-*.tar.gz > checksums.txt
 
-      - name: Publish to npm
-        working-directory: apps/cli
+      - name: Publish both packages to npm
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-        run: bun publish --access public --tag history --tolerate-republish
+        run: |
+          for package in chofex-cli hacktheandes-cli; do
+            (cd "apps/cli/dist/npm/${package}" && bun publish --access public --tag history --tolerate-republish)
+          done
 
       - name: Verify release is still current
         id: verify-current
@@ -238,7 +252,7 @@ jobs:
           gh release create "$release_tag" \
             --target "$GITHUB_SHA" \
             --title "chofex-cli ${release_tag}" \
-            --notes "Install this release with \`curl -fsSL https://hacktheandes.com/install | bash\` or \`npm install --global chofex-cli@${RELEASE_VERSION}\`." \
+            --notes "Install this release with \`npm install --global hacktheandes-cli@${RELEASE_VERSION}\` or \`npm install --global chofex-cli@${RELEASE_VERSION}\`. Both npm packages install \`andes\` and \`chofex\`. The standalone installer is available at \`curl -fsSL https://hacktheandes.com/install | bash\`." \
             --generate-notes \
             --latest \
             artifacts/*
@@ -247,7 +261,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
           NPM_CONFIG_FORCE: "true"
-        run: npm dist-tag add "chofex-cli@${RELEASE_VERSION}" latest
+        run: |
+          for package in chofex-cli hacktheandes-cli; do
+            npm --prefix apps/cli --workspaces=false dist-tag add "${package}@${RELEASE_VERSION}" latest
+          done
 
   recover-current-release:
     name: Requeue current CLI release

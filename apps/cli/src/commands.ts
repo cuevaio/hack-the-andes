@@ -475,7 +475,7 @@ const makeUpgradeCommand = (name: "update" | "upgrade") =>
     }),
   ).pipe(
     Command.withDescription(
-      "Actualiza chofex-cli y su skill de agente a la última versión",
+      `Actualiza ${cliPackageName} y su skill de agente a la última versión`,
     ),
   );
 

@@ -1,11 +1,13 @@
 ---
 name: release-cli
-description: Release chofex-cli to npm and GitHub. Use when asked to publish the CLI, and after changes that can affect the installed CLI under apps/cli, its bundled workspace dependencies, the lockfile, or its publishing workflow.
+description: Release chofex-cli and hacktheandes-cli to npm and GitHub. Use when asked to publish the CLI, and after changes that can affect the installed CLI under apps/cli, its bundled workspace dependencies, the lockfile, or its publishing workflow.
 ---
 
 # Release CLI
 
 Use `.github/workflows/publish-cli.yml` as the single release path.
+The workflow publishes the same CLI under `chofex-cli` and `hacktheandes-cli`.
+Both npm packages install `andes` and `chofex`.
 
 ## Gate
 
@@ -102,21 +104,23 @@ released and that commit is the remote default branch tip.
 ## Verify
 
 Inspect GitHub's latest release, verify it targets the approved commit, then
-compare its tag with npm's `latest` version:
+compare its tag with both npm packages' `latest` versions:
 
 ```sh
 npm_version="$(npm --prefix apps/cli --workspaces=false view chofex-cli version)"
+andes_version="$(npm --prefix apps/cli --workspaces=false view hacktheandes-cli version)"
 repository="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
 release_tag="$(gh api "repos/${repository}/releases/latest" --jq '.tag_name')"
 release_target="$(gh release view "$release_tag" --json targetCommitish --jq '.targetCommitish')"
 gh release view "$release_tag" \
   --json tagName,isDraft,publishedAt,url,targetCommitish
 test "$release_tag" = "v${npm_version}"
+test "$andes_version" = "$npm_version"
 test "$release_target" = "$approved_sha"
 ```
 
 The release is complete only when the workflow succeeded, npm returns the new
-version, the matching non-draft GitHub release targets the approved commit, and
-GitHub marks it as latest. npm propagation may take a few minutes; use bounded
-retries before reporting a mismatch. Report the version, npm package URL,
+version for both packages, the matching non-draft GitHub release targets the
+approved commit, and GitHub marks it as latest. npm propagation may take a few minutes; use bounded
+retries before reporting a mismatch. Report the version, both npm package URLs,
 GitHub release URL, and workflow run URL.

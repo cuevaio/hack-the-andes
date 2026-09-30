@@ -4,6 +4,7 @@
   "description": "Command-line client for Hack the Andes",
   "type": "module",
   "bin": {
+    "andes": "./dist/index.js",
     "chofex": "./dist/index.js"
   },
   "files": [
@@ -33,6 +34,8 @@
   },
   "scripts": {
     "build": "rm -rf dist && bun build src/index.ts --target=node --outfile=dist/index.js",
+    "prepare-packages": "bun scripts/prepare-packages.ts",
+    "verify-packages": "bun scripts/verify-packages.ts",
     "dev": "bun src/index.ts",
     "lint": "biome lint --error-on-warnings .",
     "format": "biome format --write .",

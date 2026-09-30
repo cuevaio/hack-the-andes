@@ -2,6 +2,7 @@ import { Command, Flag } from "effect/unstable/cli";
 
 import { eventName } from "./brand.js";
 import { config } from "./config.js";
+import { cliCommandName } from "./metadata.js";
 
 export const rootValueFlagNames = {
   apiUrl: "api-url",
@@ -9,7 +10,7 @@ export const rootValueFlagNames = {
   token: "token",
 } as const;
 
-export const root = Command.make("chofex").pipe(
+export const root = Command.make(cliCommandName).pipe(
   Command.withSharedFlags({
     apiUrl: Flag.string(rootValueFlagNames.apiUrl).pipe(
       Flag.withDefault(config.apiUrl),

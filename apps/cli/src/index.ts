@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect } from "effect";
 import { CliOutput, Command } from "effect/unstable/cli";
 
 import { command } from "./commands.js";
+import { cliVersion } from "./metadata.js";
 import { printJson } from "./output.js";
 import {
   autoUpdateCli,
@@ -17,18 +17,6 @@ import {
 } from "./upgrade.js";
 import { welcomeFormatter } from "./welcome.js";
 
-declare const CHOFEX_VERSION: string | undefined;
-
-const readCliVersion = (): string => {
-  if (typeof CHOFEX_VERSION !== "undefined") return CHOFEX_VERSION;
-
-  const packageMetadata = JSON.parse(
-    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-  ) as { version: string };
-  return packageMetadata.version;
-};
-
-const cliVersion = readCliVersion();
 const arguments_ = process.argv.slice(2);
 
 const jsonOutputRequested = (arguments_: ReadonlyArray<string>): boolean => {
