@@ -35,3 +35,13 @@ Source attribution lives in PostHog rather than this database, and acquisition s
 ## Delivery
 
 Work is on `feat/participant-history-goal` in a separate worktree. The PR starts as a draft and receives verified increments. Cursor reviews the completed change; accepted findings are fixed before merge. Codex review is not required for this PR.
+
+## Verification
+
+Run the production SQL and scenario tests with:
+
+```sh
+bun test apps/web/lib/admin/participant-history.test.ts apps/web/lib/admin/history-query.test.ts apps/web/lib/admin/attendance-plan.test.ts apps/web/lib/admin/insights-access.test.ts apps/web/lib/registration/names.test.ts
+```
+
+For a local browser fixture, run `bun apps/web/scripts/preview-participant-history.tsx`. It serves the actual report component and query over an isolated PGlite database at `127.0.0.1:4321`, using the full migration chain and a fixed observation date. In another terminal, run `bash apps/web/scripts/check-participant-history.sh`. The check covers scenario arithmetic, filtered historical counts, global-goal independence, form state, Back navigation, and keyboard table scrolling at narrow widths. It closes its named browser session on exit. These are component and database checks, not live Clerk authentication tests.

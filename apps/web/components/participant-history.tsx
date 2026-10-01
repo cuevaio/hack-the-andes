@@ -150,7 +150,7 @@ export function ParticipantHistory({
                 · Lima
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               <Metric
                 label="Confirmados presenciales"
                 value={current.onSiteConfirmed}
@@ -426,7 +426,9 @@ export function ParticipantHistory({
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   El cambio compara con el día anterior. Si hoy está incluido,
-                  se compara un día parcial con uno completo.
+                  se compara un día parcial con uno completo. Resolver
+                  incertidumbre también cambia los recuentos; no todo cambio es
+                  una transición nueva.
                 </p>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                   {historyStages.map((stage) => {
