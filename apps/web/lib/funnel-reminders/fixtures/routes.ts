@@ -13,8 +13,9 @@ mock.module("@/lib/public-origin", () => ({
 }));
 const { HttpError } = await import("../../registration/http");
 let evaluationFailure = "HUMAN_APPROVAL_REQUIRED";
+let progressStatus = "not_started";
 mock.module("@/lib/challenges/service", () => ({
-  getChallengeAttempt: async () => ({ progress: { status: "in_progress" } }),
+  getChallengeAttempt: async () => ({ progress: { status: progressStatus } }),
   testChallengeSolution: async () => ({ accuracy: 1, observationCount: 7 }),
   evaluateChallenge: async () => {
     throw new HttpError(409, evaluationFailure, "fixture");
@@ -22,13 +23,11 @@ mock.module("@/lib/challenges/service", () => ({
 }));
 const reminders: unknown[] = [];
 mock.module("@/lib/funnel-reminders/enqueue", () => ({
-  challengeReminderApplicationIdFor: async () => "application-fixture",
   enqueueChallengeFinishReminderBestEffort: async (
     userId: string,
-    applicationId: string,
     challengeSlug: string,
   ) => {
-    reminders.push({ userId, applicationId, challengeSlug });
+    reminders.push({ userId, challengeSlug });
   },
 }));
 const showRoute = await import("../../../app/api/v1/challenges/[slug]/route");
@@ -54,6 +53,23 @@ assert.equal(
   ).status,
   200,
 );
+assert.deepEqual(reminders, []);
+progressStatus = "in_progress";
+assert.equal(
+  (
+    await showRoute.GET(
+      new Request("https://hacktheandes.com/api/v1/challenges/broken-agent"),
+      context,
+    )
+  ).status,
+  200,
+);
+progressStatus = "evaluated";
+await showRoute.GET(
+  new Request("https://hacktheandes.com/api/v1/challenges/broken-agent"),
+  context,
+);
+assert.equal(reminders.length, 1);
 assert.equal((await testRoute.POST(post(), context)).status, 200);
 assert.equal((await evaluateRoute.POST(post(), context)).status, 409);
 evaluationFailure = "SOLUTION_EXECUTION_FAILED";
@@ -62,7 +78,6 @@ assert.deepEqual(
   reminders,
   Array.from({ length: 4 }, () => ({
     userId: "user-fixture",
-    applicationId: "application-fixture",
     challengeSlug: "broken-agent",
   })),
 );

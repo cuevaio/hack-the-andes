@@ -17,7 +17,7 @@ const challengeCandidateStatuses = [
   "waitlisted",
 ] as const;
 
-export const challengeReminderApplicationIdFor = async (
+const challengeReminderApplicationIdFor = async (
   clerkUserId: string,
 ): Promise<string | undefined> => {
   const [application] = await db
@@ -104,19 +104,27 @@ export const enqueuePostSubmissionRemindersBestEffort = async (
 
 export const enqueueChallengeFinishReminderBestEffort = async (
   clerkUserId: string,
-  applicationId: string | undefined,
   challengeSlug: string,
 ): Promise<void> => {
-  if (!applicationId) return;
   const challenge = reminderChallenge({ slug: challengeSlug });
   if (!challenge) return;
-  await enqueueFunnelReminderBestEffort(
-    {
+  try {
+    const applicationId = await challengeReminderApplicationIdFor(clerkUserId);
+    if (!applicationId) return;
+    await enqueueFunnelReminder(
+      {
+        clerkUserId,
+        stage: "challenge_finish",
+        applicationId,
+        challengeSlug: challenge.slug,
+      },
+      `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`,
+    );
+  } catch (error) {
+    console.error("Could not schedule challenge completion reminder", {
       clerkUserId,
-      stage: "challenge_finish",
-      applicationId,
-      challengeSlug: challenge.slug,
-    },
-    `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`,
-  );
+      challengeSlug,
+      error,
+    });
+  }
 };

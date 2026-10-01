@@ -1,9 +1,6 @@
 import { requireParticipantUserId } from "@/lib/auth";
 import { testChallengeSolution } from "@/lib/challenges/service";
-import {
-  challengeReminderApplicationIdFor,
-  enqueueChallengeFinishReminderBestEffort,
-} from "@/lib/funnel-reminders/enqueue";
+import { enqueueChallengeFinishReminderBestEffort } from "@/lib/funnel-reminders/enqueue";
 import { captureProductEvent } from "@/lib/posthog-server";
 import { jsonSuccess, readJson, withApiHandler } from "@/lib/registration/http";
 
@@ -21,12 +18,7 @@ export const POST = (
       slug,
       await readJson(request),
     );
-    const applicationId = await challengeReminderApplicationIdFor(clerkUserId);
-    await enqueueChallengeFinishReminderBestEffort(
-      clerkUserId,
-      applicationId,
-      slug,
-    );
+    await enqueueChallengeFinishReminderBestEffort(clerkUserId, slug);
     await captureProductEvent({
       distinctId: clerkUserId,
       event: "challenge_local_test_completed",
