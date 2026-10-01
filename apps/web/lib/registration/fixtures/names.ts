@@ -120,6 +120,19 @@ assert.equal(
   "Public Alias",
 );
 assert.deepEqual(badgeJobs, [applicationId]);
+assert.deepEqual(
+  (
+    await client.query(
+      "select first_completed_at = completed_at as same_time from acceptance_details where application_id = $1",
+      [applicationId],
+    )
+  ).rows,
+  [{ same_time: true }],
+);
+await client.query(
+  "update acceptance_details set completed_at = '2026-09-20T15:00:00Z', first_completed_at = '2026-09-20T15:00:00Z' where application_id = $1",
+  [applicationId],
+);
 
 assert.equal(
   (
@@ -167,6 +180,20 @@ assert.equal(
   200,
 );
 assert.deepEqual(badgeJobs, [applicationId, applicationId, applicationId]);
+assert.deepEqual(
+  (
+    await client.query(
+      "select to_char(completed_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS') as confirmed_at, to_char(first_completed_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS') as first_confirmed_at from acceptance_details where application_id = $1",
+      [applicationId],
+    )
+  ).rows,
+  [
+    {
+      confirmed_at: "2026-09-20 15:00:00",
+      first_confirmed_at: "2026-09-20 15:00:00",
+    },
+  ],
+);
 assert.equal(
   (await getParticipantBadge(identity.clerkUserId)).profile?.oneLiner,
   "Changed intro",
@@ -208,6 +235,10 @@ assert.deepEqual(
 await client.exec(
   "drop trigger reject_name_test_details on acceptance_details",
 );
+await client.query(
+  "update acceptance_details set first_completed_at = null where application_id = $1",
+  [applicationId],
+);
 await submitAcceptedDetails(identity, {
   ...legalDetails,
   name: "After rollback",
@@ -215,9 +246,32 @@ await submitAcceptedDetails(identity, {
 assert.deepEqual(await names(), [
   { name: "After rollback", legal_name: "Legal Document Name" },
 ]);
+assert.deepEqual(
+  (
+    await client.query(
+      "select first_completed_at, to_char(completed_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS') as confirmed_at from acceptance_details where application_id = $1",
+      [applicationId],
+    )
+  ).rows,
+  [{ first_completed_at: null, confirmed_at: "2026-09-20 15:00:00" }],
+);
 assert.equal(
   (await getParticipantBadge(identity.clerkUserId)).profile?.fullName,
   "After rollback",
+);
+await client.query(
+  "update acceptance_details set completed_at=null, first_completed_at=null where application_id=$1",
+  [applicationId],
+);
+await submitAcceptedDetails(identity, legalDetails);
+assert.deepEqual(
+  (
+    await client.query(
+      "select completed_at is not null and first_completed_at = completed_at as first_completion_recorded from acceptance_details where application_id=$1",
+      [applicationId],
+    )
+  ).rows,
+  [{ first_completion_recorded: true }],
 );
 await client.close();
 process.stdout.write("participant name lifecycle passed\n");

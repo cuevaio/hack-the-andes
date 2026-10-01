@@ -34,6 +34,7 @@ export const acceptanceDetails = pgTable(
     mediaConsent: boolean("media_consent").default(false).notNull(),
 
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    firstCompletedAt: timestamp("first_completed_at", { withTimezone: true }),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     ...auditTimestamps(),
   },

@@ -20,6 +20,12 @@ mock.module("../insights", () => ({
     throw new Error("authorized-report-query");
   },
 }));
+mock.module("../participant-history", () => ({
+  historyStages: [],
+  getParticipantHistory: async () => {
+    throw new Error("authorized-history-query");
+  },
+}));
 const { default: page } = await import("../../../app/admin/insights/page");
 await assert.rejects(page({ searchParams: Promise.resolve({}) }), {
   message: "redirect:/sign-in?redirect_url=/admin/insights",
@@ -31,5 +37,21 @@ await assert.rejects(page({ searchParams: Promise.resolve({}) }), {
 reviewer = true;
 await assert.rejects(page({ searchParams: Promise.resolve({}) }), {
   message: "authorized-report-query",
+});
+const { default: historyPage } = await import(
+  "../../../app/admin/insights/history/page"
+);
+signedIn = false;
+reviewer = false;
+await assert.rejects(historyPage({ searchParams: Promise.resolve({}) }), {
+  message: "redirect:/sign-in?redirect_url=/admin/insights/history",
+});
+signedIn = true;
+await assert.rejects(historyPage({ searchParams: Promise.resolve({}) }), {
+  message: "redirect:/welcome",
+});
+reviewer = true;
+await assert.rejects(historyPage({ searchParams: Promise.resolve({}) }), {
+  message: "authorized-history-query",
 });
 console.log("insights access passed");
