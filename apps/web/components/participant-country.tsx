@@ -46,7 +46,6 @@ export function ParticipantCountry({
       );
       void queryClient.invalidateQueries({
         queryKey: candidateKeys.all,
-        refetchType: "none",
       });
       changeOpen(false);
     },

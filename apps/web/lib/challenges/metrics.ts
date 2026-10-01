@@ -1,4 +1,7 @@
-import { playableChallenges } from "@chofex/challenges-contract";
+import {
+  type ChallengeSlug,
+  playableChallenges,
+} from "@chofex/challenges-contract";
 import type { db } from "@chofex/db";
 import { type SQL, sql } from "@chofex/db/orm";
 
@@ -23,15 +26,22 @@ const metricsDatabase = async (
   return (await import("@chofex/db")).db;
 };
 
+export const currentPlayableChallengeVersions = () =>
+  playableChallenges.flatMap((challenge) => {
+    const version = currentChallengeVersionFor(challenge.slug);
+    if (!version) return [];
+    return [{ slug: challenge.slug, version }];
+  });
+
 const currentPlayableChallengeCondition = (
   slugColumn: SQL,
   versionColumn: SQL,
+  selectedChallenge?: ChallengeSlug,
 ): SQL | undefined => {
-  const conditions = playableChallenges.flatMap((challenge) => {
-    const version = currentChallengeVersionFor(challenge.slug);
-    if (!version) return [];
+  const conditions = currentPlayableChallengeVersions().flatMap((challenge) => {
+    if (selectedChallenge && challenge.slug !== selectedChallenge) return [];
     return [
-      sql`(${slugColumn} = ${challenge.slug} and ${versionColumn} = ${version})`,
+      sql`(${slugColumn} = ${challenge.slug} and ${versionColumn} = ${challenge.version})`,
     ];
   });
   if (conditions.length === 0) return undefined;
@@ -40,10 +50,12 @@ const currentPlayableChallengeCondition = (
 
 export const completedChallengeParticipantCondition = (
   participantId: SQL,
+  challenge?: ChallengeSlug,
 ): SQL => {
   const challengeCondition = currentPlayableChallengeCondition(
     sql`"completed_challenge_attempt"."challenge_slug"`,
     sql`"completed_challenge_attempt"."challenge_version"`,
+    challenge,
   );
   if (!challengeCondition) return sql`false`;
 
@@ -59,10 +71,12 @@ export const completedChallengeParticipantCondition = (
 
 export const startedChallengeParticipantCondition = (
   participantId: SQL,
+  challenge?: ChallengeSlug,
 ): SQL => {
   const challengeCondition = currentPlayableChallengeCondition(
     sql`"started_challenge_attempt"."challenge_slug"`,
     sql`"started_challenge_attempt"."challenge_version"`,
+    challenge,
   );
   if (!challengeCondition) return sql`false`;
 

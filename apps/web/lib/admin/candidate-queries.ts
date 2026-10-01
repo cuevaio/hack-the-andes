@@ -1,20 +1,12 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import type {
-  CandidateDecisionResult,
-  CandidateFilter,
-  CandidatePage,
-  CandidateRankingSort,
-} from "@/lib/admin/types";
+import {
+  type CandidateFilters,
+  candidateFilterQuery,
+} from "@/lib/admin/candidate-filters";
+import type { CandidateDecisionResult, CandidatePage } from "@/lib/admin/types";
 
 export type { CandidateDecisionResult } from "@/lib/admin/types";
-
-export interface CandidateFilters {
-  readonly page: number;
-  readonly query: string;
-  readonly status?: CandidateFilter;
-  readonly ranking?: CandidateRankingSort;
-}
 
 interface ApiResponse<A> {
   readonly ok: boolean;
@@ -32,14 +24,7 @@ export interface CandidateDecisionInput {
 export const candidateKeys = {
   all: ["admin", "candidates"] as const,
   list: (filters: CandidateFilters) =>
-    [
-      ...candidateKeys.all,
-      "list",
-      filters.page,
-      filters.query,
-      filters.status ?? "all",
-      filters.ranking ?? "newest",
-    ] as const,
+    [...candidateKeys.all, "list", candidateFilterQuery(filters)] as const,
 };
 
 const responseData = async <A>(response: Response): Promise<A> => {
@@ -56,22 +41,22 @@ const responseData = async <A>(response: Response): Promise<A> => {
 
 const fetchCandidates = async (
   filters: CandidateFilters,
+  signal: AbortSignal,
 ): Promise<CandidatePage> => {
-  const parameters = new URLSearchParams({ page: filters.page.toString() });
-  if (filters.query) parameters.set("q", filters.query);
-  if (filters.status) parameters.set("status", filters.status);
-  if (filters.ranking) parameters.set("ranking", filters.ranking);
-
-  const response = await fetch(`/api/admin/applications?${parameters}`, {
-    headers: { accept: "application/json" },
-  });
+  const response = await fetch(
+    `/api/admin/applications?${candidateFilterQuery(filters)}`,
+    {
+      headers: { accept: "application/json" },
+      signal,
+    },
+  );
   return responseData<CandidatePage>(response);
 };
 
 export const candidateListOptions = (filters: CandidateFilters) =>
   queryOptions({
     queryKey: candidateKeys.list(filters),
-    queryFn: () => fetchCandidates(filters),
+    queryFn: ({ signal }) => fetchCandidates(filters, signal),
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: "always",

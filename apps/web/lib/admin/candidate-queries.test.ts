@@ -11,5 +11,10 @@ test("keeps an open candidate dashboard synchronized", () => {
 
   expect(options.refetchInterval).toBe(60_000);
   expect(options.refetchOnWindowFocus).toBe("always");
-  expect(options.queryKey).toContain("broken-agent");
+  expect([...options.queryKey]).toEqual([
+    "admin",
+    "candidates",
+    "list",
+    "ranking=broken-agent",
+  ]);
 });

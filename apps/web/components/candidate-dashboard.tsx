@@ -41,10 +41,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  ActivityIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  CalendarDaysIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -58,18 +56,20 @@ import {
   SparklesIcon,
   SquareCodeIcon,
   TriangleAlertIcon,
-  TrophyIcon,
-  UserRoundPlusIcon,
-  UsersIcon,
   XIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
+import { CountryFilter } from "@/components/country-filter";
 import { brandName } from "@/components/landing/content";
 import { ParticipantCountry } from "@/components/participant-country";
 import {
   type CandidateFilters,
+  candidateFilterQuery,
+  parseCandidateFilters,
+} from "@/lib/admin/candidate-filters";
+import {
   candidateKeys,
   candidateListOptions,
   submitCandidateDecision,
@@ -78,7 +78,6 @@ import {
   candidateLastUpdatedAt,
   candidateTimeline,
 } from "@/lib/admin/candidate-timeline";
-import { candidateFunnelMilestones } from "@/lib/admin/funnel-metrics";
 import {
   applicationDataStatus,
   challengeReviewStatus,
@@ -106,9 +105,7 @@ import { formatChallengeScore } from "@/lib/challenges/score";
 
 interface CandidateDashboardProps {
   readonly data: CandidatePage;
-  readonly initialQuery: string;
-  readonly initialStatus?: CandidateFilter;
-  readonly initialRanking?: CandidateRankingSort;
+  readonly initialFilters: CandidateFilters;
   readonly initialSelection?: "first" | "last";
 }
 
@@ -157,38 +154,29 @@ const applicationStatusStyles: Record<CandidateStatus, StatusStyle> = {
 
 const funnelStatusStyles: Record<CandidateFunnelStatus, StatusStyle> = {
   registration_started: {
-    label: "Registration started",
+    label: "Registro iniciado",
     variant: "statusDraft",
   },
   registration_completed: {
-    label: "Registration completed",
+    label: "Registro completo",
     variant: "statusSubmitted",
   },
   challenge_started: {
-    label: "Challenge started",
+    label: "Reto iniciado",
     variant: "statusUnderReview",
   },
   challenge_completed: {
-    label: "Challenge completed",
+    label: "Reto completado",
     variant: "statusAccepted",
   },
   approved: {
-    label: "Approved",
+    label: "Aprobados",
     variant: "statusAccepted",
   },
   declined: {
-    label: "Declined",
+    label: "Rechazados",
     variant: "statusRejected",
   },
-};
-
-const funnelStatusIcons: Record<CandidateFunnelStatus, React.ReactNode> = {
-  registration_started: <UserRoundPlusIcon className="size-4" />,
-  registration_completed: <CircleUserRoundIcon className="size-4" />,
-  challenge_started: <ActivityIcon className="size-4" />,
-  challenge_completed: <TrophyIcon className="size-4" />,
-  approved: <CheckIcon className="size-4" />,
-  declined: <XIcon className="size-4" />,
 };
 
 const reviewableStatuses = new Set<CandidateStatus>(
@@ -200,7 +188,7 @@ const filterStatuses: ReadonlyArray<{
   readonly label: string;
   readonly countKey: keyof CandidateCounts;
 }> = [
-  { label: "All", countKey: "all" },
+  { label: "Todos", countKey: "all" },
   ...candidateFunnelStatuses.map((status) => ({
     value: status,
     label: funnelStatusStyles[status].label,
@@ -1086,11 +1074,7 @@ const pageHref = (
   filters: CandidateFilters,
   selection?: "first" | "last",
 ): string => {
-  const parameters = new URLSearchParams();
-  if (filters.page > 1) parameters.set("page", filters.page.toString());
-  if (filters.query) parameters.set("q", filters.query);
-  if (filters.status) parameters.set("status", filters.status);
-  if (filters.ranking) parameters.set("ranking", filters.ranking);
+  const parameters = new URLSearchParams(candidateFilterQuery(filters));
   if (selection) parameters.set("candidate", selection);
   const suffix = parameters.toString();
   if (suffix) return `/admin/participants?${suffix}`;
@@ -1106,36 +1090,17 @@ const visiblePages = (
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 };
 
-const filtersFromUrl = (url: string): CandidateFilters => {
-  const parameters = new URL(url).searchParams;
-  const parsedPage = Number.parseInt(parameters.get("page") ?? "1", 10);
-  let page = 1;
-  if (Number.isFinite(parsedPage)) page = Math.max(1, parsedPage);
-  const query = parameters.get("q")?.trim().slice(0, 200) ?? "";
-  const status = parseCandidateFilter(parameters.get("status") ?? undefined);
-  const ranking = parseCandidateRankingSort(
-    parameters.get("ranking") ?? undefined,
-  );
-  return { page, query, status, ranking };
-};
-
 export function CandidateDashboard({
   data,
-  initialQuery,
-  initialStatus,
-  initialRanking,
+  initialFilters,
   initialSelection,
 }: CandidateDashboardProps) {
   const { user } = useUser();
   const adminFirstName = user?.firstName ?? undefined;
   const queryClient = useQueryClient();
-  const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<CandidateFilters>({
-    page: data.page,
-    query: initialQuery,
-    status: initialStatus,
-    ranking: initialRanking,
-  });
+  const [query, setQuery] = useState(initialFilters.query);
+  const [filters, setFilters] = useState(initialFilters);
+  const [initialDataUpdatedAt] = useState(Date.now);
   let initiallySelectedId: string | undefined;
   if (initialSelection === "first") {
     initiallySelectedId = data.candidates[0]?.id;
@@ -1150,13 +1115,11 @@ export function CandidateDashboard({
     "first" | "last"
   >();
   const isInitialList =
-    filters.page === data.page &&
-    filters.query === initialQuery &&
-    filters.status === initialStatus;
-  const initialRankingMatches = filters.ranking === initialRanking;
+    candidateFilterQuery(filters) === candidateFilterQuery(initialFilters);
   const candidateQuery = useQuery({
     ...candidateListOptions(filters),
-    initialData: isInitialList && initialRankingMatches ? data : undefined,
+    initialData: isInitialList ? data : undefined,
+    initialDataUpdatedAt,
     placeholderData: keepPreviousData,
   });
   const currentData = candidateQuery.data ?? data;
@@ -1164,10 +1127,31 @@ export function CandidateDashboard({
     (candidate) => candidate.id === selectedId,
   );
   const selectedCandidate = currentData.candidates[selectedIndex];
+  const resultsUnavailable =
+    candidateQuery.isPlaceholderData || candidateQuery.isError;
+  let resultSummary = `${currentData.total} participantes`;
+  if (currentData.total === 1) resultSummary = "1 participante";
+  if (candidateQuery.isError) {
+    resultSummary = "No se pudieron actualizar los resultados.";
+  } else if (candidateQuery.isPlaceholderData) {
+    resultSummary = "Actualizando resultados…";
+  }
+
+  useEffect(() => {
+    if (!candidateQuery.isSuccess || candidateQuery.isPlaceholderData) return;
+    if (selectedId && !selectedCandidate) setSelectedId(undefined);
+  }, [
+    candidateQuery.isSuccess,
+    candidateQuery.isPlaceholderData,
+    selectedId,
+    selectedCandidate,
+  ]);
 
   useEffect(() => {
     const handlePopState = () => {
-      const nextFilters = filtersFromUrl(window.location.href);
+      const nextFilters = parseCandidateFilters(
+        new URL(window.location.href).searchParams,
+      );
       setFilters(nextFilters);
       setQuery(nextFilters.query);
       setSelectedId(undefined);
@@ -1176,6 +1160,21 @@ export function CandidateDashboard({
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  useEffect(() => {
+    if (!candidateQuery.isSuccess || candidateQuery.isPlaceholderData) return;
+    if (currentData.page === filters.page) return;
+    const nextFilters = { ...filters, page: currentData.page };
+    queryClient.setQueryData(candidateKeys.list(nextFilters), currentData);
+    window.history.replaceState(null, "", pageHref(nextFilters));
+    setFilters(nextFilters);
+  }, [
+    candidateQuery.isSuccess,
+    candidateQuery.isPlaceholderData,
+    currentData,
+    filters,
+    queryClient,
+  ]);
 
   useEffect(() => {
     if (!pendingPageSelection || candidateQuery.isPlaceholderData) return;
@@ -1191,6 +1190,11 @@ export function CandidateDashboard({
     nextFilters: CandidateFilters,
     selection?: "first" | "last",
   ) => {
+    if (
+      candidateFilterQuery(nextFilters) === candidateFilterQuery(filters) &&
+      !selection
+    )
+      return;
     window.history.pushState(null, "", pageHref(nextFilters));
     setFilters(nextFilters);
     setPendingPageSelection(selection);
@@ -1242,10 +1246,9 @@ export function CandidateDashboard({
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     navigateTo({
+      ...filters,
       page: 1,
-      query: query.trim(),
-      status: filters.status,
-      ranking: filters.ranking,
+      query: query.trim().slice(0, 200),
     });
   };
 
@@ -1298,12 +1301,12 @@ export function CandidateDashboard({
         <div>
           <BrandWordmarkLink href="/">{brandName}</BrandWordmarkLink>
           <BrandKicker className="mt-1 text-muted-foreground">
-            Lima / participant operations
+            Lima / revisión de participantes
           </BrandKicker>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="hidden sm:inline-flex">
-            Admin workspace
+            Equipo organizador
           </Badge>
           <UserButton
             appearance={{
@@ -1323,41 +1326,129 @@ export function CandidateDashboard({
           <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <BrandKicker className="mb-3 text-primary">
-                {brandName} 2026 / applications
+                Revisión de postulaciones
               </BrandKicker>
-              <BrandTitle as="h1">Meet the candidates</BrandTitle>
+              <BrandTitle as="h1" className="text-3xl sm:text-6xl">
+                Participantes
+              </BrandTitle>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                Review every application, keep decisions moving, and make each
-                response feel personal.
+                Busca participantes y revisa sus postulaciones.
               </p>
             </div>
-            <Badge variant="outline">
-              <CalendarDaysIcon className="size-4" />
-              On-site in Lima, Peru
-            </Badge>
+            <ButtonLink
+              variant="outline"
+              href={`/admin/insights?${candidateFilterQuery({ page: 1, query: "", country: filters.country, challenge: filters.challenge })}`}
+            >
+              Ver estadísticas
+            </ButtonLink>
           </section>
 
-          <CandidateFunnel data={currentData} />
-
           <section className="mt-8">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <form onSubmit={handleSearch} className="w-full lg:max-w-sm">
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(16rem,1.5fr)_minmax(12rem,1fr)_minmax(12rem,1fr)]">
+              <form
+                onSubmit={handleSearch}
+                className="col-span-2 min-w-0 xl:col-span-1"
+              >
+                <label
+                  htmlFor="candidate-search"
+                  className="mb-1.5 block text-xs font-medium text-muted-foreground"
+                >
+                  Buscar participantes
+                </label>
                 <InputGroup>
                   <InputGroupAddon>
                     <SearchIcon />
                   </InputGroupAddon>
                   <InputGroupInput
+                    id="candidate-search"
+                    className="h-11"
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search name, email, or organization"
+                    placeholder="Nombre, correo u organización"
+                    maxLength={200}
                   />
                 </InputGroup>
               </form>
-              <label className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
+              <label className="min-w-0 text-xs font-medium text-muted-foreground">
+                <span className="mb-1.5 block">Estado</span>
+                <select
+                  className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={filters.status ?? ""}
+                  onChange={(event) =>
+                    navigateTo({
+                      ...filters,
+                      page: 1,
+                      status: parseCandidateFilter(event.target.value),
+                    })
+                  }
+                >
+                  {filterStatuses.map((filter) => {
+                    let count = "";
+                    if (!resultsUnavailable)
+                      count = ` · ${currentData.counts[filter.countKey]}`;
+                    return (
+                      <option key={filter.countKey} value={filter.value ?? ""}>
+                        {filter.label}
+                        {count}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+              <CountryFilter
+                value={filters.country}
+                onChange={(country) =>
+                  navigateTo({ ...filters, page: 1, country })
+                }
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p role="status" className="text-sm text-muted-foreground">
+                  {resultSummary}
+                </p>
+                {(filters.query ||
+                  filters.status ||
+                  filters.country ||
+                  filters.challenge) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setQuery("");
+                      navigateTo({
+                        page: 1,
+                        query: "",
+                        ranking: filters.ranking,
+                      });
+                    }}
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+                {filters.challenge && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigateTo({ ...filters, page: 1, challenge: undefined })
+                    }
+                  >
+                    Iniciaron{" "}
+                    {
+                      playableChallenges.find(
+                        (challenge) => challenge.slug === filters.challenge,
+                      )?.theme
+                    }
+                    <XIcon className="size-3" />
+                  </Button>
+                )}
+              </div>
+              <label className="flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground">
                 Ordenar por
                 <select
-                  className="h-9 border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="h-11 min-w-0 flex-1 border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
                   value={filters.ranking ?? ""}
                   onChange={(event) => {
                     const ranking = parseCandidateRankingSort(
@@ -1375,41 +1466,6 @@ export function CandidateDashboard({
                 </select>
               </label>
             </div>
-            <div className="mt-3 flex justify-end">
-              <div className="flex gap-1 overflow-x-auto border bg-background p-1">
-                {filterStatuses.map((filter) => {
-                  const active = filter.value === filters.status;
-                  const variant = active ? "default" : "ghost";
-                  return (
-                    <ButtonLink
-                      key={filter.label}
-                      variant={variant}
-                      size="sm"
-                      className="shrink-0"
-                      href={pageHref({
-                        page: 1,
-                        query: filters.query,
-                        status: filter.value,
-                        ranking: filters.ranking,
-                      })}
-                      onClick={(event) =>
-                        navigateFromClick(event, {
-                          page: 1,
-                          query: filters.query,
-                          status: filter.value,
-                          ranking: filters.ranking,
-                        })
-                      }
-                    >
-                      {filter.label}
-                      <span className="ml-1.5 opacity-65">
-                        {currentData.counts[filter.countKey]}
-                      </span>
-                    </ButtonLink>
-                  );
-                })}
-              </div>
-            </div>
 
             {candidateQuery.isError && (
               <p
@@ -1422,13 +1478,14 @@ export function CandidateDashboard({
             <div
               className="mt-4 overflow-hidden border bg-card"
               aria-busy={candidateQuery.isFetching}
+              inert={resultsUnavailable}
             >
               <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(8rem,.8fr)_minmax(9rem,1fr)_11rem_9rem] gap-4 border-b bg-muted/35 px-5 py-3 text-[11px] font-medium tracking-wide text-muted-foreground uppercase sm:grid">
-                <span>Candidate</span>
-                <span>Background</span>
+                <span>Participante</span>
+                <span>Perfil</span>
                 <span>Ranking de retos</span>
-                <span>Status</span>
-                <span className="text-right">Last updated at</span>
+                <span>Estado</span>
+                <span className="text-right">Última actualización</span>
               </div>
               {currentData.candidates.length === 0 && <EmptyCandidates />}
               {currentData.candidates.length > 0 && (
@@ -1443,11 +1500,12 @@ export function CandidateDashboard({
 
             <div className="mt-4 flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
               <span>
-                Showing {firstResult}–{lastResult} of {currentData.total}
+                Mostrando {firstResult}–{lastResult} de {currentData.total}
               </span>
               <nav
-                aria-label="Candidate pagination"
+                aria-label="Páginas de participantes"
                 className="flex items-center gap-1"
+                inert={resultsUnavailable}
               >
                 <PaginationArrow
                   href={pageHref({
@@ -1461,7 +1519,7 @@ export function CandidateDashboard({
                     })
                   }
                   disabled={currentData.page === 1}
-                  label="Previous page"
+                  label="Página anterior"
                   icon={<ArrowLeftIcon className="size-3.5" />}
                 />
                 {pageNumbers.map((page) => {
@@ -1501,7 +1559,7 @@ export function CandidateDashboard({
                     })
                   }
                   disabled={currentData.page === currentData.totalPages}
-                  label="Next page"
+                  label="Página siguiente"
                   icon={<ArrowRightIcon className="size-3.5" />}
                 />
               </nav>
@@ -1545,202 +1603,15 @@ export function CandidateDashboard({
   );
 }
 
-const conversionLabel = (value: number, previousValue: number): string => {
-  if (previousValue === 0) return "No prior candidates";
-  return `${Math.round((value / previousValue) * 100)}% from prior stage`;
-};
-
-const funnelWidth = (value: number, topOfFunnel: number): string => {
-  if (topOfFunnel === 0) return "0%";
-  return `${Math.min(100, (value / topOfFunnel) * 100)}%`;
-};
-
-type FunnelTone = "muted" | "accent" | "primary";
-
-const funnelToneStyles: Record<
-  FunnelTone,
-  { readonly bar: string; readonly text: string }
-> = {
-  muted: { bar: "bg-chart-4", text: "text-chart-4" },
-  accent: { bar: "bg-chart-3", text: "text-chart-3" },
-  primary: { bar: "bg-chart-1", text: "text-chart-1" },
-};
-
-const FunnelStage = ({
-  index,
-  label,
-  value,
-  previousValue,
-  topOfFunnel,
-  icon,
-  tone,
-  first = false,
-}: {
-  readonly index: number;
-  readonly label: string;
-  readonly value: number;
-  readonly previousValue: number;
-  readonly topOfFunnel: number;
-  readonly icon: React.ReactNode;
-  readonly tone: FunnelTone;
-  readonly first?: boolean;
-}) => {
-  const toneStyle = funnelToneStyles[tone];
-  return (
-    <li className="relative min-h-36 bg-card p-4 sm:p-5">
-      <div className={`absolute inset-x-0 top-0 h-0.5 ${toneStyle.bar}`} />
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <BrandKicker className={toneStyle.text}>
-            {String(index).padStart(2, "0")}
-          </BrandKicker>
-          <p className="mt-2 min-h-8 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {label}
-          </p>
-        </div>
-        <span className={toneStyle.text}>{icon}</span>
-      </div>
-      <p className="mt-3 font-display text-4xl leading-none font-semibold tabular-nums">
-        {value}
-      </p>
-      <div className="mt-4 h-1 bg-muted">
-        <div
-          className={`h-full ${toneStyle.bar}`}
-          style={{ width: funnelWidth(value, topOfFunnel) }}
-        />
-      </div>
-      <p className="mt-2 text-[11px] text-muted-foreground">
-        {first ? "Top of funnel" : conversionLabel(value, previousValue)}
-      </p>
-      <ChevronRightIcon
-        className={`absolute top-1/2 -right-3 z-10 hidden size-6 -translate-y-1/2 bg-card xl:block ${toneStyle.text}`}
-      />
-    </li>
-  );
-};
-
-const CandidateFunnel = ({ data }: { readonly data: CandidatePage }) => {
-  const milestones = candidateFunnelMilestones(data.counts);
-  const stages = [
-    {
-      label: "Authenticated users",
-      value: data.authenticatedUserCount,
-      icon: <UsersIcon className="size-4" />,
-      tone: "muted" as const,
-    },
-    {
-      label: "Registration started",
-      value: milestones.registrationStarted,
-      icon: funnelStatusIcons.registration_started,
-      tone: "muted" as const,
-    },
-    {
-      label: "Registration completed",
-      value: milestones.registrationCompleted,
-      icon: funnelStatusIcons.registration_completed,
-      tone: "accent" as const,
-    },
-    {
-      label: "Challenge started",
-      value: milestones.challengeStarted,
-      icon: funnelStatusIcons.challenge_started,
-      tone: "primary" as const,
-    },
-    {
-      label: "Challenge completed",
-      value: milestones.challengeCompleted,
-      icon: funnelStatusIcons.challenge_completed,
-      tone: "primary" as const,
-    },
-  ];
-  const decisions = data.counts.approved + data.counts.declined;
-
-  return (
-    <section className="mt-8" aria-labelledby="candidate-funnel-title">
-      <div className="mb-3 flex items-end justify-between gap-4">
-        <div>
-          <BrandKicker id="candidate-funnel-title" className="text-primary">
-            Candidate funnel
-          </BrandKicker>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Cumulative progress from sign-in through review
-          </p>
-        </div>
-        <p className="hidden text-xs text-muted-foreground sm:block">
-          {data.counts.all} candidates
-        </p>
-      </div>
-      <div className="overflow-hidden border bg-border">
-        <ol className="grid gap-px sm:grid-cols-2 xl:grid-cols-[1.12fr_1.06fr_1fr_.94fr_.88fr_1.1fr]">
-          {stages.map((stage, index) => {
-            let previousValue = data.authenticatedUserCount;
-            if (index > 0) previousValue = stages[index - 1]?.value ?? 0;
-            return (
-              <FunnelStage
-                key={stage.label}
-                index={index + 1}
-                label={stage.label}
-                value={stage.value}
-                previousValue={previousValue}
-                topOfFunnel={data.authenticatedUserCount}
-                icon={stage.icon}
-                tone={stage.tone}
-                first={index === 0}
-              />
-            );
-          })}
-          <li className="relative min-h-36 bg-card p-4 sm:p-5">
-            <div className="absolute inset-x-0 top-0 flex h-0.5">
-              <span className="w-1/2 bg-primary" />
-              <span className="w-1/2 bg-destructive" />
-            </div>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <BrandKicker>06</BrandKicker>
-                <p className="mt-2 min-h-8 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Decision outcomes
-                </p>
-              </div>
-              <span className="flex items-center gap-1.5">
-                <CheckIcon className="size-4 text-primary" />
-                <XIcon className="size-4 text-destructive" />
-              </span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-4">
-              <div>
-                <p className="font-display text-4xl leading-none font-semibold text-primary tabular-nums">
-                  {data.counts.approved}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Approved
-                </p>
-              </div>
-              <div className="border-l pl-4">
-                <p className="font-display text-4xl leading-none font-semibold text-destructive tabular-nums">
-                  {data.counts.declined}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Declined
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 text-[11px] text-muted-foreground">
-              {conversionLabel(decisions, milestones.challengeCompleted)}
-            </p>
-          </li>
-        </ol>
-      </div>
-    </section>
-  );
-};
-
 const EmptyCandidates = () => (
   <div className="grid min-h-64 place-items-center px-6 text-center">
     <div>
       <div className="mx-auto grid size-11 place-items-center border border-border bg-muted">
         <SearchIcon className="size-5 text-muted-foreground" />
       </div>
-      <p className="mt-3 text-sm font-medium">No candidates found</p>
+      <p className="mt-3 text-sm font-medium">
+        No hay participantes con estos filtros
+      </p>
       <p className="mt-1 text-xs text-muted-foreground">
         Try a different search or status filter.
       </p>

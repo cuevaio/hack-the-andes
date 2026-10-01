@@ -3,22 +3,13 @@ import { redirect } from "next/navigation";
 
 import { CandidateDashboard } from "@/components/candidate-dashboard";
 import { getAdminIdentity } from "@/lib/admin/auth";
+import { parseCandidateFilters } from "@/lib/admin/candidate-filters";
 import { listCandidates } from "@/lib/admin/candidates";
-import {
-  parseCandidateFilter,
-  parseCandidateRankingSort,
-} from "@/lib/admin/types";
 
 export const dynamic = "force-dynamic";
 
 interface HomeProps {
-  readonly searchParams: Promise<{
-    readonly page?: string;
-    readonly q?: string;
-    readonly status?: string;
-    readonly ranking?: string;
-    readonly candidate?: string;
-  }>;
+  readonly searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function ParticipantsAdminPage({
@@ -33,12 +24,8 @@ export default async function ParticipantsAdminPage({
   if (!admin) redirect("/welcome");
 
   const parameters = await searchParams;
-  const parsedPage = Number.parseInt(parameters.page ?? "1", 10);
-  const page = Number.isFinite(parsedPage) ? parsedPage : 1;
-  const query = parameters.q?.trim().slice(0, 200) ?? "";
-  const status = parseCandidateFilter(parameters.status);
-  const ranking = parseCandidateRankingSort(parameters.ranking);
-  const data = await listCandidates({ page, query, status, ranking });
+  const filters = parseCandidateFilters(parameters);
+  const data = await listCandidates(filters);
   let selection: "first" | "last" | undefined;
   if (parameters.candidate === "first" || parameters.candidate === "last") {
     selection = parameters.candidate;
@@ -46,11 +33,9 @@ export default async function ParticipantsAdminPage({
 
   return (
     <CandidateDashboard
-      key={`${data.page}:${ranking ?? "newest"}:${selection ?? "none"}`}
+      key={`${JSON.stringify(filters)}:${selection ?? "none"}`}
       data={data}
-      initialQuery={query}
-      initialStatus={status}
-      initialRanking={ranking}
+      initialFilters={filters}
       initialSelection={selection}
     />
   );

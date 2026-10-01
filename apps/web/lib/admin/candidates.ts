@@ -23,10 +23,12 @@ import { storeAcceptanceBadgeProfile } from "@/lib/badges/acceptance";
 import { enqueueBadgeGeneration } from "@/lib/badges/enqueue";
 import { emailAddresses } from "@/lib/emails/config";
 import { HttpError } from "@/lib/registration/http";
+import { startedChallengeParticipantCondition } from "../challenges/metrics";
 import { rankedEvaluationsFor } from "../challenges/ranking";
 import { challengeActivityForParticipants } from "../challenges/service";
 import { participantHasLatestRankedChallengeResult } from "./admission-policy";
 import { candidateAvatarUrl, candidateBadgePictureUrl } from "./avatars";
+import type { CandidateFilters } from "./candidate-filters";
 import { sortCandidatesByChallengeRanking } from "./candidate-ranking";
 import { type ApplicationDecision, buildDecisionEmail } from "./decision-email";
 import {
@@ -38,9 +40,7 @@ import {
   type Candidate,
   type CandidateCounts,
   type CandidateDecisionResult,
-  type CandidateFilter,
   type CandidatePage,
-  type CandidateRankingSort,
   candidateFunnelStatuses,
   reviewableCandidateStatuses,
 } from "./types";
@@ -389,15 +389,8 @@ const emptyCounts = (): MutableCandidateCounts => {
   return Object.fromEntries(entries) as MutableCandidateCounts;
 };
 
-export interface CandidateListInput {
-  readonly page?: number;
-  readonly query?: string;
-  readonly status?: CandidateFilter;
-  readonly ranking?: CandidateRankingSort;
-}
-
 export const listCandidates = async (
-  input: CandidateListInput,
+  input: CandidateFilters,
 ): Promise<CandidatePage> => {
   const requestedPage = Math.max(1, Math.floor(input.page ?? 1));
   const search = input.query?.trim();
@@ -412,7 +405,20 @@ export const listCandidates = async (
     );
   }
   const funnelStatus = candidateFunnelStatusExpression();
+  let countryCondition: SQL | undefined;
+  if (input.country?.kind === "unknown") {
+    countryCondition = isNull(participants.countryCode);
+  } else if (input.country?.kind === "country") {
+    countryCondition = eq(participants.countryCode, input.country.code);
+  }
   const visibleInFunnel = candidateFunnelApplicationCondition();
+  let challengeCondition: SQL | undefined;
+  if (input.challenge) {
+    challengeCondition = startedChallengeParticipantCondition(
+      sql`${applications.participantId}`,
+      input.challenge,
+    );
+  }
   let statusCondition: SQL | undefined;
   if (input.status) statusCondition = sql`${funnelStatus} = ${input.status}`;
   const latestApplications = db
@@ -429,30 +435,35 @@ export const listCandidates = async (
     .from(applications)
     .innerJoin(latestApplications, eq(latestApplications.id, applications.id))
     .innerJoin(participants, eq(participants.id, applications.participantId))
-    .where(and(visibleInFunnel, searchCondition))
+    .where(
+      and(
+        visibleInFunnel,
+        searchCondition,
+        countryCondition,
+        challengeCondition,
+      ),
+    )
     .as("funnel_summary");
-  const whereCondition = and(visibleInFunnel, searchCondition, statusCondition);
+  const whereCondition = and(
+    visibleInFunnel,
+    searchCondition,
+    countryCondition,
+    challengeCondition,
+    statusCondition,
+  );
 
-  const [totalResult, statusResults, authenticatedUserCount] =
-    await Promise.all([
-      db
-        .select({ value: count() })
-        .from(applications)
-        .innerJoin(
-          latestApplications,
-          eq(latestApplications.id, applications.id),
-        )
-        .innerJoin(
-          participants,
-          eq(participants.id, applications.participantId),
-        )
-        .where(whereCondition),
-      db
-        .select({ status: funnelSummary.status, value: count() })
-        .from(funnelSummary)
-        .groupBy(funnelSummary.status),
-      clerkClient().then((clerk) => clerk.users.getCount()),
-    ]);
+  const [totalResult, statusResults] = await Promise.all([
+    db
+      .select({ value: count() })
+      .from(applications)
+      .innerJoin(latestApplications, eq(latestApplications.id, applications.id))
+      .innerJoin(participants, eq(participants.id, applications.participantId))
+      .where(whereCondition),
+    db
+      .select({ status: funnelSummary.status, value: count() })
+      .from(funnelSummary)
+      .groupBy(funnelSummary.status),
+  ]);
 
   const total = totalResult[0]?.value ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -540,7 +551,6 @@ export const listCandidates = async (
 
   return {
     candidates,
-    authenticatedUserCount,
     counts,
     page: currentPage,
     pageSize,
