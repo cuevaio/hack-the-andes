@@ -99,8 +99,10 @@ describe("badge-ready email", () => {
     expect(headers.get("idempotency-key")).toBe(
       "participant-badge/application-123/run-456",
     );
-    expect(body.from).toBe("hackathons@crafterstation.com");
-    expect(body.reply_to).toBe("anthony@crafterstation.com");
+    expect(body.from).toBe("hi@cueva.io");
+    expect(body.reply_to).toBe("hi@cueva.io");
+    expect(body.cc).toEqual(["shiara.arauzo@gmail.com"]);
+    expect(body.to).toEqual(["ada@example.com"]);
     expect(body.html).toContain("Ada &lt;Admin&gt;");
     expect(body.html).toContain("a=1&amp;b=2");
     // The face, and a way to the card — not a flattened picture of one.

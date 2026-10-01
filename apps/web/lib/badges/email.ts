@@ -12,6 +12,7 @@
  */
 
 import { buildDecisionEmail } from "@/lib/admin/decision-email";
+import { emailAddresses } from "@/lib/emails/config";
 import {
   button,
   emailShell,
@@ -20,8 +21,6 @@ import {
   paragraph,
   picture,
 } from "@/lib/emails/layout";
-
-import { badgeEmailFrom, badgeEmailReplyTo } from "./config";
 
 export interface BadgeReadyEmailInput {
   readonly applicationId: string;
@@ -148,9 +147,8 @@ export const sendBadgeReadyEmail = async (
       "idempotency-key": `participant-badge/${input.applicationId}/${input.generationId}`,
     },
     body: JSON.stringify({
-      from: badgeEmailFrom,
+      ...emailAddresses,
       to: [input.email],
-      reply_to: badgeEmailReplyTo,
       subject: email.subject,
       text: email.text,
       html: email.html,

@@ -1,8 +1,56 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 
-import { buildFunnelReminderEmail } from "./email";
+import { buildFunnelReminderEmail, sendFunnelReminderEmail } from "./email";
+
+const originalFetch = globalThis.fetch;
+const originalApiKey = process.env.RESEND_API_KEY;
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+  if (originalApiKey) {
+    process.env.RESEND_API_KEY = originalApiKey;
+  } else {
+    delete process.env.RESEND_API_KEY;
+  }
+});
 
 describe("funnel reminder emails", () => {
+  test.each(["registration", "challenge_start", "challenge_finish"] as const)(
+    "sends the %s reminder with the shared sender, reply-to, and CC",
+    async (stage) => {
+      process.env.RESEND_API_KEY = "test-key";
+      let headers = new Headers();
+      let body: Record<string, unknown> = {};
+      const mockFetch = async (
+        _input: RequestInfo | URL,
+        init?: RequestInit,
+      ) => {
+        headers = new Headers(init?.headers);
+        body = JSON.parse(String(init?.body));
+        return new Response(null, { status: 200 });
+      };
+      globalThis.fetch = Object.assign(mockFetch, {
+        preconnect: originalFetch.preconnect,
+      });
+
+      await sendFunnelReminderEmail({
+        stage,
+        clerkUserId: "user-123",
+        deliveryScope: "application-456",
+        email: "ada@example.com",
+        firstName: "Ada",
+      });
+
+      expect(body.from).toBe("hi@cueva.io");
+      expect(body.reply_to).toBe("hi@cueva.io");
+      expect(body.cc).toEqual(["shiara.arauzo@gmail.com"]);
+      expect(body.to).toEqual(["ada@example.com"]);
+      expect(headers.get("idempotency-key")).toBe(
+        `funnel-reminder/${stage}/user-123/application-456`,
+      );
+    },
+  );
+
   test.each([
     ["registration", "andes register", "Enviar mi postulación"],
     ["challenge_start", "andes challenge init", "Empezar el challenge"],
