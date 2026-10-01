@@ -11,6 +11,8 @@
  * Color roles: Sandy Linen paper, Aegean actions, Scarlet accent, ink type.
  */
 
+import { onSiteGoal } from "@/lib/event";
+
 export const prizeAmountsUsd = {
   first: 2_000,
   second: 500,
@@ -34,7 +36,7 @@ export const formatSoles = (amount: number): string =>
 
 export const brandName = "Hack the Andes";
 
-export const seatCount = 100;
+export const seatCount = onSiteGoal;
 export const trackCount = 3;
 export const qualifierChallengeCount = 5;
 

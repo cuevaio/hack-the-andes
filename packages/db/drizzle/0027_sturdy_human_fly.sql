@@ -1,0 +1,1 @@
+ALTER TABLE "acceptance_details" ADD COLUMN "first_completed_at" timestamp with time zone;

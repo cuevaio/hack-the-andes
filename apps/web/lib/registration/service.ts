@@ -555,12 +555,17 @@ export const submitAcceptedDetails = async (
   };
   const detailsUpdate = db
     .insert(acceptanceDetails)
-    .values({ applicationId: current.application.id, ...values })
+    .values({
+      applicationId: current.application.id,
+      ...values,
+      firstCompletedAt: values.completedAt,
+    })
     .onConflictDoUpdate({
       target: acceptanceDetails.applicationId,
       set: {
         ...values,
         completedAt: sql`coalesce(${acceptanceDetails.completedAt}, excluded.completed_at)`,
+        firstCompletedAt: sql`case when ${acceptanceDetails.completedAt} is null then excluded.first_completed_at else ${acceptanceDetails.firstCompletedAt} end`,
       },
     })
     .returning();
