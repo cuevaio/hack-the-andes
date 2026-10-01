@@ -1,8 +1,8 @@
 import { ParticipantChallengeProgressSchema } from "@chofex/challenges-contract";
 import { DateTime, Option, Schema, SchemaGetter } from "effect";
-import { CountryCode } from "./countries.js";
+import { CountryCode } from "#countries";
 
-export * from "./countries.js";
+export * from "#countries";
 
 export const campaignAttributionHandoffHeader =
   "x-chofex-campaign-attribution" as const;
