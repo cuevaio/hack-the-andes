@@ -7,6 +7,7 @@ import { parseCandidateFilters } from "@/lib/admin/candidate-filters";
 import { getAdminInsights } from "@/lib/admin/insights";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Estadísticas de participantes" };
 
 export default async function InsightsAdminPage({
   searchParams,

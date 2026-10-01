@@ -125,12 +125,18 @@ export function ParticipantInsights({
             <p className="text-muted-foreground">
               {countryScope} · {challengeScope}.
             </p>
-            <p className="max-w-3xl text-sm text-muted-foreground">
-              Cada persona cuenta una vez, según su última postulación. Incluye
-              postulaciones rechazadas; excluye las retiradas y las personas sin
-              postulación. El país es el de residencia actual. La búsqueda, el
-              estado y el orden de la lista no limitan este informe.
-            </p>
+            <details className="max-w-3xl text-sm text-muted-foreground">
+              <summary className="cursor-pointer focus-visible:outline-2">
+                Cómo se cuentan las personas
+              </summary>
+              <p className="mt-2">
+                Cada persona cuenta una vez, según su última postulación.
+                Incluye postulaciones rechazadas; excluye las retiradas y las
+                personas sin postulación. El país es el de residencia actual. La
+                búsqueda, el estado y el orden de la lista no limitan este
+                informe. Las decisiones no implican un envío ni una evaluación.
+              </p>
+            </details>
           </header>
 
           <form
@@ -214,14 +220,13 @@ export function ParticipantInsights({
 
           <section aria-labelledby="insights-milestones" className="space-y-5">
             <h2 id="insights-milestones" className="text-xl font-semibold">
-              Hitos registrados
+              Embudo de participación
             </h2>
             <p className="max-w-3xl text-sm text-muted-foreground">
               Son hitos independientes, no etapas consecutivas. Una nueva
               postulación puede conservar un reto evaluado. Cada porcentaje usa
-              el total de personas de este informe. Las decisiones no implican
-              un envío ni una evaluación. Sin filtro de reto, los hitos cuentan
-              cualquier reto disponible en su versión vigente.
+              el total de personas de este informe. Solo se cuenta la versión
+              vigente de los retos disponibles.
             </p>
             {filters.challenge && (
               <p className="text-sm text-muted-foreground">
@@ -374,8 +379,14 @@ export function ParticipantInsights({
                           )}
                         </td>
                         <td>{numbers.format(challenge.completed)}</td>
-                        <td className="whitespace-nowrap">
-                          {rate(challenge.completed, challenge.started)}
+                        <td className="min-w-48">
+                          <div className="mb-2 whitespace-nowrap">
+                            {rate(challenge.completed, challenge.started)}
+                          </div>
+                          <ShareBar
+                            count={challenge.completed}
+                            total={challenge.started}
+                          />
                         </td>
                       </tr>
                     );
@@ -394,8 +405,8 @@ export function ParticipantInsights({
                 <caption className="p-4 text-left text-sm text-muted-foreground">
                   Cada celda muestra evaluados / iniciaron y su porcentaje
                   dentro del grupo seleccionado. Sin base significa que nadie
-                  inició ese reto. Desplaza la tabla horizontalmente para ver
-                  todos los retos.
+                  inició ese reto. Un fondo más intenso indica una mayor tasa de
+                  evaluación. Desplaza la tabla para ver todos los retos.
                 </caption>
                 <thead>
                   <tr>
@@ -419,8 +430,17 @@ export function ParticipantInsights({
                             entry.countryCode === country.countryCode &&
                             entry.slug === slug,
                         );
+                        let intensity = 0;
+                        if (cell && cell.started > 0)
+                          intensity = (30 * cell.completed) / cell.started;
                         return (
-                          <td key={slug} className="whitespace-nowrap">
+                          <td
+                            key={slug}
+                            className="whitespace-nowrap"
+                            style={{
+                              backgroundColor: `color-mix(in srgb, var(--primary) ${intensity}%, transparent)`,
+                            }}
+                          >
                             {rate(cell?.completed ?? 0, cell?.started ?? 0)}
                           </td>
                         );

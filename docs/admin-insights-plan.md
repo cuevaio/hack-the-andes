@@ -10,7 +10,7 @@ The participant list is for reviewing applications. A separate `/admin/insights`
 - Count challenge activity on current playable versions. Multiple evaluations do not create extra participants.
 - Measure actual challenge starts and completions. An approval or rejection does not prove challenge completion.
 
-## Delivery
+## Design
 
 The list uses a compact row with search, status, and country. Sorting remains separate. Country is searchable; selected values remain visible. A reset clears filters but preserves sorting. This replaces the status-button strip and moves the large funnel to the insights page.
 
@@ -18,8 +18,8 @@ Compared with a single filter popover, inline controls need fewer interaction st
 
 The insights report uses server-rendered counts and charts from one database snapshot. Its optional challenge filter selects people who started that challenge's current version. Challenge progress survives a new application, so milestones are independent measurements rather than a strictly sequential conversion rate.
 
-1. Consolidate URL parsing and add country filtering.
-2. Replace the status-button strip with compact controls and visible active filters.
-3. Add an authorized insights page with a funnel, country distribution, and challenge breakdowns.
-4. Verify database counts, browser history, country corrections, keyboard use, and mobile layouts.
-5. Request Codex and Cursor reviews, address findings, and merge after both reviews are clear.
+## Verification
+
+`bun test apps/web/lib/admin/candidate-list.test.ts apps/web/lib/admin/candidate-filters.test.ts apps/web/lib/admin/insights.test.ts apps/web/lib/admin/insights-access.test.ts` checks URL normalization, complete-list filtering, ranking, pagination, country corrections, report totals, and access control.
+
+The database tests execute production queries against PGlite. They cover multiple evaluations, historical applications, withdrawn participants, unknown countries, current challenge versions, and empty cohorts. Report rendering tests check rates and filter-preserving drilldown links.
