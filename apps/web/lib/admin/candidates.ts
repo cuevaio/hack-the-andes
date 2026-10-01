@@ -21,6 +21,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 
 import { storeAcceptanceBadgeProfile } from "@/lib/badges/acceptance";
 import { enqueueBadgeGeneration } from "@/lib/badges/enqueue";
+import { emailAddresses } from "@/lib/emails/config";
 import { HttpError } from "@/lib/registration/http";
 import { rankedEvaluationsFor } from "../challenges/ranking";
 import { challengeActivityForParticipants } from "../challenges/service";
@@ -45,8 +46,6 @@ import {
 } from "./types";
 
 const pageSize = 10;
-const decisionEmailFrom = "hackathons@crafterstation.com";
-const decisionEmailReplyTo = "anthony@crafterstation.com";
 
 const optional = <A>(value: A | null | undefined): A | undefined =>
   value ?? undefined;
@@ -579,9 +578,8 @@ const sendRejectionEmail = async (
       "idempotency-key": `application-decision/${candidate.id}/rejected`,
     },
     body: JSON.stringify({
-      from: decisionEmailFrom,
+      ...emailAddresses,
       to: [candidate.email],
-      reply_to: decisionEmailReplyTo,
       subject: email.subject,
       text: email.text,
       html: email.html,

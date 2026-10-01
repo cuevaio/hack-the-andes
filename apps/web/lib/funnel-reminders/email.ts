@@ -1,3 +1,4 @@
+import { emailAddresses } from "@/lib/emails/config";
 import {
   button,
   command,
@@ -7,7 +8,6 @@ import {
   paragraph,
 } from "@/lib/emails/layout";
 
-import { badgeEmailFrom, badgeEmailReplyTo } from "../badges/config";
 import type { FunnelReminderRecipient, FunnelReminderStage } from "./types";
 
 interface FunnelReminderEmail {
@@ -124,9 +124,8 @@ export const sendFunnelReminderEmail = async (
       "idempotency-key": `funnel-reminder/${input.stage}/${input.clerkUserId}/${input.deliveryScope}`,
     },
     body: JSON.stringify({
-      from: badgeEmailFrom,
+      ...emailAddresses,
       to: [input.email],
-      reply_to: badgeEmailReplyTo,
       subject: email.subject,
       text: email.text,
       html: email.html,
