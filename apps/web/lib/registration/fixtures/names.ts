@@ -120,6 +120,10 @@ assert.equal(
   "Public Alias",
 );
 assert.deepEqual(badgeJobs, [applicationId]);
+await client.query(
+  "update acceptance_details set completed_at = '2026-09-20T15:00:00Z' where application_id = $1",
+  [applicationId],
+);
 
 assert.equal(
   (
@@ -167,6 +171,15 @@ assert.equal(
   200,
 );
 assert.deepEqual(badgeJobs, [applicationId, applicationId, applicationId]);
+assert.deepEqual(
+  (
+    await client.query(
+      "select to_char(completed_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS') as confirmed_at from acceptance_details where application_id = $1",
+      [applicationId],
+    )
+  ).rows,
+  [{ confirmed_at: "2026-09-20 15:00:00" }],
+);
 assert.equal(
   (await getParticipantBadge(identity.clerkUserId)).profile?.oneLiner,
   "Changed intro",

@@ -558,7 +558,10 @@ export const submitAcceptedDetails = async (
     .values({ applicationId: current.application.id, ...values })
     .onConflictDoUpdate({
       target: acceptanceDetails.applicationId,
-      set: values,
+      set: {
+        ...values,
+        completedAt: sql`coalesce(${acceptanceDetails.completedAt}, excluded.completed_at)`,
+      },
     })
     .returning();
   const oneLiner =
