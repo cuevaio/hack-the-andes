@@ -22,7 +22,11 @@ export const POST = (
       slug,
       await readJson(request),
     );
-    await enqueueChallengeFinishReminderBestEffort(clerkUserId, applicationId);
+    await enqueueChallengeFinishReminderBestEffort(
+      clerkUserId,
+      applicationId,
+      slug,
+    );
     await captureProductEvent({
       distinctId: clerkUserId,
       event: "challenge_query_completed",

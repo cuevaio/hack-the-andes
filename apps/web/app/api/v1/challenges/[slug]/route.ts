@@ -17,6 +17,10 @@ export const GET = (
     const clerkUserId = await requireParticipantUserId(request);
     const result = await getChallengeAttempt(clerkUserId, slug);
     const applicationId = await challengeReminderApplicationIdFor(clerkUserId);
-    await enqueueChallengeFinishReminderBestEffort(clerkUserId, applicationId);
+    await enqueueChallengeFinishReminderBestEffort(
+      clerkUserId,
+      applicationId,
+      slug,
+    );
     return jsonSuccess(requestId, result);
   });

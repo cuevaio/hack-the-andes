@@ -11,6 +11,7 @@ import {
 import { db } from "@chofex/db/worker";
 import { logger, task, wait } from "@trigger.dev/sdk";
 
+import { currentChallengeVersionFor } from "../lib/challenges/engine";
 import {
   isCurrentReminderAttempt,
   reminderChallenge,
@@ -136,9 +137,13 @@ const loadReminderContext = async (
     };
   }
 
+  let deliveryScope = application?.id ?? "participant";
+  if (payload.stage !== "registration" && challenge) {
+    deliveryScope += `/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`;
+  }
   return {
     challenge,
-    deliveryScope: application?.id ?? "participant",
+    deliveryScope,
     pendingEvaluationUntil,
     progress: {
       applicationStatus: application?.status,

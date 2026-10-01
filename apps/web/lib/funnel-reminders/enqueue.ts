@@ -4,6 +4,7 @@ import { applications, participants } from "@chofex/db/schema";
 import { tasks } from "@trigger.dev/sdk";
 
 import type { sendFunnelReminder } from "../../trigger/send-funnel-reminder";
+import { currentChallengeVersionFor } from "../challenges/engine";
 import { reminderChallenge } from "./challenge";
 import type { FunnelReminderPayload } from "./types";
 
@@ -69,8 +70,9 @@ export const enqueuePostSubmissionRemindersBestEffort = async (
   applicationId: string,
   challengeAlreadyStarted: boolean,
 ): Promise<void> => {
-  if (!reminderChallenge()) return;
-  const idempotencyKeySuffix = `application/${applicationId}`;
+  const challenge = reminderChallenge();
+  if (!challenge) return;
+  const idempotencyKeySuffix = `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`;
   await enqueueFunnelReminderBestEffort(
     { clerkUserId, stage: "challenge_start", applicationId },
     idempotencyKeySuffix,
@@ -86,11 +88,13 @@ export const enqueuePostSubmissionRemindersBestEffort = async (
 export const enqueueChallengeFinishReminderBestEffort = async (
   clerkUserId: string,
   applicationId: string | undefined,
+  challengeSlug: string,
 ): Promise<void> => {
   if (!applicationId) return;
-  if (!reminderChallenge()) return;
+  const challenge = reminderChallenge();
+  if (!challenge || challenge.slug !== challengeSlug) return;
   await enqueueFunnelReminderBestEffort(
     { clerkUserId, stage: "challenge_finish", applicationId },
-    `application/${applicationId}`,
+    `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`,
   );
 };

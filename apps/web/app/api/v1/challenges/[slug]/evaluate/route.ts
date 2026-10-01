@@ -43,6 +43,7 @@ export const POST = (
         await enqueueChallengeFinishReminderBestEffort(
           clerkUserId,
           applicationId,
+          slug,
         );
       }
       throw error;

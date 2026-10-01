@@ -20,7 +20,10 @@ export const POST = (request: Request): Promise<Response> =>
     const created = result.registration.status === "submitted";
     if (created) {
       const challengeAlreadyStarted = result.registration.challenges.some(
-        (challenge) => challenge.playable && challenge.status === "in_progress",
+        (challenge) =>
+          challenge.playable &&
+          challenge.open &&
+          challenge.status === "in_progress",
       );
       await enqueuePostSubmissionRemindersBestEffort(
         participant.clerkUserId,

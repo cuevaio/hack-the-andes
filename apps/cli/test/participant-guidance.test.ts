@@ -1,4 +1,7 @@
 import { expect, test } from "bun:test";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { ParticipantChallengeProgress } from "@chofex/challenges-contract";
 import {
   applicationRequirementsFor,
@@ -287,4 +290,98 @@ test("an available challenge takes precedence over an exhausted one", () => {
   expect(nextStepFor(result).command).toBe(
     "andes challenge init --challenge broken-agent",
   );
+});
+
+test("a default badge still sends an accepted participant to attendance confirmation", async () => {
+  const server = Bun.serve({
+    port: 0,
+    fetch(request) {
+      const path = new URL(request.url).pathname;
+      const data =
+        path === "/api/v1/badge"
+          ? { status: "completed", url: "https://example.com/badge.png" }
+          : accepted;
+      return Response.json({
+        version: 1,
+        ok: true,
+        requestId: "badge-guidance",
+        data,
+      });
+    },
+  });
+  try {
+    const result = await run(server.url.toString(), ["badge"]);
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("https://example.com/badge.png");
+    expect(result.stdout).toContain("Siguiente comando: andes confirm");
+    expect(result.stdout).not.toContain("andes badge regenerate");
+  } finally {
+    server.stop(true);
+  }
+});
+
+test("JSON confirmation with an upload requires a picture path before prompting", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "andes-confirm-"));
+  const path = join(directory, "attendance.json");
+  const requests: string[] = [];
+  const server = Bun.serve({
+    port: 0,
+    fetch(request) {
+      const pathname = new URL(request.url).pathname;
+      requests.push(request.method);
+      let data: unknown = accepted;
+      if (pathname === "/api/v1/me")
+        data = {
+          authenticated: true,
+          userId: "user-test",
+          email: "ada@example.com",
+          tokenType: "oauth_token",
+        };
+      if (pathname === "/api/v1/badge") data = { status: "not_started" };
+      return Response.json({
+        version: 1,
+        ok: true,
+        requestId: "confirm-upload",
+        data,
+      });
+    },
+  });
+  try {
+    await writeFile(
+      path,
+      JSON.stringify({
+        fullName: "Ada Lovelace",
+        name: "Ada L.",
+        oneLiner: "Computing pioneer",
+        phone: "+51 999 999 999",
+        dateOfBirth: "1990-01-01",
+        nationalIdNumber: "12345678",
+        shirtSize: "m",
+        dietaryRestrictions: "None",
+        accessibilityNeeds: "None",
+        emergencyContactName: "Grace Hopper",
+        emergencyContactPhone: "+51 999 999 998",
+        mediaConsent: false,
+        pictureSource: "upload",
+      }),
+    );
+    const result = await run(server.url.toString(), [
+      "--output",
+      "json",
+      "confirm",
+      "--input",
+      path,
+    ]);
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toBe("");
+    expect(result.stdout.trim().split("\n")).toHaveLength(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      error: { code: "PICTURE_PATH_REQUIRED" },
+    });
+    expect(new Set(requests)).toEqual(new Set(["GET"]));
+  } finally {
+    server.stop(true);
+    await rm(directory, { recursive: true, force: true });
+  }
 });
