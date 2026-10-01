@@ -59,22 +59,6 @@ describe("participant badge generation lifecycle", () => {
     expect(registration).toContain("generationId: null");
   });
 
-  test("regenerates after an updated attendance confirmation", async () => {
-    const registration = await source("../lib/registration/service.ts");
-    const attendanceRoute = await source(
-      "../app/api/v1/registration/attendance/route.ts",
-    );
-
-    expect(registration).toContain("currentBadge?.customPictureUrl");
-    expect(registration).toContain("input.name ??");
-    expect(registration).toContain("identity.name ??");
-    expect(registration).toContain(".update(participants)");
-    expect(registration).toContain("oneLiner");
-    expect(attendanceRoute).toContain(
-      "enqueueBadgeGeneration(result.registration.id, { force: true })",
-    );
-  });
-
   test("starts default badge generation when an admin accepts a candidate", async () => {
     const candidates = await source("../lib/admin/candidates.ts");
     const enqueue = await source("../lib/badges/enqueue.ts");

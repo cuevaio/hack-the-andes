@@ -23,7 +23,6 @@ export const acceptanceDetails = pgTable(
       .notNull()
       .references(() => applications.id, { onDelete: "cascade" }),
 
-    fullName: varchar("full_name", { length: 200 }),
     phone: varchar("phone", { length: 32 }),
     dateOfBirth: date("date_of_birth", { mode: "date" }),
     nationalIdNumber: text("national_id_number"),
@@ -45,7 +44,6 @@ export const acceptanceDetails = pgTable(
     check(
       "acceptance_details_completed_fields_required",
       sql`${table.completedAt} is null or (
-        ${table.fullName} is not null and
         ${table.dateOfBirth} is not null and
         ${table.nationalIdNumber} is not null and
         ${table.emergencyContactName} is not null and

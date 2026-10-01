@@ -14,3 +14,4 @@ export {
   type SQL,
   sql,
 } from "drizzle-orm";
+export type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";

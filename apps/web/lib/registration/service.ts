@@ -130,6 +130,7 @@ const toView = (
   details: AcceptanceDetailsRecord | undefined,
   challenges: ReadonlyArray<ParticipantChallengeProgress>,
   countryCode: string | null,
+  legalName: string | null,
 ): RegistrationView => ({
   id: application.id,
   status: application.status,
@@ -137,7 +138,7 @@ const toView = (
   lastName: application.lastName ?? "",
   email: application.email ?? "",
   applicationPhone: optional(application.phone),
-  fullName: optional(details?.fullName),
+  fullName: optional(legalName),
   phone: optional(details?.phone ?? application.phone),
   dateOfBirth: optionalDateString(details?.dateOfBirth),
   pronouns: optional(application.pronouns),
@@ -182,7 +183,10 @@ const resultFor = async (
   const [challenges, [participant]] = await Promise.all([
     challengeProgressForParticipant(application.participantId),
     db
-      .select({ countryCode: participants.countryCode })
+      .select({
+        countryCode: participants.countryCode,
+        legalName: participants.legalName,
+      })
       .from(participants)
       .where(eq(participants.id, application.participantId)),
   ]);
@@ -192,6 +196,7 @@ const resultFor = async (
     details,
     challenges,
     participant.countryCode,
+    participant.legalName,
   );
   return {
     registration,
@@ -257,7 +262,6 @@ const latestApplicationRecord = async (
   | {
       application: ApplicationRecord;
       details?: AcceptanceDetailsRecord;
-      participantName?: string;
     }
   | undefined
 > => {
@@ -265,7 +269,6 @@ const latestApplicationRecord = async (
     .select({
       application: applications,
       details: acceptanceDetails,
-      participantName: participants.name,
     })
     .from(participants)
     .innerJoin(applications, eq(applications.participantId, participants.id))
@@ -280,7 +283,6 @@ const latestApplicationRecord = async (
   return {
     application: record.application,
     details: record.details ?? undefined,
-    participantName: optional(record.participantName),
   };
 };
 
@@ -460,7 +462,6 @@ const latestApplicationFor = async (
 ): Promise<{
   application: ApplicationRecord;
   details?: AcceptanceDetailsRecord;
-  participantName?: string;
 }> => {
   const current = await latestApplicationRecord(clerkUserId);
   if (!current) {
@@ -539,7 +540,6 @@ export const submitAcceptedDetails = async (
   });
 
   const values = {
-    fullName: input.fullName,
     phone: input.phone ?? null,
     dateOfBirth: DateTime.toDateUtc(
       DateTime.makeUnsafe(`${input.dateOfBirth}T00:00:00.000Z`),
@@ -565,13 +565,6 @@ export const submitAcceptedDetails = async (
     input.oneLiner ??
     currentBadge?.oneLiner ??
     badgeOneLinerFor(current.application.role);
-  const name =
-    input.name ??
-    current.participantName ??
-    identity.name ??
-    [current.application.firstName, current.application.lastName]
-      .filter(Boolean)
-      .join(" ");
   const badgeUpdate = db
     .insert(participantBadges)
     .values({
@@ -599,7 +592,7 @@ export const submitAcceptedDetails = async (
     .returning();
   const participantUpdate = db
     .update(participants)
-    .set({ name, updatedAt: new Date() })
+    .set({ name: input.name, legalName: input.fullName, updatedAt: new Date() })
     .where(eq(participants.id, current.application.participantId))
     .returning();
   if (current.details?.completedAt) {

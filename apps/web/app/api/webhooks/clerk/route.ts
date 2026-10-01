@@ -7,6 +7,7 @@ import {
   userGrantsApplicationReviewAccess,
 } from "@/lib/admin/roles";
 import { enqueueFunnelReminder } from "@/lib/funnel-reminders/enqueue";
+import { participantIdFor } from "@/lib/registration/participants";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,10 @@ export const POST = async (request: NextRequest): Promise<Response> => {
 
   const clerk = await clerkClient();
   const user = await clerk.users.getUser(event.data.user_id);
+  await participantIdFor(
+    user.id,
+    [user.firstName, user.lastName].filter(Boolean).join(" "),
+  );
   const isApplicationReviewer = userGrantsApplicationReviewAccess({
     clerkUserId: user.id,
     configuredAdminIds: configuredAdminIdsFrom(

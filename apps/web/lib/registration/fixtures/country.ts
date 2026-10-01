@@ -46,6 +46,11 @@ await client.exec(
   "update participants set country_code = 'AR' where clerk_user_id = 'legacy-co'",
 );
 await client.exec(countryMigration);
+for (const file of files.filter(
+  (file) => file > "0025_volatile_butterfly.sql",
+)) {
+  await client.exec(await readFile(new URL(file, migrations), "utf8"));
+}
 assert.deepEqual(
   (
     await client.query(

@@ -1,6 +1,7 @@
 import { mock } from "bun:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 
@@ -12,28 +13,20 @@ process.env.CHALLENGE_ENGINE_URL = "https://engine.test";
 process.env.CHALLENGE_ENGINE_API_SECRET = "test-secret";
 const { evaluateChallenge } = await import("../service");
 
-await client.exec(`create table participants (
-  id uuid primary key, clerk_user_id text not null, name text
-);`);
-for (const migration of [
-  "0008_glamorous_nuke.sql",
-  "0009_serious_praxagora.sql",
-  "0010_strong_blackheart.sql",
-  "0011_boring_bushwacker.sql",
-  "0018_rank_challenge_runtime.sql",
-  "0022_burly_mesmero.sql",
-  "0023_breezy_sleeper.sql",
-  "0024_broken_agent_rank.sql",
-]) {
-  const sql = await Bun.file(
-    new URL(`../../../../../packages/db/drizzle/${migration}`, import.meta.url),
-  ).text();
+const migrations = new URL(
+  "../../../../../packages/db/drizzle/",
+  import.meta.url,
+);
+for (const migration of (await readdir(migrations))
+  .filter((file) => file.endsWith(".sql"))
+  .sort()) {
+  const sql = await Bun.file(new URL(migration, migrations)).text();
   await client.exec(sql.replaceAll("--> statement-breakpoint", ""));
 }
 const participantId = crypto.randomUUID();
 const attemptId = crypto.randomUUID();
 await client.query(
-  "insert into participants values ($1, 'user_retry', 'Test')",
+  "insert into participants (id, clerk_user_id, name) values ($1, 'user_retry', 'Test')",
   [participantId],
 );
 await client.query(
