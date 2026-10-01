@@ -63,6 +63,9 @@ describe("badge-ready email", () => {
     });
 
     expect(email.text).toContain("andes badge regenerate");
+    expect(email.text).toContain(
+      "Siguiente paso: consulta y comparte tu carnet con andes badge",
+    );
     expect(email.text).not.toContain("andes confirm");
     expect(email.text).not.toContain("carnet predeterminado");
     expect(email.text).not.toContain("¡Felicitaciones!");

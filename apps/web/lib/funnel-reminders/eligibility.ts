@@ -30,7 +30,9 @@ export const needsFunnelReminder = (
     );
   if (!isActiveCandidate) return false;
 
-  if (stage === "challenge_start") return !progress.challengeStarted;
+  if (stage === "challenge_start") {
+    return !progress.challengeStarted && !progress.challengeCompleted;
+  }
   return (
     progress.challengeStarted &&
     !progress.challengeCompleted &&

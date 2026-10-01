@@ -1,4 +1,3 @@
-import { challengeAdmissionNotice } from "@chofex/challenges-contract";
 import {
   type ApiSuccess,
   type BadgeResult,
@@ -10,6 +9,7 @@ import { Console, Effect, Result, Schema } from "effect";
 
 import { registrationPartsText } from "./challenge-output.js";
 import { type CliError, exitCodeFor } from "./errors.js";
+import { nextStepFor, nextStepText } from "./participant-guidance.js";
 
 export type OutputMode = "human" | "json";
 
@@ -84,75 +84,62 @@ export const registrationLookupErrorText = (
   error: CliError,
 ): string | undefined => {
   if (error.code !== "REGISTRATION_NOT_FOUND") return undefined;
-  return "No registration found.\nNext command: andes register";
+  return `Todavía no tienes una postulación.\n${nextStepText(nextStepFor())}`;
 };
 
 const requirementsText = (result: RegistrationResult): string => {
   const { registration, requirements } = result;
-  if (registration.status === "withdrawn") {
-    return "Application withdrawn. You may submit a new application.";
-  }
-  if (requirements.stage === "complete") return "Attendance details: complete";
-  if (requirements.stage === "draft") {
-    return `Application draft in progress.${registrationPartsText(result)}`;
-  }
-  if (requirements.stage === "review") {
-    return [
-      "Application received. A seat has not been assigned.",
-      result.admission?.notice ?? challengeAdmissionNotice,
-      "Next command: andes challenge",
-    ].join("\n");
-  }
-  let feedback = "";
+  const lines: string[] = [];
+  if (requirements.stage === "draft") lines.push(registrationPartsText(result));
   const rejectionReason =
     requirements.rejectionReason ?? registration.rejectionReason;
-  if (rejectionReason) {
-    feedback = `\nReview feedback: ${rejectionReason}`;
-  }
-
-  let nextCommand = "";
-  if (requirements.stage === "accepted") {
-    nextCommand = "\nNext command: andes confirm";
-  }
-
-  let missing = "";
+  if (rejectionReason) lines.push(`Comentario del equipo: ${rejectionReason}`);
   if (requirements.missing.length > 0) {
     const items = requirements.missing
       .map((item) => `  - ${item.field}: ${item.reason}`)
       .join("\n");
-    missing = `\nStill required:\n${items}`;
+    lines.push(`Datos pendientes:\n${items}`);
   }
-
-  return `Next stage: ${requirements.stage}${feedback}${missing}${nextCommand}`;
+  lines.push(nextStepText(nextStepFor(result)));
+  return lines.join("\n\n");
 };
+
+const statusLabels = {
+  draft: "Borrador",
+  submitted: "Postulación enviada",
+  under_review: "En revisión",
+  waitlisted: "En lista de espera",
+  accepted: "Aceptada",
+  rejected: "No aceptada",
+  withdrawn: "Retirada",
+} satisfies Record<RegistrationResult["registration"]["status"], string>;
 
 export const registrationText = (result: RegistrationResult): string =>
   [
-    `Registration: ${result.registration.id}`,
-    `Participant: ${result.registration.firstName} ${result.registration.lastName}`,
-    `Status: ${result.registration.status}`,
+    `Postulación: ${result.registration.id}`,
+    `Participante: ${result.registration.firstName} ${result.registration.lastName}`,
+    `Estado: ${statusLabels[result.registration.status]}`,
     requirementsText(result),
   ].join("\n");
 
 export const createdText = (result: CreatedRegistration): string => {
-  if (result.registration.status !== "submitted") {
-    return ["Application draft saved.", registrationText(result)].join("\n");
+  if (result.registration.status === "draft") {
+    return ["Borrador guardado.", registrationText(result)].join("\n");
   }
-  return ["Application submitted successfully.", registrationText(result)].join(
-    "\n",
-  );
+  return ["Postulación enviada.", registrationText(result)].join("\n");
 };
 
 export const requirementsOnlyText = (result: RegistrationResult): string =>
   requirementsText(result);
 
 export const badgeText = (result: BadgeResult): string => {
-  if (result.url) return result.url;
+  if (result.status === "completed" && result.url)
+    return `Tu carnet está listo:\n${result.url}\n\nCompártelo en LinkedIn o Instagram.\nPara personalizarlo: andes badge regenerate`;
   if (result.status === "pending" || result.status === "running") {
-    return "Tu carnet se está generando.";
+    return "Tu carnet se está generando. Espera unos minutos y consulta de nuevo.\nSiguiente comando: andes badge";
   }
   if (result.status === "failed") {
     return "No se pudo generar tu carnet. Ejecuta `andes badge regenerate` para intentarlo de nuevo.";
   }
-  return "Todavía no tienes un carnet.";
+  return "Todavía no tienes un carnet. Consulta qué paso te falta completar.\nSiguiente comando: andes status";
 };

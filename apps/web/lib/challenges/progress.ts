@@ -2,11 +2,10 @@ import type { ParticipantChallengeProgress } from "@chofex/challenges-contract";
 
 export const challengeProgressStatus = (input: {
   readonly hasPersistedEvaluation: boolean;
-  readonly queriesUsed: number;
-  readonly evaluationsUsed: number;
+  readonly hasAttempt: boolean;
 }): ParticipantChallengeProgress["status"] => {
   if (input.hasPersistedEvaluation) return "evaluated";
-  if (input.queriesUsed > 0 || input.evaluationsUsed > 0) return "in_progress";
+  if (input.hasAttempt) return "in_progress";
   return "not_started";
 };
 

@@ -17,6 +17,13 @@ describe("buildDecisionEmail", () => {
     expect(email.subject).toBe("Estás dentro — bienvenida a Hack the Andes");
     expect(email.text).toContain("Hola Ada,");
     expect(email.text).toContain("andes confirm");
+    expect(email.text).toContain(
+      "2. Consulta y comparte tu carnet: andes badge",
+    );
+    expect(email.html).toContain(
+      "Después de confirmar, consulta y comparte tu carnet",
+    );
+    expect(email.html).toContain("andes badge");
     expect(email.text).toContain("carnet predeterminado");
     expect(email.text).toContain("DNI o pasaporte");
     expect(email.text).toContain("WhatsApp");

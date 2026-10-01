@@ -15,6 +15,7 @@ import { buildDecisionEmail } from "@/lib/admin/decision-email";
 import { emailAddresses } from "@/lib/emails/config";
 import {
   button,
+  command,
   emailShell,
   eyebrow,
   heading,
@@ -69,8 +70,9 @@ export const buildBadgeReadyEmail = (
     "Tu nuevo carnet ya está listo con los cambios que elegiste.";
   let body =
     "Puedes volver a personalizar el nombre, la foto, la presentación de una línea o el enlace del QR con andes badge regenerate.";
-  let terminalCommand = "andes badge regenerate";
-  let terminalInstruction = "Personalizar y regenerar: andes badge regenerate";
+  let terminalCommand = "andes badge";
+  let terminalInstruction =
+    "Siguiente paso: consulta y comparte tu carnet con andes badge";
   if (input.requiresConfirmation) {
     introduction =
       "Tu carnet predeterminado ya está hecho con el nombre, la foto y la presentación que teníamos al aceptar tu postulación.";
@@ -114,7 +116,7 @@ export const buildBadgeReadyEmail = (
     paragraph(body),
     paragraph(sharing),
     button("Ver mi carnet", input.badgePageUrl),
-    paragraph(`Desde tu terminal: ${terminalCommand}`),
+    command("Siguiente comando en tu terminal", terminalCommand),
   );
 
   const html = emailShell({

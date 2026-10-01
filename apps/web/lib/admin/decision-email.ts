@@ -66,7 +66,7 @@ const decisionCopy = (decision: ApplicationDecision) => {
       body: "Este es tu carnet predeterminado, hecho con el nombre, la foto y la presentación que vimos en tu postulación. Completa andes confirm aunque quieras conservarlo: necesitamos tu nombre completo y DNI o pasaporte para autorizar tu ingreso al venue. Comparte también tu teléfono para que podamos contactarte por WhatsApp si hace falta. En ese mismo paso puedes cambiar el nombre del carnet, la foto y la presentación de una línea; al terminar generaremos uno nuevo.",
       action: "Confirmar mi asistencia",
       url: CONFIRM_URL,
-      commandLabel: "O desde tu terminal:",
+      commandLabel: "Siguiente comando en tu terminal:",
       command: "andes confirm",
     };
   }
@@ -81,7 +81,7 @@ const decisionCopy = (decision: ApplicationDecision) => {
     body: "Valoramos el tiempo y el trabajo que le pusiste. Puedes volver a postular con una nueva postulación cuando quieras.",
     action: "Volver a postular",
     url: APPLY_URL,
-    commandLabel: "O desde tu terminal:",
+    commandLabel: "Siguiente comando en tu terminal:",
     command: "andes register",
   };
 };
@@ -102,6 +102,12 @@ export const buildDecisionEmail = (
   const acceptedNextSteps: string[] = [];
   if (input.decision === "accepted") {
     acceptedNextSteps.push(
+      "",
+      "1. Confirma tu asistencia desde tu terminal: andes confirm",
+      "Al terminar, generaremos tu carnet automáticamente.",
+      "2. Consulta y comparte tu carnet: andes badge",
+      "Si todavía se está generando, espera unos minutos y repite andes badge.",
+      "Si no recuerdas dónde quedaste, ejecuta andes para ver tu siguiente paso.",
       "",
       sharing,
       "",
@@ -153,6 +159,16 @@ export const buildDecisionEmail = (
   );
   if (input.decision === "accepted") {
     blocks.push(
+      paragraph(
+        "Al confirmar tu asistencia generaremos tu carnet automáticamente.",
+      ),
+      command(
+        "Después de confirmar, consulta y comparte tu carnet",
+        "andes badge",
+      ),
+      paragraph(
+        "Si todavía se está generando, espera unos minutos y repite andes badge. Si no recuerdas dónde quedaste, ejecuta andes para ver tu siguiente paso.",
+      ),
       paragraph(sharing),
       note(transportSupport.title, transportSupport.body),
       paragraph(transportSupport.conditions),

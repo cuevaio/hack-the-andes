@@ -3,7 +3,7 @@ import {
   isChallengeClosedAt,
   isChallengeOpenAt,
 } from "@chofex/challenges-contract";
-import { Console, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
 
 import {
@@ -37,7 +37,12 @@ import {
 } from "./challenge-scaffold.js";
 import { root } from "./cli-root.js";
 import { type CliError, cliError } from "./errors.js";
-import { execute, printJson } from "./output.js";
+import { execute } from "./output.js";
+import {
+  loadParticipantGuidance,
+  type NextStep,
+  nextStepText,
+} from "./participant-guidance.js";
 
 const challengeQuickstart = {
   title: "BROKEN AGENT — THE SCHEDULER",
@@ -551,16 +556,26 @@ const evaluateCommand = Command.make(
         Option.getOrUndefined(review),
         challenge,
       );
-      return yield* evaluateChallenge(
-        { apiUrl: options.apiUrl, token },
-        challenge,
-        solution,
+      const client = { apiUrl: options.apiUrl, token };
+      const evaluated = yield* evaluateChallenge(client, challenge, solution);
+      const nextStep = yield* loadParticipantGuidance(client).pipe(
+        Effect.map((response) => response.data.nextStep),
+        Effect.catch(() =>
+          Effect.succeed({
+            kind: "decision",
+            message:
+              "Tu evaluación oficial se guardó. Consulta el estado de tu postulación para continuar.",
+            command: "andes status",
+          } satisfies NextStep),
+        ),
       );
+      return { ...evaluated, data: { ...evaluated.data, nextStep } };
     });
     yield* execute(
       options.output,
       operation,
-      challengeEvaluateText,
+      (result) =>
+        `${challengeEvaluateText(result)}\n\n${nextStepText(result.nextStep)}`,
       evaluationErrorText,
     );
   }),
@@ -606,63 +621,28 @@ export const challengeCommand = Command.make(
   {},
   Effect.fn("challengeQuickstartCommand")(function* () {
     const options = yield* root;
-    const participationState = participationStateFor(defaultChallengeSlug);
-    const participationOpen = participationState === "open";
-    const launchNotice = launchNoticeFor(defaultChallengeSlug);
-    if (options.output === "json") {
-      let workflow: ReadonlyArray<
-        (typeof challengeQuickstart.workflow)[number]
-      > = challengeQuickstart.workflow;
-      let helpCommand: string = challengeQuickstart.helpCommand;
-      let story: ReadonlyArray<string> = challengeQuickstart.story;
-      let mission: string = challengeQuickstart.mission;
-      let rules: ReadonlyArray<string> = challengeQuickstart.rules;
-      if (participationState === "closed") {
-        const rankingStep = challengeQuickstart.workflow.at(-1);
-        workflow = rankingStep ? [rankingStep] : [];
-        helpCommand = "andes challenge ranking --help";
-        story = [];
-        mission = "El Challenge 2 terminó. El ranking final sigue disponible.";
-        rules = [];
-      } else if (participationState === "scheduled") {
-        workflow = [];
-        helpCommand = "andes challenge list --help";
-        story = [];
-        mission = "El challenge todavía no está disponible.";
-        rules = [];
-      }
-      const data: {
-        readonly title: string;
-        readonly story: typeof story;
-        readonly mission: string;
-        readonly rules: typeof rules;
-        readonly workflow: typeof workflow;
-        readonly helpCommand: string;
-        readonly open: boolean;
-        readonly state: ChallengeParticipationState;
-        notice?: string;
-      } = {
-        ...challengeQuickstart,
-        story,
-        mission,
-        rules,
-        workflow,
-        helpCommand,
-        open: participationOpen,
-        state: participationState,
-      };
-      if (launchNotice) data.notice = launchNotice;
-      yield* printJson({
-        version: 1,
-        ok: true,
-        requestId: crypto.randomUUID(),
-        data,
-      });
-      return;
-    }
-    yield* Console.log(
-      challengeQuickstartText(participationState, launchNotice),
+    const client = {
+      apiUrl: options.apiUrl,
+      token: Option.getOrUndefined(options.token),
+    };
+    const operation = loadParticipantGuidance(client).pipe(
+      Effect.map((response) => {
+        const { nextStep } = response.data;
+        let guide: typeof challengeQuickstart | undefined;
+        if (
+          (nextStep.kind === "challenge_start" ||
+            nextStep.kind === "challenge_continue") &&
+          nextStep.challengeSlug === "broken-agent"
+        ) {
+          guide = challengeQuickstart;
+        }
+        return { ...response, data: { ...response.data, guide } };
+      }),
     );
+    yield* execute(options.output, operation, (result) => {
+      if (!result.guide) return nextStepText(result.nextStep);
+      return `${challengeQuickstartText("open")}\n\n${nextStepText(result.nextStep)}`;
+    });
   }),
 ).pipe(
   Command.withDescription(

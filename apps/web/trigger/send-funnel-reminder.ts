@@ -11,8 +11,11 @@ import {
 import { db } from "@chofex/db/worker";
 import { logger, task, wait } from "@trigger.dev/sdk";
 
-import { isBlackBoxParticipationOpen } from "../lib/challenges/availability";
-import { currentChallengeVersion } from "../lib/challenges/engine";
+import { currentChallengeVersionFor } from "../lib/challenges/engine";
+import {
+  isCurrentReminderAttempt,
+  reminderChallenge,
+} from "../lib/funnel-reminders/challenge";
 import {
   type FunnelProgress,
   needsFunnelReminder,
@@ -24,6 +27,7 @@ import type {
 } from "../lib/funnel-reminders/types";
 
 interface ReminderContext {
+  readonly challenge: ReturnType<typeof reminderChallenge>;
   readonly deliveryScope: string;
   readonly pendingEvaluationUntil?: Date;
   readonly progress: FunnelProgress;
@@ -46,21 +50,6 @@ interface ApplicationContext {
 const loadApplicationContext = async (
   payload: FunnelReminderPayload,
 ): Promise<ApplicationContext | undefined> => {
-  if (payload.applicationId) {
-    const [record] = await db
-      .select({ participantId: participants.id, application: applications })
-      .from(participants)
-      .innerJoin(applications, eq(applications.participantId, participants.id))
-      .where(
-        and(
-          eq(participants.clerkUserId, payload.clerkUserId),
-          eq(applications.id, payload.applicationId),
-        ),
-      )
-      .limit(1);
-    return record;
-  }
-
   const [record] = await db
     .select({ participantId: participants.id, application: applications })
     .from(participants)
@@ -69,6 +58,8 @@ const loadApplicationContext = async (
     .orderBy(desc(applications.createdAt))
     .limit(1);
   if (!record) return undefined;
+  if (payload.applicationId && record.application?.id !== payload.applicationId)
+    return undefined;
   return {
     participantId: record.participantId,
     application: record.application ?? undefined,
@@ -80,29 +71,31 @@ const loadReminderContext = async (
 ): Promise<ReminderContext> => {
   const record = await loadApplicationContext(payload);
   const application = record?.application ?? undefined;
+  const challenge = reminderChallenge({ slug: payload.challengeSlug });
 
   let challengeStarted = false;
   let challengeCompleted = false;
   let challengeFinishAvailable = false;
   let pendingEvaluationUntil: Date | undefined;
   if (record && playableChallengeSlugs.length > 0) {
-    const attempts = await db
+    const loadedAttempts = await db
       .select({
+        challengeSlug: challengeAttempts.challengeSlug,
+        challengeVersion: challengeAttempts.challengeVersion,
         evaluationsLimit: challengeAttempts.evaluationsLimit,
         id: challengeAttempts.id,
-        queriesUsed: challengeAttempts.queriesUsed,
         evaluationsUsed: challengeAttempts.evaluationsUsed,
       })
       .from(challengeAttempts)
       .where(
         and(
           eq(challengeAttempts.participantId, record.participantId),
-          eq(challengeAttempts.challengeVersion, currentChallengeVersion),
           inArray(challengeAttempts.challengeSlug, playableChallengeSlugs),
         ),
       );
+    const attempts = loadedAttempts.filter(isCurrentReminderAttempt);
     const startedAttempts = attempts.filter(
-      (attempt) => attempt.queriesUsed > 0 || attempt.evaluationsUsed > 0,
+      (attempt) => attempt.challengeSlug === challenge?.slug,
     );
     challengeStarted = startedAttempts.length > 0;
     challengeFinishAvailable = startedAttempts.some(
@@ -144,8 +137,13 @@ const loadReminderContext = async (
     };
   }
 
+  let deliveryScope = application?.id ?? "participant";
+  if (payload.stage !== "registration" && challenge) {
+    deliveryScope += `/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`;
+  }
   return {
-    deliveryScope: application?.id ?? "participant",
+    challenge,
+    deliveryScope,
     pendingEvaluationUntil,
     progress: {
       applicationStatus: application?.status,
@@ -289,7 +287,7 @@ export const sendFunnelReminder = task<
       !needsFunnelReminder(
         payload.stage,
         reminder.progress,
-        isBlackBoxParticipationOpen(),
+        Boolean(reminder.challenge),
       )
     ) {
       logger.info("Skipping stale funnel reminder", {
@@ -321,6 +319,7 @@ export const sendFunnelReminder = task<
         clerkUserId: payload.clerkUserId,
         deliveryScope: reminder.deliveryScope,
         stage: payload.stage,
+        challenge: reminder.challenge,
         ...reminder.recipient,
       });
     } catch (error) {

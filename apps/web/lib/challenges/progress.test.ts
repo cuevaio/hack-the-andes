@@ -11,31 +11,29 @@ describe("challenge progress", () => {
     expect(
       challengeProgressStatus({
         hasPersistedEvaluation: false,
-        queriesUsed: 0,
-        evaluationsUsed: 0,
+        hasAttempt: false,
       }),
     ).toBe("not_started");
     expect(
       challengeProgressStatus({
         hasPersistedEvaluation: false,
-        queriesUsed: 4,
-        evaluationsUsed: 0,
-      }),
-    ).toBe("in_progress");
-    expect(
-      challengeProgressStatus({
-        hasPersistedEvaluation: false,
-        queriesUsed: 0,
-        evaluationsUsed: 1,
+        hasAttempt: true,
       }),
     ).toBe("in_progress");
     expect(
       challengeProgressStatus({
         hasPersistedEvaluation: true,
-        queriesUsed: 0,
-        evaluationsUsed: 1,
+        hasAttempt: true,
       }),
     ).toBe("evaluated");
+  });
+  test("public tests and pending browser approval count as started without spending budget", () => {
+    expect(
+      challengeProgressStatus({
+        hasAttempt: true,
+        hasPersistedEvaluation: false,
+      }),
+    ).toBe("in_progress");
   });
 });
 

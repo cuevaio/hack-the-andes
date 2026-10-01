@@ -159,7 +159,7 @@ export const renderWelcome = ({
 };
 
 export const welcomeFormatter = (
-  options: WelcomeOptions & { readonly home?: boolean },
+  options: WelcomeOptions,
 ): CliOutput.Formatter => {
   const formatter = CliOutput.defaultFormatter({ colors: options.colors });
   return {
@@ -168,15 +168,7 @@ export const welcomeFormatter = (
       const help = formatter.formatHelpDoc(doc);
       if (!doc.subcommands?.length) return help;
       const welcome = renderWelcome(options);
-      if (!options.home) return `${welcome}\n${help}`;
-      const width = Math.max(1, Math.min(options.columns ?? 80, 72));
-      const shortcuts = [
-        "andes login     Sign in",
-        "andes register  Apply",
-        "andes status    Check your application",
-        "andes --help    All commands",
-      ];
-      return `${welcome}\n${shortcuts.flatMap((line) => wrap(line, width)).join("\n")}\n`;
+      return `${welcome}\n${help}`;
     },
   };
 };

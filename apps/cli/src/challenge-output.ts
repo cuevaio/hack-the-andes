@@ -87,6 +87,7 @@ export const challengeListText = (
   } else {
     lines.push(
       "No hay un challenge abierto. Los rankings finales siguen visibles.",
+      "Siguiente comando para consultar tu postulación: andes status",
     );
   }
   return lines.join("\n");
@@ -122,13 +123,27 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
       if (progress.shareCode)
         lines.push(`Código         #${progress.shareCode}`);
     }
-    lines.push(
-      "",
-      "SIGUIENTE PASO",
-      "Lee el contrato. Antes de editar, discute tres trazas de falla y elige cuál investigar primero.",
-      "  cd broken-agent && npm test",
-      "  andes challenge test --challenge broken-agent --source ./scheduler.js",
-    );
+    if (
+      attempt.latestEvaluation ||
+      challenge.closed ||
+      evaluationsRemaining <= 0
+    ) {
+      lines.push(
+        "",
+        "Consulta el estado de tu postulación y tu siguiente paso:",
+        "  andes status",
+      );
+    } else {
+      lines.push(
+        "",
+        "SIGUIENTE PASO",
+        "Desde la carpeta broken-agent, lee el contrato, repara scheduler.js y ejecuta los tests públicos:",
+        "  andes challenge test --challenge broken-agent --source ./scheduler.js",
+        "Después prepara review.json con tu revisión y envía una evaluación oficial:",
+        "  andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+        "Abre personalmente el enlace de aprobación y repite el mismo comando. Los tests públicos por sí solos no completan el challenge.",
+      );
+    }
     return lines.join("\n");
   }
 
@@ -377,6 +392,7 @@ export const challengeTestText = (result: ChallengeLocalTestResult): string => {
     lines.push(
       "",
       "Corrige las regresiones públicas antes de usar una evaluación oficial.",
+      "Siguiente comando: andes challenge test --challenge broken-agent --source ./scheduler.js",
     );
     return lines.join("\n");
   }
@@ -485,12 +501,16 @@ export const challengeRankingText = (
     lines.push(
       "",
       `Ranking disponible ${formatChallengeOpeningInPeru(rankingVisibleAt)}.`,
+      "Siguiente comando para consultar tu postulación: andes status",
     );
     return lines.join("\n");
   }
   lines.push("");
   if (ranking.entries.length === 0) {
-    lines.push("Todavía no hay evaluaciones oficiales.");
+    lines.push(
+      "Todavía no hay evaluaciones oficiales.",
+      "Siguiente comando: andes",
+    );
     return lines.join("\n");
   }
   if (ranking.challenge.slug === "broken-agent") {
@@ -506,6 +526,11 @@ export const challengeRankingText = (
       const participant = [entry.displayName, ...profileLinks].join(" ");
       lines.push(`${rank}  ${accuracy}  ${points}  ${participant}`);
     }
+    lines.push(
+      "",
+      "El ranking no confirma tu aceptación. Consulta tu siguiente paso:",
+      "  andes status",
+    );
     return lines.join("\n");
   }
   lines.push("Rank  Accuracy  Exact        Queries  Name");
@@ -518,6 +543,11 @@ export const challengeRankingText = (
     const participant = [entry.displayName, ...profileLinks].join(" ");
     lines.push(`${rank}  ${accuracy}  ${exact}  ${queries}  ${participant}`);
   }
+  lines.push(
+    "",
+    "El ranking no confirma tu aceptación. Consulta tu siguiente paso:",
+    "  andes status",
+  );
   return lines.join("\n");
 };
 

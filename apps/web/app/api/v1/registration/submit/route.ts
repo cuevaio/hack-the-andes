@@ -14,13 +14,10 @@ export const POST = (request: Request): Promise<Response> =>
       email: participant.email,
       name: participant.name,
     });
-    const challengeAlreadyStarted = result.registration.challenges.some(
-      (challenge) => challenge.playable && challenge.status === "in_progress",
-    );
     await enqueuePostSubmissionRemindersBestEffort(
       participant.clerkUserId,
       result.registration.id,
-      challengeAlreadyStarted,
+      result.registration.challenges,
     );
     await captureProductEvent({
       distinctId: participant.clerkUserId,

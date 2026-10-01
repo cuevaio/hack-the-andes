@@ -10,7 +10,6 @@ import {
   completedChallengeParticipantCondition,
   startedChallengeParticipantCondition,
 } from "./metrics";
-import { challengeProgressStatus } from "./progress";
 
 describe("challenge activity metrics", () => {
   let client: PGlite;
@@ -84,34 +83,10 @@ describe("challenge activity metrics", () => {
       [firstCompletedId, secondCompletedId, hiddenCompletedId],
     );
 
-    const representedStatuses = [
-      challengeProgressStatus({
-        hasPersistedEvaluation: true,
-        queriesUsed: 2,
-        evaluationsUsed: 1,
-      }),
-      challengeProgressStatus({
-        hasPersistedEvaluation: true,
-        queriesUsed: 2,
-        evaluationsUsed: 1,
-      }),
-      challengeProgressStatus({
-        hasPersistedEvaluation: false,
-        queriesUsed: 1,
-        evaluationsUsed: 0,
-      }),
-    ];
-    const expectedCounts = {
-      completed: representedStatuses.filter((status) => status === "evaluated")
-        .length,
-      inProgress: representedStatuses.filter(
-        (status) => status === "in_progress",
-      ).length,
-    };
-
-    await expect(challengeActivityCounts(database)).resolves.toEqual(
-      expectedCounts,
-    );
+    await expect(challengeActivityCounts(database)).resolves.toEqual({
+      completed: 2,
+      inProgress: 1,
+    });
 
     const completedParticipants = await database.execute<{
       participant_id: string;
@@ -140,5 +115,28 @@ describe("challenge activity metrics", () => {
     expect(startedParticipants.rows.map((row) => row.participant_id)).toEqual(
       [firstCompletedId, secondCompletedId, inProgressId].sort(),
     );
+  });
+
+  test("counts public-test attempts without spent budget and excludes superseded versions", async () => {
+    const currentId = "00000000-0000-0000-0000-000000000001";
+    const historicalId = "00000000-0000-0000-0000-000000000002";
+    await client.query(
+      `insert into applications (participant_id) values ($1), ($2)`,
+      [currentId, historicalId],
+    );
+    await client.query(
+      `insert into challenge_attempts (id, participant_id, challenge_slug, challenge_version) values
+      ($1, $1, 'broken-agent', 'broken-agent-v3'), ($2, $2, 'broken-agent', 'broken-agent-v2')`,
+      [currentId, historicalId],
+    );
+    await expect(challengeActivityCounts(database)).resolves.toEqual({
+      completed: 0,
+      inProgress: 1,
+    });
+    const result = await database.execute<{ participant_id: string }>(sql`
+      select application.participant_id from applications as application
+      where ${startedChallengeParticipantCondition(sql`application.participant_id`)}
+    `);
+    expect(result.rows).toEqual([{ participant_id: currentId }]);
   });
 });

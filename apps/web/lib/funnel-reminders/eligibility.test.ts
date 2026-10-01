@@ -72,6 +72,17 @@ describe("funnel reminder eligibility", () => {
     }
   });
 
+  test("does not ask an evaluated participant to start another challenge", () => {
+    expect(
+      needsFunnelReminder("challenge_start", {
+        ...progress,
+        applicationStatus: "submitted",
+        applicationSubmitted: true,
+        challengeCompleted: true,
+      }),
+    ).toBe(false);
+  });
+
   test("does not promise another evaluation after the budget is exhausted", () => {
     expect(
       needsFunnelReminder("challenge_finish", {

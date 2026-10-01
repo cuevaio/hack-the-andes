@@ -31,6 +31,13 @@ import {
   registrationText,
   requirementsOnlyText,
 } from "./output.js";
+import {
+  loadParticipantGuidance,
+  type NextStep,
+  nextStepFor,
+  nextStepText,
+  withRegistrationNextStep,
+} from "./participant-guidance.js";
 import { uploadPicture } from "./picture-upload.js";
 import {
   cliPackageName,
@@ -38,6 +45,7 @@ import {
   updateChofex,
   upgradeVersion,
 } from "./upgrade.js";
+import { renderWelcome } from "./welcome.js";
 
 type InputStage = "application" | "acceptance";
 
@@ -64,55 +72,35 @@ const currentRegistration = (client: {
     }),
   );
 
-const rejectIfApplicationLocked = Effect.fn("rejectIfApplicationLocked")(
-  function* (
-    current: Option.Option<{
-      data: {
-        registration: { status: string };
-        requirements: { stage: string };
-      };
-    }>,
-  ) {
-    if (Option.isNone(current)) return;
-    const { registration, requirements } = current.value.data;
-    const { status } = registration;
-    const registrationAlreadyExists =
-      status === "submitted" ||
-      status === "under_review" ||
-      status === "waitlisted" ||
-      status === "accepted";
-    if (!registrationAlreadyExists) return;
-    let message = "Already registered. Wait for approval.";
-    if (status === "accepted") {
-      message = "Already accepted. Your registration is complete.";
-      if (requirements.stage === "accepted") {
-        message =
-          "Already accepted. Run `andes confirm` to complete your registration.";
-      }
-    }
-    return yield* cliError("ACTIVE_APPLICATION_EXISTS", message, false, {
-      currentStatus: status,
-    });
-  },
-);
-
 const registerCommand = Command.make(
   "register",
   { input: inputFlag },
   Effect.fn("registerCommand")(function* ({ input }) {
     const options = yield* root;
+    let existing = false;
     const operation = Effect.gen(function* () {
       const token = Option.getOrUndefined(options.token);
       const client = { apiUrl: options.apiUrl, token };
       const current = yield* currentRegistration(client);
-      yield* rejectIfApplicationLocked(current);
+      if (
+        Option.isSome(current) &&
+        !current.value.data.requirements.canSubmitNewApplication &&
+        !current.value.data.requirements.canSaveDraft
+      ) {
+        existing = true;
+        return current.value;
+      }
 
       if (Option.isSome(input)) {
         const body = yield* applicationInput(input.value, config.publicSiteUrl);
         return yield* register(client, body);
       }
 
-      if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      if (
+        options.output === "json" ||
+        !process.stdin.isTTY ||
+        !process.stdout.isTTY
+      ) {
         return yield* cliError(
           "INPUT_REQUIRED",
           "Non-interactive use requires --input <file>, or --input - for stdin",
@@ -121,7 +109,16 @@ const registerCommand = Command.make(
 
       return yield* interactiveRegister(client, current);
     });
-    yield* execute(options.output, operation, createdText);
+    yield* execute(
+      options.output,
+      withRegistrationNextStep(operation),
+      (result) => {
+        if (existing)
+          return `Tu postulación ya estaba enviada.\n${registrationText(result)}`;
+        return createdText(result);
+      },
+      registrationLookupErrorText,
+    );
   }),
 ).pipe(
   Command.withDescription("Complete and submit an application for review"),
@@ -175,7 +172,7 @@ const statusCommand = Command.make(
     });
     yield* execute(
       options.output,
-      operation,
+      withRegistrationNextStep(operation),
       registrationText,
       registrationLookupErrorText,
     );
@@ -193,7 +190,7 @@ const requirementsCommand = Command.make(
     });
     yield* execute(
       options.output,
-      operation,
+      withRegistrationNextStep(operation),
       requirementsOnlyText,
       registrationLookupErrorText,
     );
@@ -223,6 +220,13 @@ const badgeRegenerateCommand = Command.make(
       }
       const token = Option.getOrUndefined(options.token);
       const client = { apiUrl: options.apiUrl, token };
+      const current = yield* getRegistration(client);
+      if (current.data.requirements.stage !== "complete") {
+        return yield* cliError(
+          "INVALID_APPLICATION_STATE",
+          nextStepText(nextStepFor(current.data)),
+        );
+      }
       const badge = yield* getBadge(client);
       if (!badge.data.profile) {
         return yield* Effect.fail(
@@ -232,10 +236,7 @@ const badgeRegenerateCommand = Command.make(
           ),
         );
       }
-      const [current, currentUser] = yield* Effect.all([
-        getRegistration(client),
-        getCurrentUser(client),
-      ]);
+      const currentUser = yield* getCurrentUser(client);
       const body = yield* badgeProfileInput(inputPath, badge.data.profile, {
         clerkPictureUrl: currentUser.data.clerkPictureUrl,
         githubUrl: current.data.registration.githubUrl,
@@ -276,8 +277,31 @@ const badgeCommand = Command.make(
   Effect.fn("badgeCommand")(function* () {
     const options = yield* root;
     const token = Option.getOrUndefined(options.token);
-    const operation = getBadge({ apiUrl: options.apiUrl, token });
-    yield* execute(options.output, operation, badgeText);
+    const client = { apiUrl: options.apiUrl, token };
+    const operation = Effect.gen(function* () {
+      const current = yield* getRegistration(client);
+      if (current.data.registration.status !== "accepted") {
+        return yield* cliError(
+          "INVALID_APPLICATION_STATE",
+          nextStepText(nextStepFor(current.data)),
+        );
+      }
+      const badge = yield* getBadge(client);
+      return {
+        ...badge,
+        data: { ...badge.data, nextStep: nextStepFor(current.data) },
+      };
+    });
+    yield* execute(
+      options.output,
+      operation,
+      (result) => {
+        if (result.nextStep.kind === "confirm")
+          return `Tu carnet predeterminado no confirma tu asistencia.\n${result.url ?? "El carnet todavía se está preparando."}\n\n${nextStepText(result.nextStep)}`;
+        return badgeText(result);
+      },
+      registrationLookupErrorText,
+    );
   }),
 ).pipe(
   Command.withDescription("Muestra o regenera tu carnet de participante"),
@@ -299,12 +323,24 @@ const confirmCommand = Command.make(
       const token = Option.getOrUndefined(options.token);
       const client = { apiUrl: options.apiUrl, token };
       const current = yield* getRegistration(client);
+      if (
+        current.data.requirements.stage === "complete" &&
+        Option.isNone(input) &&
+        Option.isNone(picture)
+      )
+        return current;
       if (!current.data.requirements.canSubmitAcceptedDetails) {
         return yield* Effect.fail(
           cliError(
             "INVALID_APPLICATION_STATE",
-            "Acceptance details can only be submitted after acceptance",
+            nextStepText(nextStepFor(current.data)),
           ),
+        );
+      }
+      if (options.output === "json" && Option.isNone(input)) {
+        return yield* cliError(
+          "INPUT_REQUIRED",
+          "El modo JSON requiere --input <archivo> o --input -",
         );
       }
       const currentUser = yield* getCurrentUser(client);
@@ -330,6 +366,12 @@ const confirmCommand = Command.make(
       );
       const picturePath = Option.getOrUndefined(picture);
       if (body.pictureSource === "upload") {
+        if (options.output === "json" && picturePath === undefined) {
+          return yield* cliError(
+            "PICTURE_PATH_REQUIRED",
+            "Usa --picture <ruta> cuando pictureSource es upload",
+          );
+        }
         const path = yield* picturePathInput(picturePath);
         yield* uploadPicture(client, path);
       } else if (picturePath) {
@@ -340,7 +382,12 @@ const confirmCommand = Command.make(
       }
       return yield* confirmAttendance(client, body);
     });
-    yield* execute(options.output, operation, registrationText);
+    yield* execute(
+      options.output,
+      withRegistrationNextStep(operation),
+      registrationText,
+      registrationLookupErrorText,
+    );
   }),
 ).pipe(
   Command.withDescription(
@@ -373,6 +420,19 @@ const loginCommand = Command.make(
         token,
       });
       const environmentTokenActive = Boolean(process.env.CHOFEX_TOKEN);
+      const nextStep = yield* loadParticipantGuidance({
+        apiUrl: options.apiUrl,
+        token,
+      }).pipe(
+        Effect.map((response) => response.data.nextStep),
+        Effect.catch(() =>
+          Effect.succeed({
+            kind: "status",
+            message: "Consulta tu avance para continuar con tu siguiente paso.",
+            command: "andes",
+          } satisfies NextStep),
+        ),
+      );
       return {
         version: 1 as const,
         ok: true as const,
@@ -380,14 +440,15 @@ const loginCommand = Command.make(
         data: {
           authenticated: true as const,
           environmentTokenActive,
+          nextStep,
         },
       };
     });
     yield* execute(options.output, operation, (result) => {
       if (result.environmentTokenActive) {
-        return "Signed in successfully. CHOFEX_TOKEN is set and will override the stored session; unset it before running other commands.";
+        return "Sesión iniciada. CHOFEX_TOKEN está configurado y tiene prioridad sobre la sesión guardada; elimínalo del entorno para usar esta sesión.\nSiguiente comando: andes";
       }
-      return "Signed in successfully.";
+      return `Sesión iniciada.\n${result.nextStep.message}\nSiguiente comando: ${result.nextStep.command}`;
     });
   }),
 ).pipe(Command.withDescription("Sign in through Clerk OAuth in your browser"));
@@ -417,7 +478,7 @@ const logoutCommand = Command.make(
       if (result.environmentTokenActive) {
         return "Stored credentials removed. CHOFEX_TOKEN remains active; unset it to stop using that token.";
       }
-      return "Signed out successfully.";
+      return "Sesión cerrada. Para volver a continuar tu postulación:\nSiguiente comando: andes login";
     });
   }),
 ).pipe(Command.withDescription("Revoke and remove locally stored credentials"));
@@ -433,7 +494,7 @@ const whoamiCommand = Command.make(
       options.output,
       operation,
       (result) =>
-        `Authenticated as ${result.email} (${result.userId}, ${result.tokenType}).`,
+        `Sesión iniciada como ${result.email} (${result.userId}, ${result.tokenType}).\nConsulta tu siguiente paso: andes`,
     );
   }),
 ).pipe(Command.withDescription("Verify the current Clerk authentication"));
@@ -470,7 +531,7 @@ const makeUpgradeCommand = (name: "update" | "upgrade") =>
         options.output,
         operation,
         () =>
-          `Se actualizó ${cliPackageName} a la versión ${upgradeVersion} y se refrescó ${skillName}.`,
+          `Se actualizó ${cliPackageName} a la versión ${upgradeVersion} y se refrescó ${skillName}.\nSiguiente comando: andes`,
       );
     }),
   ).pipe(
@@ -494,6 +555,19 @@ const validateCommand = Command.make(
   { input: inputFlag, stage: stageFlag },
   Effect.fn("validateCommand")(function* ({ input, stage }) {
     const options = yield* root;
+    if (options.output === "json" && Option.isNone(input)) {
+      yield* execute(
+        options.output,
+        Effect.fail(
+          cliError(
+            "INPUT_REQUIRED",
+            "El modo JSON requiere --input <archivo> o --input -",
+          ),
+        ),
+        () => "",
+      );
+      return;
+    }
     const operation = inputValidation(stage, Option.getOrUndefined(input)).pipe(
       Effect.map(() => ({
         version: 1 as const,
@@ -502,11 +576,14 @@ const validateCommand = Command.make(
         data: { valid: true as const, stage },
       })),
     );
-    yield* execute(
-      options.output,
-      operation,
-      (result) => `${result.stage} input is valid.`,
-    );
+    yield* execute(options.output, operation, (result) => {
+      const command =
+        result.stage === "application" ? "andes register" : "andes confirm";
+      let nextCommand = command;
+      if (Option.isSome(input))
+        nextCommand += ` --input ${JSON.stringify(input.value)}`;
+      return `Datos válidos. Todavía no se enviaron.\nSiguiente comando: ${nextCommand}`;
+    });
   }),
 ).pipe(
   Command.withDescription("Validate input without submitting it"),
@@ -569,6 +646,30 @@ const schemaCommand = Command.make(
 );
 
 export const command = root.pipe(
+  Command.withHandler((options) =>
+    Effect.gen(function* () {
+      const client = {
+        apiUrl: options.apiUrl,
+        token: Option.getOrUndefined(options.token),
+      };
+      yield* execute(
+        options.output,
+        loadParticipantGuidance(client),
+        (result) => {
+          const welcome = renderWelcome({
+            columns: process.stdout.columns ?? 80,
+            colors:
+              process.stdout.isTTY === true &&
+              process.env.NO_COLOR === undefined,
+          });
+          const guidance = result.registration
+            ? registrationText(result.registration)
+            : nextStepText(result.nextStep);
+          return `${welcome}\n${guidance}\n\nTodos los comandos: andes --help`;
+        },
+      );
+    }),
+  ),
   Command.withSubcommands([
     loginCommand,
     logoutCommand,

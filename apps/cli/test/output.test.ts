@@ -98,14 +98,14 @@ const submittedResult: RegistrationResult = {
 
 describe("registration output", () => {
   test("shows that a withdrawn participant may apply again", () => {
-    const expected = "Application withdrawn. You may submit a new application.";
+    const expected = "Puedes enviar una nueva postulación.";
 
-    expect(requirementsOnlyText(withdrawnResult)).toBe(expected);
+    expect(requirementsOnlyText(withdrawnResult)).toContain(expected);
     expect(registrationText(withdrawnResult)).toContain(expected);
   });
 
   test("shows the next command for an accepted participant", () => {
-    const expected = "Next command: andes confirm";
+    const expected = "Siguiente comando: andes confirm";
 
     expect(requirementsOnlyText(acceptedResult)).toContain(expected);
     expect(registrationText(acceptedResult)).toContain(expected);
@@ -120,30 +120,29 @@ describe("registration output", () => {
 
   test("shows reviewer feedback for a rejected application", () => {
     expect(registrationText(rejectedResult)).toContain(
-      "Review feedback: Please add a concrete example of something you shipped.",
+      "Comentario del equipo: Please add a concrete example of something you shipped.",
     );
   });
 
   test("does not tell submitted applicants to wait instead of competing", () => {
     const output = registrationText(submittedResult);
 
-    expect(output).toContain("A seat has not been assigned");
-    expect(output).toContain("challenges técnicos son obligatorios");
-    expect(output).toContain("Next command: andes challenge");
+    expect(output).toContain("necesitas una evaluación oficial");
+    expect(output).toContain("Siguiente comando: andes challenge list");
     expect(output).not.toContain("No action needed");
   });
 });
 
 describe("badge output", () => {
   test("explains that a pending badge is not available yet", () => {
-    expect(badgeText({ status: "pending" })).toBe(
-      "Tu carnet se está generando.",
+    expect(badgeText({ status: "pending" })).toContain(
+      "Siguiente comando: andes badge",
     );
   });
 
   test("prints the badge URL when generation is complete", () => {
     expect(
       badgeText({ status: "completed", url: "https://example.com/badge.png" }),
-    ).toBe("https://example.com/badge.png");
+    ).toContain("https://example.com/badge.png");
   });
 });

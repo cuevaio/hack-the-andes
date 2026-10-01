@@ -71,10 +71,6 @@ export const startedChallengeParticipantCondition = (
     from "challenge_attempts" as "started_challenge_attempt"
     where "started_challenge_attempt"."participant_id" = ${participantId}
       and ${challengeCondition}
-      and (
-        "started_challenge_attempt"."queries_used" > 0
-        or "started_challenge_attempt"."evaluations_used" > 0
-      )
   )`;
 };
 
@@ -102,10 +98,6 @@ export const challengeActivityCounts = async (
             select 1
             from "challenge_evaluations" as evaluation
             where evaluation."attempt_id" = attempt."id"
-          )
-          and (
-            attempt."queries_used" > 0
-            or attempt."evaluations_used" > 0
           )
       )::integer as "in_progress"
     from "challenge_attempts" as attempt

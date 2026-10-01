@@ -1,10 +1,12 @@
+import type { ParticipantChallengeProgress } from "@chofex/challenges-contract";
 import { db } from "@chofex/db";
 import { and, desc, eq, inArray } from "@chofex/db/orm";
 import { applications, participants } from "@chofex/db/schema";
 import { tasks } from "@trigger.dev/sdk";
 
 import type { sendFunnelReminder } from "../../trigger/send-funnel-reminder";
-import { isBlackBoxParticipationOpen } from "../challenges/availability";
+import { currentChallengeVersionFor } from "../challenges/engine";
+import { reminderChallenge } from "./challenge";
 import type { FunnelReminderPayload } from "./types";
 
 export const funnelReminderDelay = "2h";
@@ -15,7 +17,7 @@ const challengeCandidateStatuses = [
   "waitlisted",
 ] as const;
 
-export const challengeReminderApplicationIdFor = async (
+const challengeReminderApplicationIdFor = async (
   clerkUserId: string,
 ): Promise<string | undefined> => {
   const [application] = await db
@@ -67,17 +69,34 @@ export const enqueueFunnelReminderBestEffort = async (
 export const enqueuePostSubmissionRemindersBestEffort = async (
   clerkUserId: string,
   applicationId: string,
-  challengeAlreadyStarted: boolean,
+  progress: ReadonlyArray<ParticipantChallengeProgress>,
 ): Promise<void> => {
-  if (!isBlackBoxParticipationOpen()) return;
-  const idempotencyKeySuffix = `application/${applicationId}`;
+  const started = progress.find(
+    (challenge) =>
+      challenge.playable &&
+      challenge.open &&
+      challenge.status === "in_progress",
+  );
+  const challenge = reminderChallenge({ slug: started?.slug });
+  if (!challenge) return;
+  const idempotencyKeySuffix = `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`;
   await enqueueFunnelReminderBestEffort(
-    { clerkUserId, stage: "challenge_start", applicationId },
+    {
+      clerkUserId,
+      stage: "challenge_start",
+      applicationId,
+      challengeSlug: challenge.slug,
+    },
     idempotencyKeySuffix,
   );
-  if (challengeAlreadyStarted) {
+  if (started) {
     await enqueueFunnelReminderBestEffort(
-      { clerkUserId, stage: "challenge_finish", applicationId },
+      {
+        clerkUserId,
+        stage: "challenge_finish",
+        applicationId,
+        challengeSlug: challenge.slug,
+      },
       idempotencyKeySuffix,
     );
   }
@@ -85,12 +104,27 @@ export const enqueuePostSubmissionRemindersBestEffort = async (
 
 export const enqueueChallengeFinishReminderBestEffort = async (
   clerkUserId: string,
-  applicationId: string | undefined,
+  challengeSlug: string,
 ): Promise<void> => {
-  if (!applicationId) return;
-  if (!isBlackBoxParticipationOpen()) return;
-  await enqueueFunnelReminderBestEffort(
-    { clerkUserId, stage: "challenge_finish", applicationId },
-    `application/${applicationId}`,
-  );
+  const challenge = reminderChallenge({ slug: challengeSlug });
+  if (!challenge) return;
+  try {
+    const applicationId = await challengeReminderApplicationIdFor(clerkUserId);
+    if (!applicationId) return;
+    await enqueueFunnelReminder(
+      {
+        clerkUserId,
+        stage: "challenge_finish",
+        applicationId,
+        challengeSlug: challenge.slug,
+      },
+      `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`,
+    );
+  } catch (error) {
+    console.error("Could not schedule challenge completion reminder", {
+      clerkUserId,
+      challengeSlug,
+      error,
+    });
+  }
 };
