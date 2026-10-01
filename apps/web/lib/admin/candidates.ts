@@ -84,6 +84,7 @@ type CandidateRecord = {
   readonly badge: typeof participantBadges.$inferSelect | null;
   readonly clerkUserId: string;
   readonly participantName: string | null;
+  readonly countryCode: string | null;
   readonly participantCreatedAt: Date;
   readonly attemptNumber: number;
   readonly applicationHistory: ReadonlyArray<ApplicationHistoryRecord>;
@@ -162,7 +163,7 @@ const toCandidate = (
       application.githubUrl,
     ),
     pronouns: optional(application.pronouns),
-    countryCode: optional(application.countryCode),
+    countryCode: optional(record.countryCode),
     city: optional(application.city),
     participationMode: optional(application.participationMode),
     organization: optional(application.organization),
@@ -356,6 +357,7 @@ const candidateRecordById = async (
       badge: participantBadges,
       clerkUserId: participants.clerkUserId,
       participantName: participants.name,
+      countryCode: participants.countryCode,
       participantCreatedAt: participants.createdAt,
     })
     .from(applications)
@@ -461,6 +463,7 @@ export const listCandidates = async (
         badge: participantBadges,
         clerkUserId: participants.clerkUserId,
         participantName: participants.name,
+        countryCode: participants.countryCode,
         participantCreatedAt: participants.createdAt,
       })
       .from(applications)

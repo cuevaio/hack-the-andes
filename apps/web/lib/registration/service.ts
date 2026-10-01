@@ -16,9 +16,9 @@ import {
   applicationDraftReplacementFrom,
   applicationRequirementsFor,
   applicationSemanticRequirements,
+  CountryInput,
   type CreatedRegistration,
   fullNameColumnRequirements,
-  hackathonCountryCode,
   hackathonParticipationMode,
   PictureSource,
   type RegistrationResult,
@@ -31,7 +31,7 @@ import { challengeProgressForParticipant } from "../challenges/service";
 import { badgeOneLinerFor } from "../credential/profile";
 import { isUniqueViolation } from "../db-errors";
 import { HttpError } from "./http";
-import { participantIdFor } from "./participants";
+import { participantIdFor, selectParticipantCountry } from "./participants";
 import { confirmedPictureUrl } from "./pictures";
 import { encryptSensitiveValue } from "./sensitive";
 
@@ -129,6 +129,7 @@ const toView = (
   application: ApplicationRecord,
   details: AcceptanceDetailsRecord | undefined,
   challenges: ReadonlyArray<ParticipantChallengeProgress>,
+  countryCode: string | null,
 ): RegistrationView => ({
   id: application.id,
   status: application.status,
@@ -140,7 +141,7 @@ const toView = (
   phone: optional(details?.phone ?? application.phone),
   dateOfBirth: optionalDateString(details?.dateOfBirth),
   pronouns: optional(application.pronouns),
-  countryCode: optional(application.countryCode),
+  countryCode: optional(countryCode),
   city: optional(application.city),
   participationMode: application.participationMode ?? "in_person",
   organization: optional(application.organization),
@@ -178,10 +179,20 @@ const resultFor = async (
   application: ApplicationRecord,
   details?: AcceptanceDetailsRecord,
 ): Promise<RegistrationResult> => {
-  const challenges = await challengeProgressForParticipant(
-    application.participantId,
+  const [challenges, [participant]] = await Promise.all([
+    challengeProgressForParticipant(application.participantId),
+    db
+      .select({ countryCode: participants.countryCode })
+      .from(participants)
+      .where(eq(participants.id, application.participantId)),
+  ]);
+  if (!participant) throw new Error("Application participant not found");
+  const registration = toView(
+    application,
+    details,
+    challenges,
+    participant.countryCode,
   );
-  const registration = toView(application, details, challenges);
   return {
     registration,
     requirements: applicationRequirementsFor(registration),
@@ -202,7 +213,6 @@ const draftColumnsFrom = (
 ): DraftColumns => {
   const values: DraftColumns = {
     email: identity.email,
-    countryCode: hackathonCountryCode,
     participationMode: hackathonParticipationMode,
     pronouns: null,
     city: null,
@@ -305,6 +315,10 @@ export const saveRegistrationDraft = async (
     );
   }
 
+  if (input.countryCode !== undefined) {
+    await selectParticipantCountry(participantId, input.countryCode);
+  }
+
   if (current?.application.status === "draft") {
     const [application] = await db
       .update(applications)
@@ -387,6 +401,7 @@ export const submitRegistration = async (
         sql`${applications.firstName} is not null`,
         sql`${applications.role} is not null`,
         sql`${applications.codeOfConductAcceptedAt} is not null`,
+        sql`exists (select 1 from ${participants} where ${participants.id} = ${applications.participantId} and ${participants.countryCode} is not null)`,
       ),
     )
     .returning();
@@ -462,6 +477,19 @@ export const getRegistration = async (
   clerkUserId: string,
 ): Promise<RegistrationResult> => {
   const current = await latestApplicationFor(clerkUserId);
+  return resultFor(current.application, current.details);
+};
+
+export const selectRegistrationCountry = async (
+  clerkUserId: string,
+  rawInput: unknown,
+): Promise<RegistrationResult> => {
+  const { countryCode } = parseInput(CountryInput, rawInput);
+  const current = await latestApplicationFor(clerkUserId);
+  await selectParticipantCountry(
+    current.application.participantId,
+    countryCode,
+  );
   return resultFor(current.application, current.details);
 };
 

@@ -17,6 +17,7 @@
     "predev": "node scripts/vendor-vision.mjs"
   },
   "dependencies": {
+    "@base-ui/react": "^1.8.0",
     "@chofex/challenges-contract": "*",
     "@chofex/db": "*",
     "@chofex/registration-contract": "*",

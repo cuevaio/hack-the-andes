@@ -67,6 +67,7 @@ import Image from "next/image";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { brandName } from "@/components/landing/content";
+import { ParticipantCountry } from "@/components/participant-country";
 import {
   type CandidateFilters,
   candidateKeys,
@@ -573,6 +574,7 @@ const CandidateDrawer = ({
 }) => {
   const [message, setMessage] = useState("");
   const [notify, setNotify] = useState(true);
+  const [countryDialogOpen, setCountryDialogOpen] = useState(false);
   const decisionMutation = useMutation({
     mutationFn: submitCandidateDecision,
     onSuccess: (result) => {
@@ -583,7 +585,7 @@ const CandidateDrawer = ({
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || countryDialogOpen) return;
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       const target = event.target;
       if (
@@ -605,7 +607,7 @@ const CandidateDrawer = ({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasNext, hasPrevious, onNext, onPrevious, open]);
+  }, [hasNext, hasPrevious, onNext, onPrevious, open, countryDialogOpen]);
 
   if (!candidate) return null;
 
@@ -738,6 +740,11 @@ const CandidateDrawer = ({
                   <div>
                     <h2 className="flex items-center gap-1 text-xl font-semibold tracking-tight">
                       <span>{displayName(candidate)}</span>
+                      <ParticipantCountry
+                        key={candidate.id}
+                        candidate={candidate}
+                        onOpenChange={setCountryDialogOpen}
+                      />
                       <WhatsAppLink
                         candidate={candidate}
                         adminFirstName={adminFirstName}
@@ -1821,6 +1828,7 @@ const CandidateRows = ({
                 <span className="truncate text-sm font-medium">
                   {displayName(candidate)}
                 </span>
+                <ParticipantCountry candidate={candidate} />
                 <WhatsAppLink
                   candidate={candidate}
                   adminFirstName={adminFirstName}

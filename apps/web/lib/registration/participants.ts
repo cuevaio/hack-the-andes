@@ -1,6 +1,33 @@
 import { db } from "@chofex/db";
-import { eq } from "@chofex/db/orm";
+import { and, eq, isNull, or } from "@chofex/db/orm";
 import { participants } from "@chofex/db/schema";
+import { HttpError } from "./http";
+
+export const selectParticipantCountry = async (
+  participantId: string,
+  countryCode: string,
+): Promise<void> => {
+  const [selected] = await db
+    .update(participants)
+    .set({ countryCode, updatedAt: new Date() })
+    .where(
+      and(
+        eq(participants.id, participantId),
+        or(
+          isNull(participants.countryCode),
+          eq(participants.countryCode, countryCode),
+        ),
+      ),
+    )
+    .returning({ id: participants.id });
+  if (!selected) {
+    throw new HttpError(
+      409,
+      "COUNTRY_ALREADY_SET",
+      "Tu país ya está guardado. Solo el equipo organizador puede corregirlo tras revisar tu LinkedIn u otras redes sociales.",
+    );
+  }
+};
 
 export const participantIdFor = async (
   clerkUserId: string,

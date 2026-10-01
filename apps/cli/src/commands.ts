@@ -1,5 +1,9 @@
-import { joinFullName } from "@chofex/registration-contract";
-import { Console, Effect, Option } from "effect";
+import {
+  CountryCode,
+  countryTravelNotice,
+  joinFullName,
+} from "@chofex/registration-contract";
+import { Console, Effect, Option, Schema } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
 import {
   confirmAttendance,
@@ -8,6 +12,7 @@ import {
   getRegistration,
   regenerateBadge,
   register,
+  selectRegistrationCountry,
 } from "./api-client.js";
 import { login as oauthLogin, logout as oauthLogout } from "./auth.js";
 import { challengeCommand } from "./challenge-commands.js";
@@ -21,6 +26,7 @@ import {
   applicationInput,
   badgeProfileInput,
   picturePathInput,
+  selectCountry,
 } from "./input.js";
 import {
   badgeText,
@@ -93,6 +99,9 @@ const registerCommand = Command.make(
 
       if (Option.isSome(input)) {
         const body = yield* applicationInput(input.value, config.publicSiteUrl);
+        yield* Effect.sync(() =>
+          process.stderr.write(`${countryTravelNotice(body.countryCode)}\n`),
+        );
         return yield* register(client, body);
       }
 
@@ -178,6 +187,60 @@ const statusCommand = Command.make(
     );
   }),
 ).pipe(Command.withDescription("Show your latest application and next steps"));
+
+const countryCommand = Command.make(
+  "country",
+  { code: Flag.string("code").pipe(Flag.optional) },
+  Effect.fn("countryCommand")(function* ({ code }) {
+    const options = yield* root;
+    const operation = Effect.gen(function* () {
+      const client = {
+        apiUrl: options.apiUrl,
+        token: Option.getOrUndefined(options.token),
+      };
+      const current = yield* getRegistration(client);
+      let countryCode: string;
+      if (Option.isSome(code)) {
+        countryCode = yield* Schema.decodeUnknownEffect(CountryCode)(
+          code.value,
+        ).pipe(
+          Effect.mapError(() =>
+            cliError(
+              "VALIDATION_ERROR",
+              "Usa un código de país ISO de dos letras válido, como PE.",
+            ),
+          ),
+        );
+        yield* Effect.sync(() =>
+          process.stderr.write(`${countryTravelNotice(countryCode)}\n`),
+        );
+      } else {
+        if (current.data.registration.countryCode) return current;
+        if (
+          options.output === "json" ||
+          !process.stdin.isTTY ||
+          !process.stdout.isTTY
+        ) {
+          return yield* cliError(
+            "INPUT_REQUIRED",
+            "Indica tu país de residencia con --code, por ejemplo: andes country --code PE",
+          );
+        }
+        countryCode = yield* selectCountry().pipe(
+          Effect.mapError(() =>
+            cliError("PROMPT_CANCELLED", "Selección de país cancelada."),
+          ),
+        );
+      }
+      return yield* selectRegistrationCountry(client, countryCode);
+    });
+    yield* execute(options.output, operation, registrationText);
+  }),
+).pipe(
+  Command.withDescription(
+    "Selecciona tu país de residencia una sola vez; solo el equipo puede corregirlo",
+  ),
+);
 
 const requirementsCommand = Command.make(
   "requirements",
@@ -597,6 +660,7 @@ const validateCommand = Command.make(
 );
 
 const applicationTemplate = {
+  countryCode: "PE",
   fullName: "Ada Lovelace",
   role: "Programmer",
   phone: "+51 999 999 999",
@@ -679,6 +743,7 @@ export const command = root.pipe(
     validateCommand,
     registerCommand,
     statusCommand,
+    countryCommand,
     requirementsCommand,
     badgeCommand,
     confirmCommand,

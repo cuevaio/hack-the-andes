@@ -22,6 +22,7 @@ import {
 } from "./index.js";
 
 const application = {
+  countryCode: "PE",
   fullName: " Ada Lovelace ",
   role: "Programmer",
   codeOfConductAccepted: true,
@@ -32,6 +33,7 @@ const registrationView = (
 ): RegistrationView => ({
   id: "application_123",
   status: "submitted",
+  countryCode: "PE",
   firstName: "Ada",
   lastName: "Lovelace",
   email: "ada@example.com",
@@ -103,6 +105,35 @@ describe("campaign attribution OAuth handoff", () => {
 });
 
 describe("registration contract", () => {
+  test("requires a real country on registration and forbids clearing it in drafts", () => {
+    expect(
+      Schema.decodeUnknownSync(ApplicationInput)({
+        ...application,
+        countryCode: "US",
+      }).countryCode,
+    ).toBe("US");
+    for (const countryCode of [undefined, null, "", "ZZ", "Peru", "pe"]) {
+      expect(() =>
+        Schema.decodeUnknownSync(ApplicationInput)({
+          ...application,
+          countryCode,
+        }),
+      ).toThrow();
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(ApplicationDraftInput)({ countryCode: null }),
+    ).toThrow();
+    expect(
+      Schema.decodeUnknownSync(ApplicationDraftInput)({ role: "Builder" }),
+    ).toEqual({ role: "Builder" });
+    const requirements = applicationRequirementsFor(
+      registrationView({ status: "draft", countryCode: undefined }),
+    );
+    expect(requirements.canSubmitApplication).toBe(false);
+    expect(requirements.missing).toEqual([
+      { field: "countryCode", reason: "Selecciona tu país de residencia" },
+    ]);
+  });
   test("decodes an authenticated CLI identity", () => {
     expect(
       Schema.decodeUnknownSync(CurrentUserSchema)({
@@ -147,7 +178,6 @@ describe("registration contract", () => {
       })({
         ...application,
         email: "other@example.com",
-        countryCode: "US",
         participationMode: "remote",
       }),
     ).toThrow();

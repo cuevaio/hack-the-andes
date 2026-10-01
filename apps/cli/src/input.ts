@@ -15,11 +15,14 @@ import {
   BadgeRegenerationInput,
   badgeRegenerationInputFieldNames,
   badgeRegenerationInputFields,
+  countries,
+  countrySelectionNotice,
+  countryTravelNotice,
   dateOfBirthRequirement,
   joinFullName,
   type RegistrationView,
 } from "@chofex/registration-contract";
-import { Effect, Schema } from "effect";
+import { Console, Effect, Schema } from "effect";
 import { Prompt } from "effect/unstable/cli";
 import type * as PromptModule from "effect/unstable/cli/Prompt";
 
@@ -139,6 +142,7 @@ const withoutEmptyStrings = (
 export const applicationDefaultsFromRegistration = (
   registration: RegistrationView,
 ): Partial<ApplicationInput> => ({
+  countryCode: registration.countryCode,
   fullName: joinFullName(registration.firstName, registration.lastName),
   role: registration.role,
   phone: registration.applicationPhone,
@@ -299,6 +303,7 @@ export const collectApplicationFields = (
   defaults: Partial<ApplicationInput>,
 ): Effect.Effect<Record<string, unknown>, CliError, PromptModule.Environment> =>
   Effect.gen(function* () {
+    const countryCode = yield* selectCountry(defaults.countryCode);
     const profile = yield* Prompt.run(applicationPrompts(defaults));
     const codeOfConductAccepted = yield* requiredAgreement(
       "Terms and Conditions",
@@ -306,6 +311,7 @@ export const collectApplicationFields = (
       defaults.codeOfConductAccepted,
     );
     return normalizeDraftFields({
+      countryCode,
       ...profile,
       codeOfConductAccepted,
     });
@@ -315,6 +321,28 @@ export const collectApplicationFields = (
       return cliError("PROMPT_CANCELLED", "Interactive input was cancelled");
     }),
   );
+
+export const countryPrompt = () =>
+  Prompt.autoComplete({
+    message: "¿En qué país resides?",
+    filterLabel: "País",
+    filterPlaceholder: "Escribe para buscar",
+    emptyMessage: "No se encontraron países",
+    choices: countries.map(({ code, name, flag }) => ({
+      title: `${flag} ${name} (${code})`,
+      value: code,
+    })),
+  });
+
+export const selectCountry = Effect.fn("selectCountry")(function* (
+  currentCountry?: string,
+) {
+  if (currentCountry) return currentCountry;
+  yield* Console.error(countrySelectionNotice);
+  const countryCode = yield* Prompt.run(countryPrompt());
+  yield* Console.error(countryTravelNotice(countryCode));
+  return countryCode;
+});
 
 const shirtSizePrompt = (
   participationMode: "in_person" | "remote",

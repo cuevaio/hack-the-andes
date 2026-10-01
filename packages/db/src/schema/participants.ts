@@ -8,6 +8,7 @@ export const participants = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     clerkUserId: varchar("clerk_user_id", { length: 255 }).notNull(),
     name: varchar("name", { length: 200 }),
+    countryCode: varchar("country_code", { length: 2 }),
     ...auditTimestamps(),
   },
   (table) => [

@@ -8,6 +8,10 @@ A person identified by a Clerk user account who may apply to join the hackathon.
 
 The participant's public name used in the admin dashboard, challenge rankings, and badge. It begins with their Clerk name and may be changed during attendance confirmation without changing their legal full name.
 
+## Participant country
+
+The participant's country of residence persists across application attempts. Participants select it once; only admins and application reviewers may correct it after reviewing LinkedIn or other social profiles. An unknown country is not assumed to be Peru. The event is in Lima. Participants residing outside Peru pay for their travel; travel support is reserved for exceptional talent residing in other Peruvian cities.
+
 ## Application
 
 One attempt by a participant to enter the hackathon. A rejected or withdrawn application remains part of the participant's history; either outcome permits the participant to create a new application.

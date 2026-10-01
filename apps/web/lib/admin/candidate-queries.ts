@@ -94,3 +94,22 @@ export const submitCandidateDecision = async (
   );
   return responseData<CandidateDecisionResult>(response);
 };
+
+export interface ParticipantCountryUpdate {
+  readonly participantId: string;
+  readonly countryCode: string;
+}
+
+export const updateParticipantCountry = async (
+  input: ParticipantCountryUpdate,
+): Promise<ParticipantCountryUpdate> => {
+  const response = await fetch(
+    `/api/admin/participants/${input.participantId}/country`,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ countryCode: input.countryCode }),
+    },
+  );
+  return responseData<ParticipantCountryUpdate>(response);
+};

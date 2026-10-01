@@ -111,7 +111,7 @@ answers” is not an answer and must not be offered. Ask only for fields the
 participant has not already answered. Group the questionnaire so the participant
 can scan and answer it naturally:
 
-- required profile: full name and role;
+- required profile: full name, role, and country of residence;
 - optional profile: phone number, bio, portfolio URL, something they have
   shipped, LinkedIn, and GitHub URLs; and
 - required Terms and Conditions.
@@ -119,8 +119,17 @@ can scan and answer it naturally:
 Explain these rules while collecting answers:
 
 - Registration is for the in-person event in Lima, Peru. The application uses
-  the authenticated account's primary email and records Peru as the country.
-- `fullName` and `role` are required.
+  the authenticated account's primary email.
+- `fullName`, `role`, and `countryCode` are required. Ask for the participant's
+  country of residence and use its ISO two-letter code. Do not assume Peru.
+- The participant chooses their country once. Only the organizers can correct
+  it after reviewing LinkedIn or other social profiles. Reuse the saved country
+  on reapplication. Existing participants with no country can select it with
+  `andes country --code PE`, replacing `PE` with their actual country.
+- Before submitting a country other than Peru, explain that the event is in
+  Lima and participants outside Peru must cover their travel costs. Travel
+  support is reserved for exceptional talent residing in Peruvian cities other
+  than Lima. Do not promise travel support.
 - Every field grouped under optional profile is optional.
 - `codeOfConductAccepted` must be the participant's explicit `true`; an agent
   cannot consent for them.

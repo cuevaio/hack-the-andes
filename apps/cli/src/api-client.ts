@@ -279,6 +279,20 @@ export const getRegistration = (
     decodeRegistrationResult,
   );
 
+export const selectRegistrationCountry = (
+  options: ApiClientOptions,
+  countryCode: string,
+): Effect.Effect<ApiSuccess<RegistrationResult>, CliError> =>
+  request(
+    options,
+    "/api/v1/registration/country",
+    {
+      method: "PUT",
+      body: JSON.stringify({ countryCode }),
+    },
+    decodeRegistrationResult,
+  );
+
 export const getBadge = (
   options: ApiClientOptions,
 ): Effect.Effect<ApiSuccess<BadgeResult>, CliError> =>

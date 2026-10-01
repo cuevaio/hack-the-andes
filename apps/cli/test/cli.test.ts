@@ -32,6 +32,105 @@ const runCli = (...arguments_: ReadonlyArray<string>) =>
   runCliFrom(cliDirectory, ...arguments_);
 
 describe("CLI JSON mode", () => {
+  test("selects a missing country for an existing application and reports locked-country errors", async () => {
+    let countryCode: string | undefined;
+    let writes = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        if (request.method === "PUT") {
+          expect(new URL(request.url).pathname).toBe(
+            "/api/v1/registration/country",
+          );
+          const body = await request.json();
+          if (countryCode && countryCode !== body.countryCode) {
+            return Response.json(
+              {
+                version: 1,
+                ok: false,
+                requestId: "country-lock",
+                error: {
+                  code: "COUNTRY_ALREADY_SET",
+                  message: "Solo el equipo puede corregir tu país.",
+                  retryable: false,
+                },
+              },
+              { status: 409 },
+            );
+          }
+          countryCode = body.countryCode;
+          writes++;
+        }
+        return Response.json({
+          version: 1,
+          ok: true,
+          requestId: "country-result",
+          data: {
+            registration: {
+              id: "existing",
+              status: "submitted",
+              firstName: "Ada",
+              lastName: "Lovelace",
+              email: "ada@example.com",
+              countryCode,
+              participationMode: "in_person",
+              nationalIdProvided: false,
+              mediaConsent: false,
+              codeOfConductAccepted: true,
+              privacyPolicyAccepted: true,
+              createdAt: "2026-09-01T00:00:00.000Z",
+              updatedAt: "2026-09-01T00:00:00.000Z",
+              challenges: [],
+            },
+            requirements: {
+              stage: "review",
+              canSubmitNewApplication: false,
+              canSubmitAcceptedDetails: false,
+              canSaveDraft: false,
+              canSubmitApplication: false,
+              parts: [],
+              missing: [],
+            },
+          },
+        });
+      },
+    });
+    const runCountry = (...args: string[]) =>
+      runCli(
+        "--api-url",
+        server.url.toString().replace(/\/$/, ""),
+        "--token",
+        "test-token",
+        "--output",
+        "json",
+        "country",
+        ...args,
+      );
+    try {
+      const missing = await runCountry();
+      expect(JSON.parse(missing.stdout).error.code).toBe("INPUT_REQUIRED");
+      const selected = await runCountry("--code", "CO");
+      expect(selected.exitCode).toBe(0);
+      expect(selected.stdout.trim().split("\n")).toHaveLength(1);
+      expect(JSON.parse(selected.stdout).data.registration.countryCode).toBe(
+        "CO",
+      );
+      expect(selected.stderr).toContain("debes cubrir tus gastos de viaje");
+      const current = await runCountry();
+      expect(JSON.parse(current.stdout).data.registration.countryCode).toBe(
+        "CO",
+      );
+      expect(writes).toBe(1);
+      const changed = await runCountry("--code", "PE");
+      expect(JSON.parse(changed.stdout).error.code).toBe("COUNTRY_ALREADY_SET");
+      const invalid = await runCountry("--code", "ZZ");
+      expect(JSON.parse(invalid.stdout).error.code).toBe("VALIDATION_ERROR");
+      expect(writes).toBe(1);
+    } finally {
+      server.stop(true);
+    }
+  });
   test("returns one JSON error document for invalid arguments", async () => {
     const { exitCode, stderr, stdout } = await runCli(
       "--output",
@@ -866,7 +965,7 @@ describe("CLI JSON mode", () => {
     expect(template).toHaveProperty("shippedProject");
     expect(template).toHaveProperty("codeOfConductAccepted");
     expect(template).not.toHaveProperty("email");
-    expect(template).not.toHaveProperty("countryCode");
+    expect(template).toHaveProperty("countryCode", "PE");
     expect(template).not.toHaveProperty("participationMode");
   });
 
@@ -891,6 +990,7 @@ describe("CLI JSON mode", () => {
         JSON.stringify({
           fullName: "Anthony Cueva",
           role: "Builder",
+          countryCode: "PE",
           codeOfConductAccepted: true,
         }),
       );
@@ -1073,6 +1173,7 @@ describe("CLI JSON mode", () => {
         inputPath,
         JSON.stringify({
           fullName: " Anthony Cueva ",
+          countryCode: "CO",
           role: "Builder",
           phone: "+51 999 999 999",
           bio: "I build developer tools.",
@@ -1103,6 +1204,7 @@ describe("CLI JSON mode", () => {
       expect(submittedMethod).toBe("POST");
       expect(submittedPath).toBe("/api/v1/registrations");
       expect(submittedBody).toEqual({
+        countryCode: "CO",
         fullName: "Anthony Cueva",
         role: "Builder",
         phone: "+51 999 999 999",
@@ -1113,7 +1215,9 @@ describe("CLI JSON mode", () => {
         codeOfConductAccepted: true,
       });
       expect(submittedBody).not.toHaveProperty("email");
-      expect(submittedBody).not.toHaveProperty("countryCode");
+      expect(result.stdout.trim().split("\n")).toHaveLength(1);
+      expect(result.stderr).toContain("debes cubrir tus gastos de viaje");
+      expect(result.stderr).toContain("talento excepcional");
       expect(submittedBody).not.toHaveProperty("participationMode");
       expect(submittedBody).not.toHaveProperty("firstName");
       expect(submittedBody).not.toHaveProperty("lastName");

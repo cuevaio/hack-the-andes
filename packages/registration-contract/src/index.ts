@@ -1,5 +1,8 @@
 import { ParticipantChallengeProgressSchema } from "@chofex/challenges-contract";
 import { DateTime, Option, Schema, SchemaGetter } from "effect";
+import { CountryCode } from "./countries.js";
+
+export * from "./countries.js";
 
 export const campaignAttributionHandoffHeader =
   "x-chofex-campaign-attribution" as const;
@@ -107,7 +110,6 @@ export const RegistrationStatus = Schema.Literals([
 ]);
 
 export const ParticipationMode = Schema.Literals(["in_person", "remote"]);
-export const hackathonCountryCode = "PE" as const;
 export const hackathonParticipationMode = "in_person" as const;
 export const TeamPreference = Schema.Literals([
   "have_team",
@@ -196,6 +198,7 @@ export const joinFullName = (
 };
 
 export const applicationInputFields = {
+  countryCode: CountryCode,
   fullName: nonBlank(givenNameMaximum + familyNameMaximum + 1),
   role: nonBlank(120),
   phone: Schema.optional(phone),
@@ -214,6 +217,7 @@ export const ApplicationInput = Schema.Struct(applicationInputFields);
 export type ApplicationInput = typeof ApplicationInput.Type;
 
 export const applicationDraftInputFields = {
+  countryCode: Schema.optional(CountryCode),
   fullName: Schema.optional(applicationInputFields.fullName),
   role: nullableOptionalText(120),
   phone: Schema.optional(Schema.NullOr(phone)),
@@ -285,6 +289,7 @@ export const AcceptedDetailsInput = Schema.Struct(acceptedDetailsInputFields);
 export type AcceptedDetailsInput = typeof AcceptedDetailsInput.Type;
 
 export const initialRequiredFields = [
+  "countryCode",
   "fullName",
   "role",
   "codeOfConductAccepted",
@@ -383,7 +388,7 @@ export const RegistrationViewSchema = Schema.Struct({
   phone: Schema.optional(Schema.String),
   dateOfBirth: Schema.optional(Schema.String),
   pronouns: Schema.optional(Schema.String),
-  countryCode: Schema.optional(Schema.String),
+  countryCode: Schema.optional(CountryCode),
   city: Schema.optional(Schema.String),
   participationMode: ParticipationMode,
   organization: Schema.optional(Schema.String),
@@ -508,6 +513,12 @@ export const applicationPartsFor = (
   registration: RegistrationView,
 ): ReadonlyArray<ApplicationPart> => {
   const identityMissing: Array<Requirement> = [];
+  if (!registration.countryCode) {
+    identityMissing.push({
+      field: "countryCode",
+      reason: "Selecciona tu país de residencia",
+    });
+  }
   if (
     !requiredValue(joinFullName(registration.firstName, registration.lastName))
   ) {

@@ -2,6 +2,7 @@ import {
   type ApiSuccess,
   type BadgeResult,
   type CreatedRegistration,
+  countryName,
   type RegistrationResult,
   RequirementSchema,
 } from "@chofex/registration-contract";
@@ -114,13 +115,20 @@ const statusLabels = {
   withdrawn: "Retirada",
 } satisfies Record<RegistrationResult["registration"]["status"], string>;
 
-export const registrationText = (result: RegistrationResult): string =>
-  [
+export const registrationText = (result: RegistrationResult): string => {
+  let countryLine =
+    "País pendiente. Selecciónalo una sola vez con: andes country";
+  if (result.registration.countryCode) {
+    countryLine = `País: ${countryName(result.registration.countryCode)}`;
+  }
+  return [
     `Postulación: ${result.registration.id}`,
     `Participante: ${result.registration.firstName} ${result.registration.lastName}`,
     `Estado: ${statusLabels[result.registration.status]}`,
+    countryLine,
     requirementsText(result),
   ].join("\n");
+};
 
 export const createdText = (result: CreatedRegistration): string => {
   if (result.registration.status === "draft") {

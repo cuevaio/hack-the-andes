@@ -33,7 +33,6 @@ export const applications = pgTable(
     lastName: varchar("last_name", { length: 100 }),
     email: varchar("email", { length: 320 }),
     pronouns: varchar("pronouns", { length: 50 }),
-    countryCode: varchar("country_code", { length: 2 }),
     city: varchar("city", { length: 120 }),
     participationMode: participationMode("participation_mode"),
     organization: varchar("organization", { length: 200 }),

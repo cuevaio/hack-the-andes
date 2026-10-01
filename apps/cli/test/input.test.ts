@@ -6,9 +6,11 @@ import * as Terminal from "effect/Terminal";
 
 import {
   applicationDefaultsFromRegistration,
+  countryPrompt,
   dateOfBirthPrompt,
   normalizeDraftFields,
   publicDocumentUrl,
+  selectCountry,
 } from "../src/input.js";
 
 const input = (value: string, name = value): Terminal.UserInput => ({
@@ -17,10 +19,33 @@ const input = (value: string, name = value): Terminal.UserInput => ({
 });
 
 describe("CLI registration input", () => {
+  test("searches countries by name and keeps a saved country without prompting", async () => {
+    const program = Effect.gen(function* () {
+      const inputs = yield* Queue.make<Terminal.UserInput, Cause.Done>();
+      yield* Queue.offerAll(inputs, [input("Colombia"), input("\r", "return")]);
+      const terminal = Terminal.make({
+        columns: Effect.succeed(120),
+        rows: Effect.succeed(40),
+        readInput: Effect.succeed(inputs),
+        readLine: Effect.never,
+        display: () => Effect.void,
+      });
+      return yield* countryPrompt().pipe(
+        Effect.provideService(Terminal.Terminal, terminal),
+      );
+    }).pipe(Effect.provide(NodeServices.layer));
+    expect(await Effect.runPromise(program)).toBe("CO");
+    expect(
+      await Effect.runPromise(
+        selectCountry("US").pipe(Effect.provide(NodeServices.layer)),
+      ),
+    ).toBe("US");
+  });
   test("reuses application fields from a previous registration", () => {
     const defaults = applicationDefaultsFromRegistration({
       id: "registration-123",
       status: "rejected",
+      countryCode: "CO",
       firstName: "Anthony",
       lastName: "Cueva",
       email: "hi@cueva.io",
@@ -44,6 +69,7 @@ describe("CLI registration input", () => {
     });
 
     expect(defaults).toEqual({
+      countryCode: "CO",
       fullName: "Anthony Cueva",
       phone: "+51 999 999 999",
       role: "Builder",
