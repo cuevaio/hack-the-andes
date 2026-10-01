@@ -84,6 +84,7 @@ type CandidateRecord = {
   readonly badge: typeof participantBadges.$inferSelect | null;
   readonly clerkUserId: string;
   readonly participantName: string | null;
+  readonly participantLegalName: string | null;
   readonly countryCode: string | null;
   readonly participantCreatedAt: Date;
   readonly attemptNumber: number;
@@ -195,7 +196,7 @@ const toCandidate = (
     attemptNumber: record.attemptNumber,
     applicationHistory,
     decisionHistory,
-    documentFullName: optional(details?.fullName),
+    documentFullName: optional(record.participantLegalName),
     phone: optional(details?.phone),
     dateOfBirth,
     shirtSize: optional(details?.shirtSize),
@@ -357,6 +358,7 @@ const candidateRecordById = async (
       badge: participantBadges,
       clerkUserId: participants.clerkUserId,
       participantName: participants.name,
+      participantLegalName: participants.legalName,
       countryCode: participants.countryCode,
       participantCreatedAt: participants.createdAt,
     })
@@ -463,6 +465,7 @@ export const listCandidates = async (
         badge: participantBadges,
         clerkUserId: participants.clerkUserId,
         participantName: participants.name,
+        participantLegalName: participants.legalName,
         countryCode: participants.countryCode,
         participantCreatedAt: participants.createdAt,
       })

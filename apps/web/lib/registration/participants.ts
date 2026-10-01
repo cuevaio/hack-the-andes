@@ -1,12 +1,25 @@
-import { db } from "@chofex/db";
-import { and, eq, isNull, or } from "@chofex/db/orm";
+import {
+  and,
+  eq,
+  isNull,
+  or,
+  type PgDatabase,
+  type PgQueryResultHKT,
+  sql,
+} from "@chofex/db/orm";
 import { participants } from "@chofex/db/schema";
 import { HttpError } from "./http";
+
+export type ParticipantDatabase = Pick<
+  PgDatabase<PgQueryResultHKT>,
+  "select" | "insert" | "update"
+>;
 
 export const selectParticipantCountry = async (
   participantId: string,
   countryCode: string,
 ): Promise<void> => {
+  const { db } = await import("@chofex/db");
   const [selected] = await db
     .update(participants)
     .set({ countryCode, updatedAt: new Date() })
@@ -32,35 +45,22 @@ export const selectParticipantCountry = async (
 export const participantIdFor = async (
   clerkUserId: string,
   defaultName?: string,
+  database?: ParticipantDatabase,
 ): Promise<string> => {
-  const [existing] = await db
-    .select({ id: participants.id, name: participants.name })
-    .from(participants)
-    .where(eq(participants.clerkUserId, clerkUserId))
-    .limit(1);
-  const name = defaultName?.trim() || undefined;
-  if (existing) {
-    if (!existing.name && name) {
-      await db
-        .update(participants)
-        .set({ name, updatedAt: new Date() })
-        .where(eq(participants.id, existing.id));
-    }
-    return existing.id;
-  }
-
-  const [created] = await db
+  const db = database ?? (await import("@chofex/db")).db;
+  const defaultValue = defaultName?.trim();
+  let name: string | undefined;
+  if (defaultValue && defaultValue.length <= 200) name = defaultValue;
+  const [participant] = await db
     .insert(participants)
     .values({ clerkUserId, name })
-    .onConflictDoNothing()
+    .onConflictDoUpdate({
+      target: participants.clerkUserId,
+      set: {
+        name: sql`coalesce(nullif(${participants.name}, ''), excluded.name)`,
+      },
+    })
     .returning({ id: participants.id });
-  if (created) return created.id;
-
-  const [concurrent] = await db
-    .select({ id: participants.id })
-    .from(participants)
-    .where(eq(participants.clerkUserId, clerkUserId))
-    .limit(1);
-  if (!concurrent) throw new Error("Participant creation returned no row");
-  return concurrent.id;
+  if (!participant) throw new Error("Participant creation returned no row");
+  return participant.id;
 };

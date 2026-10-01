@@ -95,7 +95,7 @@ export const generateParticipantBadge = task<
       record.badge,
     );
     const pictureUrl = profile.pictureUrl;
-    const fullName = profile.fullName || record.details?.fullName?.trim() || "";
+    const fullName = profile.fullName;
     if (!fullName) throw new Error("Participant has no name");
     const email = record.application.email;
     if (!email) throw new Error("Participant has no email address");

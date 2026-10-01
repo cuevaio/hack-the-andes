@@ -365,10 +365,10 @@ const interactiveAcceptedDetails = (
     if (fullName) {
       const nameChoice = yield* Prompt.run(
         Prompt.select({
-          message: `Is "${fullName}" your full name exactly as it appears on your ID document?`,
+          message: `¿"${fullName}" es tu nombre completo tal como aparece en tu documento de identidad?`,
           choices: [
-            { title: "Yes, use this name", value: "keep" as const },
-            { title: "No, update it", value: "update" as const },
+            { title: "Sí, usar este nombre", value: "keep" as const },
+            { title: "No, actualizarlo", value: "update" as const },
           ],
         }),
       );
@@ -377,16 +377,16 @@ const interactiveAcceptedDetails = (
     if (!fullName) {
       fullName = yield* Prompt.run(
         requiredText(
-          "Full name exactly as it appears on your ID document",
+          "Nombre completo tal como aparece en tu documento de identidad",
           acceptedDetailsInputFields.fullName,
         ),
       );
     }
     const name = yield* Prompt.run(
       requiredText(
-        "Nombre impreso en tu carnet",
+        "Nombre público para tu carnet y rankings",
         acceptedDetailsInputFields.fullName,
-        defaults.currentName ?? fullName,
+        defaults.currentName,
       ),
     );
     const oneLiner = yield* Prompt.run(
@@ -583,7 +583,7 @@ export const badgeProfileInput = (
     const publicFields = yield* Prompt.run(
       Prompt.all({
         fullName: requiredText(
-          "Nombre impreso en el carnet",
+          "Nombre público para tu carnet y rankings",
           Schema.Trim.pipe(
             Schema.check(Schema.isMinLength(1), Schema.isMaxLength(200)),
           ),
