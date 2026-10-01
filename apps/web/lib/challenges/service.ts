@@ -283,8 +283,7 @@ const progressStatus = (
 ): ParticipantChallengeProgress["status"] => {
   return challengeProgressStatus({
     hasPersistedEvaluation: Boolean(evaluation),
-    queriesUsed: attempt?.queriesUsed ?? 0,
-    evaluationsUsed: attempt?.evaluationsUsed ?? 0,
+    hasAttempt: Boolean(attempt),
   });
 };
 

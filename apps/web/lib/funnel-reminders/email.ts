@@ -1,3 +1,5 @@
+import type { ChallengeDefinition } from "@chofex/challenges-contract";
+
 import { emailAddresses } from "@/lib/emails/config";
 import {
   button,
@@ -18,6 +20,7 @@ interface FunnelReminderEmail {
 
 interface FunnelReminderEmailInput extends FunnelReminderRecipient {
   readonly stage: FunnelReminderStage;
+  readonly challenge?: ChallengeDefinition;
 }
 
 interface SendFunnelReminderEmailInput extends FunnelReminderEmailInput {
@@ -25,7 +28,10 @@ interface SendFunnelReminderEmailInput extends FunnelReminderEmailInput {
   readonly deliveryScope: string;
 }
 
-const copyFor = (stage: FunnelReminderStage) => {
+const copyFor = (
+  stage: FunnelReminderStage,
+  challenge?: ChallengeDefinition,
+) => {
   if (stage === "registration") {
     return {
       subject: "Tu lugar en Hack the Andes empieza aquí",
@@ -37,8 +43,16 @@ const copyFor = (stage: FunnelReminderStage) => {
       action: "Enviar mi postulación",
       url: "https://hacktheandes.com/?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=registration#apply",
       command: "andes register",
+      instructions:
+        "Abre una terminal en tu computadora y ejecuta el comando. Si necesitas iniciar sesión, ejecuta andes login y luego repite andes register. Después de enviar la postulación debes completar un challenge con una evaluación oficial para competir por un cupo. Ejecuta andes para ver tu siguiente paso.",
     };
   }
+
+  if (!challenge)
+    throw new Error("A challenge reminder requires an open challenge");
+  const challengeUrl = `https://hacktheandes.com/challenges/${challenge.slug}?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=${stage}`;
+  const initCommand = `andes challenge init --challenge ${challenge.slug}`;
+  const showCommand = `andes challenge show --challenge ${challenge.slug}`;
 
   if (stage === "challenge_start") {
     return {
@@ -48,23 +62,31 @@ const copyFor = (stage: FunnelReminderStage) => {
       eyebrow: "SIGUIENTE PASO / EMPEZAR",
       heading: "Entra al challenge.",
       introduction:
-        "Tu postulación ya está en carrera. El challenge es tu oportunidad de demostrar cómo piensas, construyes y resuelves problemas reales junto a una comunidad excepcional.",
+        "Recibimos tu postulación, pero todavía falta el challenge obligatorio. Enviar la postulación no reserva un cupo. Necesitas una evaluación oficial; los tests públicos por sí solos no completan este paso.",
       action: "Empezar el challenge",
-      url: "https://hacktheandes.com/challenges/black-box?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=challenge_start",
-      command: "andes challenge init",
+      url: challengeUrl,
+      command: initCommand,
+      instructions: `Abre una terminal en tu computadora y ejecuta el comando para crear los archivos de ${challenge.theme}. Lee el README, resuelve el challenge y sigue la guía de andes challenge. Para revisar tu progreso: ${showCommand}. Si necesitas iniciar sesión, ejecuta andes login. Si ya avanzaste, ejecuta andes para ver tu siguiente paso.`,
     };
   }
 
+  let instructions =
+    "Prueba tu solución con andes challenge test --challenge black-box --source ./shipping.js. Cuando esté lista, ejecuta andes challenge evaluate --challenge black-box --source ./shipping.js. Después ejecuta andes status para consultar la decisión; si te aceptan, el siguiente paso será andes confirm.";
+  if (challenge.slug === "broken-agent") {
+    instructions =
+      "Desde la carpeta broken-agent, prueba tu solución con andes challenge test --challenge broken-agent --source ./scheduler.js. Prepara review.json con tu propia revisión y ejecuta andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json. Abre personalmente el enlace de aprobación en tu navegador y luego repite el mismo comando para registrar la evaluación oficial. Después ejecuta andes status para consultar la decisión; si te aceptan, el siguiente paso será andes confirm.";
+  }
   return {
     subject: "Ya empezaste el challenge. Ahora termínalo",
     preheader: "Convierte tu avance en una evaluación oficial.",
     eyebrow: "SIGUIENTE PASO / TERMINAR",
     heading: "Llévalo hasta el final.",
     introduction:
-      "Ya abriste la caja y empezaste a investigar. No dejes tu trabajo a medias: envía una evaluación oficial y demuestra que tienes lo necesario para construir lo que el Perú necesita.",
+      "Ya empezaste el challenge, pero todavía no tienes una evaluación oficial registrada. Revisa tu progreso y completa el envío para competir por un cupo.",
     action: "Terminar el challenge",
-    url: "https://hacktheandes.com/challenges/black-box?utm_source=resend&utm_medium=email&utm_campaign=funnel&utm_content=challenge_finish",
-    command: "andes challenge evaluate --source ./shipping.js",
+    url: challengeUrl,
+    command: showCommand,
+    instructions,
   };
 };
 
@@ -74,7 +96,7 @@ const experience =
 export const buildFunnelReminderEmail = (
   input: FunnelReminderEmailInput,
 ): FunnelReminderEmail => {
-  const copy = copyFor(input.stage);
+  const copy = copyFor(input.stage, input.challenge);
   const firstName = input.firstName.trim();
   const greeting = firstName ? `Hola ${firstName},` : "Hola,";
   const text = [
@@ -85,7 +107,9 @@ export const buildFunnelReminderEmail = (
     experience,
     "",
     `${copy.action}: ${copy.url}`,
-    `O desde tu terminal: ${copy.command}`,
+    `Siguiente comando en tu terminal: ${copy.command}`,
+    "",
+    copy.instructions,
     "",
     "Nos vemos en la cima.",
     "— El equipo de Hack the Andes",
@@ -103,7 +127,8 @@ export const buildFunnelReminderEmail = (
       paragraph(copy.introduction),
       paragraph(experience),
       button(copy.action, copy.url),
-      command("O desde tu terminal", copy.command),
+      command("Siguiente comando en tu terminal", copy.command),
+      paragraph(copy.instructions),
     ],
   });
 

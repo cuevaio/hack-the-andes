@@ -41,7 +41,6 @@ const commandProgram = command.pipe(
   Effect.provide(
     CliOutput.layer(
       welcomeFormatter({
-        home: arguments_.length === 0,
         columns: process.stdout.columns ?? 80,
         colors:
           process.stdout.isTTY === true &&

@@ -4,7 +4,7 @@ import { applications, participants } from "@chofex/db/schema";
 import { tasks } from "@trigger.dev/sdk";
 
 import type { sendFunnelReminder } from "../../trigger/send-funnel-reminder";
-import { isBlackBoxParticipationOpen } from "../challenges/availability";
+import { reminderChallenge } from "./challenge";
 import type { FunnelReminderPayload } from "./types";
 
 export const funnelReminderDelay = "2h";
@@ -69,7 +69,7 @@ export const enqueuePostSubmissionRemindersBestEffort = async (
   applicationId: string,
   challengeAlreadyStarted: boolean,
 ): Promise<void> => {
-  if (!isBlackBoxParticipationOpen()) return;
+  if (!reminderChallenge()) return;
   const idempotencyKeySuffix = `application/${applicationId}`;
   await enqueueFunnelReminderBestEffort(
     { clerkUserId, stage: "challenge_start", applicationId },
@@ -88,7 +88,7 @@ export const enqueueChallengeFinishReminderBestEffort = async (
   applicationId: string | undefined,
 ): Promise<void> => {
   if (!applicationId) return;
-  if (!isBlackBoxParticipationOpen()) return;
+  if (!reminderChallenge()) return;
   await enqueueFunnelReminderBestEffort(
     { clerkUserId, stage: "challenge_finish", applicationId },
     `application/${applicationId}`,

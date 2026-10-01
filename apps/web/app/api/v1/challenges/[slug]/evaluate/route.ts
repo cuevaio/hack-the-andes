@@ -37,7 +37,8 @@ export const POST = (
     } catch (error) {
       if (
         error instanceof HttpError &&
-        error.code === "SOLUTION_EXECUTION_FAILED"
+        (error.code === "SOLUTION_EXECUTION_FAILED" ||
+          error.code === "HUMAN_APPROVAL_REQUIRED")
       ) {
         await enqueueChallengeFinishReminderBestEffort(
           clerkUserId,

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { challengeBySlug } from "@chofex/challenges-contract";
 
 import { buildFunnelReminderEmail, sendFunnelReminderEmail } from "./email";
 
@@ -37,6 +38,7 @@ describe("funnel reminder emails", () => {
         stage,
         clerkUserId: "user-123",
         deliveryScope: "application-456",
+        challenge: challengeBySlug("broken-agent"),
         email: "ada@example.com",
         firstName: "Ada",
       });
@@ -56,7 +58,7 @@ describe("funnel reminder emails", () => {
     ["challenge_start", "andes challenge init", "Empezar el challenge"],
     [
       "challenge_finish",
-      "andes challenge evaluate --source ./shipping.js",
+      "andes challenge show --challenge broken-agent",
       "Terminar el challenge",
     ],
   ] as const)("builds the %s call to action", (stage, command, action) => {
@@ -64,10 +66,24 @@ describe("funnel reminder emails", () => {
       stage,
       email: "ada@example.com",
       firstName: "Ada",
+      challenge: challengeBySlug("broken-agent"),
     });
 
     expect(email.text).toContain(command);
     expect(email.html).toContain(action);
+    if (stage !== "registration") {
+      expect(email.text).toContain("/challenges/broken-agent");
+      expect(email.html).toContain(command);
+      expect(email.text).not.toContain("shipping.js");
+      expect(email.text).toContain("evaluación oficial");
+    }
+    if (stage === "challenge_finish") {
+      expect(email.text).toContain(
+        "--source ./scheduler.js --review ./review.json",
+      );
+      expect(email.html).toContain("enlace de aprobación");
+      expect(email.text).toContain("andes status");
+    }
     expect(email.text).toContain("grupo exclusivo de hackers");
     expect(email.text).toContain("más de S/ 8,000 en premios");
     expect(email.text).toContain("vuelos a Lima");

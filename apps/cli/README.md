@@ -74,8 +74,12 @@ version; legacy attempts do not count toward admission.
 
 The public ranking is read-only at `https://hacktheandes.com/challenges`.
 
-Run `andes` for a compact retro welcome screen with a pixel Sacred Valley and
-the main commands. Run `andes --help` for the full command reference. The
+Run `andes` to see your current progress and the next command to run.
+`andes challenge` also checks your application before showing the challenge guide.
+Repeating `andes register` after submission shows your next step without submitting again.
+After acceptance, run `andes confirm`; after confirmation, run `andes badge`.
+Confirmation generates the badge automatically. Repeat `andes badge` if it is still processing.
+Run `andes --help` for the full command reference. The welcome screen's
 landscape uses colored terminal cells, with readable text that works with your
 terminal's line spacing. It adapts to the terminal width and has a plain ASCII
 fallback when color is disabled with `NO_COLOR`. JSON output and individual
@@ -93,6 +97,8 @@ Validation does not contact the API, and a successful result does not echo input
 values. Local validation errors include `acceptedFields` in JSON mode. The
 `status` response already includes both the registration and its requirements;
 use `requirements` only when requirements-only human output is preferred.
+The CLI adds `data.nextStep` with `kind`, `message`, and `command` to registration
+results and to home and challenge guidance. JSON output remains one versioned envelope.
 
 Run `andes login` to authenticate. For automation, provide an OAuth access
 token with `CHOFEX_TOKEN`.

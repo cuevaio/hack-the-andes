@@ -87,18 +87,15 @@ describe("challenge activity metrics", () => {
     const representedStatuses = [
       challengeProgressStatus({
         hasPersistedEvaluation: true,
-        queriesUsed: 2,
-        evaluationsUsed: 1,
+        hasAttempt: true,
       }),
       challengeProgressStatus({
         hasPersistedEvaluation: true,
-        queriesUsed: 2,
-        evaluationsUsed: 1,
+        hasAttempt: true,
       }),
       challengeProgressStatus({
         hasPersistedEvaluation: false,
-        queriesUsed: 1,
-        evaluationsUsed: 0,
+        hasAttempt: true,
       }),
     ];
     const expectedCounts = {

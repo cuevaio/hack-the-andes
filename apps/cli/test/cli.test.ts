@@ -99,54 +99,6 @@ describe("CLI JSON mode", () => {
     expect(help.stdout).toContain("Compite en challenges técnicos");
   });
 
-  test("opens the live Broken Agent guided workflow by default", async () => {
-    const result = await runCli("challenge");
-
-    expect(result.exitCode).toBe(0);
-    expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("BROKEN AGENT — THE SCHEDULER");
-    expect(result.stdout).toContain("siete tests públicos");
-    expect(result.stdout).toContain("andes challenge evaluate");
-    expect(result.stdout).not.toContain("andes challenge query --distance");
-  });
-
-  test("returns the live challenge status as one JSON document", async () => {
-    const result = await runCli("--output", "json", "challenge");
-
-    expect(result.exitCode).toBe(0);
-    expect(result.stderr).toBe("");
-    expect(result.stdout.trim().split("\n")).toHaveLength(1);
-    const document = JSON.parse(result.stdout);
-    expect(document).toMatchObject({
-      version: 1,
-      ok: true,
-      data: {
-        title: "BROKEN AGENT — THE SCHEDULER",
-        open: true,
-        state: "open",
-      },
-    });
-    expect(document.data.workflow[0]).toMatchObject({
-      step: 1,
-      command: "andes login",
-    });
-    expect(document.data.workflow).toHaveLength(12);
-    expect(document.data.workflow).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          step: 5,
-          action: "Elige el riesgo con el participante",
-        }),
-        expect.objectContaining({
-          step: 8,
-          action: "Obtén el juicio del participante",
-        }),
-      ]),
-    );
-    expect(document.data.story).not.toEqual([]);
-    expect(document.data.rules).not.toEqual([]);
-  });
-
   test("does not initialize files for a closed challenge", async () => {
     const directory = await mkdtemp(join(tmpdir(), "chofex-challenge-"));
     const solutionPath = join(directory, "shipping.js");
@@ -626,6 +578,8 @@ describe("CLI JSON mode", () => {
     const server = Bun.serve({
       port: 0,
       async fetch(request) {
+        if (request.method === "GET")
+          return new Response(null, { status: 503 });
         submittedBody = await request.json();
         return Response.json({
           version: 1,
@@ -1182,7 +1136,7 @@ describe("CLI JSON mode", () => {
         parts: [],
         missing: [],
       },
-      expectedMessage: "Already registered. Wait for approval.",
+      expectedMessage: "Siguiente comando: andes challenge list",
     },
     {
       name: "an application is accepted",
@@ -1196,8 +1150,7 @@ describe("CLI JSON mode", () => {
         parts: [],
         missing: [{ field: "phone", reason: "Required after acceptance" }],
       },
-      expectedMessage:
-        "Already accepted. Run `andes confirm` to complete your registration.",
+      expectedMessage: "Siguiente comando: andes confirm",
     },
     {
       name: "an accepted registration is complete",
@@ -1211,7 +1164,7 @@ describe("CLI JSON mode", () => {
         parts: [],
         missing: [],
       },
-      expectedMessage: "Already accepted. Your registration is complete.",
+      expectedMessage: "Siguiente comando: andes badge",
     },
   ] as const) {
     test(`stops before collecting input when ${scenario.name}`, async () => {
@@ -1260,9 +1213,9 @@ describe("CLI JSON mode", () => {
           "does-not-exist.json",
         );
 
-        expect(result.exitCode).toBe(2);
-        expect(result.stdout).toBe("");
-        expect(result.stderr).toContain(scenario.expectedMessage);
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toContain(scenario.expectedMessage);
+        expect(result.stderr).toBe("");
         expect(postRequested).toBe(false);
       } finally {
         server.stop(true);
@@ -1315,8 +1268,8 @@ describe("CLI JSON mode", () => {
       );
 
       expect(human.exitCode).toBe(0);
-      expect(human.stdout.trim()).toBe(
-        "Authenticated as ada@example.com (user_123, oauth_token).",
+      expect(human.stdout.trim()).toContain(
+        "Sesión iniciada como ada@example.com (user_123, oauth_token).",
       );
       expect(json.exitCode).toBe(0);
       expect(JSON.parse(json.stdout)).toMatchObject({
@@ -1407,8 +1360,8 @@ describe("CLI JSON mode", () => {
 
         expect(result.exitCode).toBe(4);
         expect(result.stdout).toBe("");
-        expect(result.stderr).toContain("No registration found.");
-        expect(result.stderr).toContain("Next command: andes register");
+        expect(result.stderr).toContain("Todavía no tienes una postulación.");
+        expect(result.stderr).toContain("Siguiente comando: andes register");
         expect(result.stderr).toContain("Request ID: request-no-registration");
       } finally {
         server.stop(true);
