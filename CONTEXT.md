@@ -6,7 +6,11 @@ A person identified by a Clerk user account who may apply to join the hackathon.
 
 ## Participant name
 
-The participant's public name used in the admin dashboard, challenge rankings, and badge. It begins with their Clerk name and may be changed during attendance confirmation without changing their legal full name.
+The participant's public name used in the admin dashboard, challenge rankings, and badge. First login creates the participant and initializes this name from Clerk. Later logins preserve the saved name. Attendance confirmation shows the current name and lets the participant keep or change it. Badge edits change the same name. The database owns this value; public-name edits also synchronize to Clerk, with failed synchronization retried without losing the saved edit.
+
+## Participant legal name
+
+The participant's full name exactly as it appears on their identity document. It is requested during attendance confirmation and stored separately from the public name. It is not synchronized to Clerk or used as a public-name fallback. The full name entered on an application remains part of that application's history.
 
 ## Participant country
 
@@ -24,7 +28,7 @@ An application that is being drafted, awaiting a decision, or has been accepted.
 
 ## Acceptance details
 
-Personal and logistical information requested only after an application is accepted. This includes the legal full name used for venue access, which is distinct from the participant name. The details are complete only when completion has been recorded and every detail required for the participation mode is present. They may still be updated after completion.
+Personal and logistical information requested only after an application is accepted. Confirmation also collects the participant's legal name for venue access. The details are complete only when completion has been recorded and every detail required for the participation mode is present. They may still be updated after completion.
 
 ## Confirmed profile picture
 
