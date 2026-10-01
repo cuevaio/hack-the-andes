@@ -33,6 +33,7 @@ import {
 } from "./output.js";
 import {
   loadParticipantGuidance,
+  type NextStep,
   nextStepFor,
   nextStepText,
   withRegistrationNextStep,
@@ -426,9 +427,10 @@ const loginCommand = Command.make(
         Effect.map((response) => response.data.nextStep),
         Effect.catch(() =>
           Effect.succeed({
+            kind: "status",
             message: "Consulta tu avance para continuar con tu siguiente paso.",
             command: "andes",
-          }),
+          } satisfies NextStep),
         ),
       );
       return {

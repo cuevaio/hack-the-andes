@@ -7,12 +7,19 @@ import {
 import { challengesForceOpen, currentChallengeTime } from "../challenges/clock";
 import { currentChallengeVersionFor } from "../challenges/engine";
 
-export const reminderChallenge = (
-  now: Date = currentChallengeTime(),
+export const reminderChallenge = ({
+  slug,
+  now = currentChallengeTime(),
   forceOpen = challengesForceOpen(),
-): ChallengeDefinition | undefined =>
-  playableChallenges.find((challenge) =>
-    isChallengeOpenAt(challenge, now, forceOpen),
+}: {
+  readonly slug?: string;
+  readonly now?: Date;
+  readonly forceOpen?: boolean;
+} = {}): ChallengeDefinition | undefined =>
+  playableChallenges.find(
+    (challenge) =>
+      (slug === undefined || challenge.slug === slug) &&
+      isChallengeOpenAt(challenge, now, forceOpen),
   );
 
 export const isCurrentReminderAttempt = (attempt: {

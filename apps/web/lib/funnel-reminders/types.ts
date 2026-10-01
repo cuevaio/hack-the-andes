@@ -15,5 +15,6 @@ export interface FunnelReminderPayload {
   readonly clerkUserId: string;
   readonly stage: FunnelReminderStage;
   readonly applicationId?: string;
+  readonly challengeSlug?: string;
   readonly recipient?: FunnelReminderRecipient;
 }

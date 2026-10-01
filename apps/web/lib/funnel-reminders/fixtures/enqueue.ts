@@ -2,9 +2,10 @@ import { mock } from "bun:test";
 import assert from "node:assert/strict";
 
 mock.module("@chofex/db", () => ({ db: {} }));
+let forceOpen = false;
 mock.module("../../challenges/clock", () => ({
   currentChallengeTime: () => new Date("2026-10-01T12:00:00Z"),
-  challengesForceOpen: () => false,
+  challengesForceOpen: () => forceOpen,
 }));
 const queued: { taskId: string; payload: unknown; options: unknown }[] = [];
 mock.module("@trigger.dev/sdk", () => ({
@@ -21,7 +22,7 @@ const {
 await enqueuePostSubmissionRemindersBestEffort(
   "user-fixture",
   "application-fixture",
-  false,
+  [],
 );
 await enqueueChallengeFinishReminderBestEffort(
   "user-fixture",
@@ -40,6 +41,7 @@ assert.deepEqual(queued, [
       clerkUserId: "user-fixture",
       applicationId: "application-fixture",
       stage: "challenge_start",
+      challengeSlug: "broken-agent",
     },
     options: {
       delay: "2h",
@@ -55,6 +57,7 @@ assert.deepEqual(queued, [
       clerkUserId: "user-fixture",
       applicationId: "application-fixture",
       stage: "challenge_finish",
+      challengeSlug: "broken-agent",
     },
     options: {
       delay: "2h",
@@ -65,4 +68,52 @@ assert.deepEqual(queued, [
     },
   },
 ]);
+queued.length = 0;
+forceOpen = true;
+await enqueueChallengeFinishReminderBestEffort(
+  "user-fixture",
+  "application-fixture",
+  "broken-agent",
+);
+await enqueuePostSubmissionRemindersBestEffort(
+  "user-fixture",
+  "application-fixture",
+  [
+    {
+      slug: "broken-agent",
+      title: "The Scheduler",
+      theme: "Broken Agent",
+      status: "in_progress",
+      open: true,
+      playable: true,
+      queriesUsed: 0,
+      queriesLimit: 0,
+      evaluationsUsed: 0,
+      evaluationsLimit: 5,
+    },
+  ],
+);
+assert.deepEqual(
+  queued.map((item) => item.payload),
+  [
+    {
+      clerkUserId: "user-fixture",
+      applicationId: "application-fixture",
+      stage: "challenge_finish",
+      challengeSlug: "broken-agent",
+    },
+    {
+      clerkUserId: "user-fixture",
+      applicationId: "application-fixture",
+      stage: "challenge_start",
+      challengeSlug: "broken-agent",
+    },
+    {
+      clerkUserId: "user-fixture",
+      applicationId: "application-fixture",
+      stage: "challenge_finish",
+      challengeSlug: "broken-agent",
+    },
+  ],
+);
 process.stdout.write("reminder enqueue passed\n");

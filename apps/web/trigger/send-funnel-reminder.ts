@@ -71,7 +71,7 @@ const loadReminderContext = async (
 ): Promise<ReminderContext> => {
   const record = await loadApplicationContext(payload);
   const application = record?.application ?? undefined;
-  const challenge = reminderChallenge();
+  const challenge = reminderChallenge({ slug: payload.challengeSlug });
 
   let challengeStarted = false;
   let challengeCompleted = false;

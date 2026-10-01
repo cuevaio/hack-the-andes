@@ -15,6 +15,7 @@ export type NextStep = {
   | {
       readonly kind:
         | "login"
+        | "status"
         | "register"
         | "challenge_unavailable"
         | "decision"

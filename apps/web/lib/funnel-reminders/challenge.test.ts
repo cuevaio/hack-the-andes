@@ -3,14 +3,37 @@ import { expect, test } from "bun:test";
 import { isCurrentReminderAttempt, reminderChallenge } from "./challenge";
 
 test("reminders target Broken Agent after Black Box has closed", () => {
-  expect(reminderChallenge(new Date("2026-10-01T12:00:00Z"), false)?.slug).toBe(
-    "broken-agent",
-  );
+  expect(
+    reminderChallenge({
+      now: new Date("2026-10-01T12:00:00Z"),
+      forceOpen: false,
+    })?.slug,
+  ).toBe("broken-agent");
 });
 
 test("reminders stop when no playable challenge is open", () => {
   expect(
-    reminderChallenge(new Date("2027-01-01T12:00:00Z"), false),
+    reminderChallenge({
+      now: new Date("2027-01-01T12:00:00Z"),
+      forceOpen: false,
+    }),
+  ).toBeUndefined();
+});
+
+test("reminders keep the triggering challenge when preview opens every challenge", () => {
+  expect(
+    reminderChallenge({
+      slug: "broken-agent",
+      now: new Date("2026-10-01T12:00:00Z"),
+      forceOpen: true,
+    })?.slug,
+  ).toBe("broken-agent");
+  expect(
+    reminderChallenge({
+      slug: "black-box",
+      now: new Date("2026-10-01T12:00:00Z"),
+      forceOpen: false,
+    }),
   ).toBeUndefined();
 });
 

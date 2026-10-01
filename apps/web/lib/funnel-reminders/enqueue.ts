@@ -1,3 +1,4 @@
+import type { ParticipantChallengeProgress } from "@chofex/challenges-contract";
 import { db } from "@chofex/db";
 import { and, desc, eq, inArray } from "@chofex/db/orm";
 import { applications, participants } from "@chofex/db/schema";
@@ -68,18 +69,34 @@ export const enqueueFunnelReminderBestEffort = async (
 export const enqueuePostSubmissionRemindersBestEffort = async (
   clerkUserId: string,
   applicationId: string,
-  challengeAlreadyStarted: boolean,
+  progress: ReadonlyArray<ParticipantChallengeProgress>,
 ): Promise<void> => {
-  const challenge = reminderChallenge();
+  const started = progress.find(
+    (challenge) =>
+      challenge.playable &&
+      challenge.open &&
+      challenge.status === "in_progress",
+  );
+  const challenge = reminderChallenge({ slug: started?.slug });
   if (!challenge) return;
   const idempotencyKeySuffix = `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`;
   await enqueueFunnelReminderBestEffort(
-    { clerkUserId, stage: "challenge_start", applicationId },
+    {
+      clerkUserId,
+      stage: "challenge_start",
+      applicationId,
+      challengeSlug: challenge.slug,
+    },
     idempotencyKeySuffix,
   );
-  if (challengeAlreadyStarted) {
+  if (started) {
     await enqueueFunnelReminderBestEffort(
-      { clerkUserId, stage: "challenge_finish", applicationId },
+      {
+        clerkUserId,
+        stage: "challenge_finish",
+        applicationId,
+        challengeSlug: challenge.slug,
+      },
       idempotencyKeySuffix,
     );
   }
@@ -91,10 +108,15 @@ export const enqueueChallengeFinishReminderBestEffort = async (
   challengeSlug: string,
 ): Promise<void> => {
   if (!applicationId) return;
-  const challenge = reminderChallenge();
-  if (!challenge || challenge.slug !== challengeSlug) return;
+  const challenge = reminderChallenge({ slug: challengeSlug });
+  if (!challenge) return;
   await enqueueFunnelReminderBestEffort(
-    { clerkUserId, stage: "challenge_finish", applicationId },
+    {
+      clerkUserId,
+      stage: "challenge_finish",
+      applicationId,
+      challengeSlug: challenge.slug,
+    },
     `application/${applicationId}/${challenge.slug}/${currentChallengeVersionFor(challenge.slug)}`,
   );
 };
