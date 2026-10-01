@@ -127,7 +127,6 @@ export type CandidateCounts = Readonly<
 
 export interface CandidatePage {
   readonly candidates: ReadonlyArray<Candidate>;
-  readonly authenticatedUserCount: number;
   readonly counts: CandidateCounts;
   readonly page: number;
   readonly pageSize: number;

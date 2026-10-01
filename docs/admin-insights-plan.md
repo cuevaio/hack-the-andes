@@ -12,6 +12,12 @@ The participant list is for reviewing applications. A separate `/admin/insights`
 
 ## Delivery
 
+The list uses a compact row with search, status, and country. Sorting remains separate. Country is searchable; selected values remain visible. A reset clears filters but preserves sorting. This replaces the status-button strip and moves the large funnel to the insights page.
+
+Compared with a single filter popover, inline controls need fewer interaction states and keep the current scope visible. The country combobox uses the existing Base UI pattern. One shared parser and serializer govern server requests, browser history, and cache identity.
+
+The insights report uses server-rendered counts and charts from one database snapshot. Its optional challenge filter selects people who started that challenge's current version. Challenge progress survives a new application, so milestones are independent measurements rather than a strictly sequential conversion rate.
+
 1. Consolidate URL parsing and add country filtering.
 2. Replace the status-button strip with compact controls and visible active filters.
 3. Add an authorized insights page with a funnel, country distribution, and challenge breakdowns.
