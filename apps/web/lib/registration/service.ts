@@ -565,7 +565,7 @@ export const submitAcceptedDetails = async (
       set: {
         ...values,
         completedAt: sql`coalesce(${acceptanceDetails.completedAt}, excluded.completed_at)`,
-        firstCompletedAt: sql`case when ${acceptanceDetails.completedAt} is null then excluded.first_completed_at else ${acceptanceDetails.firstCompletedAt} end`,
+        firstCompletedAt: sql`coalesce(${acceptanceDetails.firstCompletedAt}, case when ${acceptanceDetails.completedAt} is null then excluded.first_completed_at end)`,
       },
     })
     .returning();

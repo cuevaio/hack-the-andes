@@ -122,6 +122,12 @@ export function ParticipantInsights({
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Estadísticas de participantes
             </h1>
+            <a
+              className={linkClass}
+              href={`/admin/insights/history?${candidateFilterQuery({ page: 1, query: "", ...filters })}`}
+            >
+              Ver evolución y meta de asistencia
+            </a>
             <p className="text-muted-foreground">
               {countryScope} · {challengeScope}.
             </p>

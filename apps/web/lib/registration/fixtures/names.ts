@@ -259,5 +259,19 @@ assert.equal(
   (await getParticipantBadge(identity.clerkUserId)).profile?.fullName,
   "After rollback",
 );
+await client.query(
+  "update acceptance_details set completed_at=null, first_completed_at=null where application_id=$1",
+  [applicationId],
+);
+await submitAcceptedDetails(identity, legalDetails);
+assert.deepEqual(
+  (
+    await client.query(
+      "select completed_at is not null and first_completed_at = completed_at as first_completion_recorded from acceptance_details where application_id=$1",
+      [applicationId],
+    )
+  ).rows,
+  [{ first_completion_recorded: true }],
+);
 await client.close();
 process.stdout.write("participant name lifecycle passed\n");
