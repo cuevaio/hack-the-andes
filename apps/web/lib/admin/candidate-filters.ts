@@ -1,4 +1,4 @@
-import { countries } from "@chofex/registration-contract";
+import { countries, countryName } from "@chofex/registration-contract";
 
 import {
   type CandidateFilter,
@@ -9,6 +9,7 @@ import {
 
 export type CandidateCountryFilter =
   | { readonly kind: "unknown" }
+  | { readonly kind: "outside_peru" }
   | { readonly kind: "country"; readonly code: string };
 
 export interface CandidateFilters {
@@ -24,6 +25,7 @@ export const parseCountryFilter = (
   value: string | undefined,
 ): CandidateCountryFilter | undefined => {
   if (value === "unknown") return { kind: "unknown" };
+  if (value === "outside_peru") return { kind: "outside_peru" };
   const country = countries.find((item) => item.code === value);
   if (country) return { kind: "country", code: country.code };
   return undefined;
@@ -34,7 +36,32 @@ export const countryFilterValue = (
 ): string => {
   if (!country) return "";
   if (country.kind === "unknown") return "unknown";
+  if (country.kind === "outside_peru") return "outside_peru";
   return country.code;
+};
+
+export const countryFilterLabel = (
+  country: CandidateCountryFilter | undefined,
+): string => {
+  if (!country) return "Todos";
+  if (country.kind === "unknown") return "Sin indicar";
+  if (country.kind === "outside_peru") return "Fuera de Perú";
+  return countryName(country.code);
+};
+
+export const countryFilterOptions = (
+  country: CandidateCountryFilter | undefined,
+) => {
+  const options = [
+    { value: "", label: "Todos" },
+    { value: "PE", label: "Perú" },
+    { value: "outside_peru", label: "Fuera de Perú" },
+    { value: "unknown", label: "Sin indicar" },
+  ];
+  if (country?.kind === "country" && country.code !== "PE") {
+    options.push({ value: country.code, label: countryName(country.code) });
+  }
+  return options;
 };
 
 export const parseCandidateFilters = (

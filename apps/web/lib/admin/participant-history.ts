@@ -255,6 +255,11 @@ export async function getParticipantHistory(
     if (query.country?.kind === "unknown" && person.country !== null)
       return false;
     if (
+      query.country?.kind === "outside_peru" &&
+      (person.country === null || person.country === "PE")
+    )
+      return false;
+    if (
       query.country?.kind === "country" &&
       person.country !== query.country.code
     )

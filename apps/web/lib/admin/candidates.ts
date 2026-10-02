@@ -410,6 +410,8 @@ export const listCandidates = async (
     countryCondition = isNull(participants.countryCode);
   } else if (input.country?.kind === "country") {
     countryCondition = eq(participants.countryCode, input.country.code);
+  } else if (input.country?.kind === "outside_peru") {
+    countryCondition = sql`${participants.countryCode} <> 'PE'`;
   }
   const visibleInFunnel = candidateFunnelApplicationCondition();
   let challengeCondition: SQL | undefined;

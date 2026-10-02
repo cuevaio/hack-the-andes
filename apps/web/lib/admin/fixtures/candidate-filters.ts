@@ -67,6 +67,21 @@ mock.module("../../badges/enqueue", () => ({
 }));
 
 const { listCandidates } = await import("../candidates");
+await client.query("update participants set country_code='BR' where id=$1", [
+  id(14),
+]);
+const outside = await listCandidates(
+  parseCandidateFilters({ country: "outside_peru" }),
+);
+assert.equal(outside.total, 2);
+assert.equal(outside.counts.all, 2);
+assert.deepEqual(
+  outside.candidates.map((candidate) => candidate.participantId),
+  [id(14), id(13)],
+);
+await client.query("update participants set country_code='CO' where id=$1", [
+  id(14),
+]);
 const first = await listCandidates(parseCandidateFilters({ country: "PE" }));
 assert.equal(first.total, 12);
 assert.equal(first.counts.all, 12);
@@ -138,6 +153,12 @@ const corrected = await listCandidates(
 assert.equal(corrected.page, 1);
 assert.equal(corrected.total, 10);
 assert.equal(corrected.counts.approved, 0);
+const outsideCorrected = await listCandidates(
+  parseCandidateFilters({ country: "outside_peru", status: "approved" }),
+);
+assert.equal(outsideCorrected.total, 1);
+assert.equal(outsideCorrected.counts.all, 4);
+assert.equal(outsideCorrected.candidates[0]?.participantId, id(1));
 await client.query(
   "update applications set status = 'withdrawn' where id = $1",
   [id(1)],

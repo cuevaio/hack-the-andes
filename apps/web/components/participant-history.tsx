@@ -1,5 +1,4 @@
 import { playableChallenges } from "@chofex/challenges-contract";
-import { countries, countryName } from "@chofex/registration-contract";
 import {
   BrandContainer,
   BrandHeader,
@@ -10,6 +9,8 @@ import {
 import { planAttendance } from "@/lib/admin/attendance-plan";
 import {
   candidateFilterQuery,
+  countryFilterLabel,
+  countryFilterOptions,
   countryFilterValue,
 } from "@/lib/admin/candidate-filters";
 import { type HistoryQuery, limaDay } from "@/lib/admin/history-query";
@@ -81,10 +82,7 @@ export function ParticipantHistory({
     country: query.country,
     challenge: query.challenge,
   });
-  let countryScope = "Todos los países";
-  if (query.country?.kind === "unknown") countryScope = "Sin país registrado";
-  if (query.country?.kind === "country")
-    countryScope = countryName(query.country.code);
+  const countryScope = countryFilterLabel(query.country);
   let challengeScope = "Todas las personas";
   if (query.challenge)
     challengeScope = `Personas que iniciaron ${playableChallenges.find((challenge) => challenge.slug === query.challenge)?.theme} hasta hoy`;
@@ -379,11 +377,9 @@ export function ParticipantHistory({
                   name="country"
                   defaultValue={countryFilterValue(query.country)}
                 >
-                  <option value="">Todos los países</option>
-                  <option value="unknown">Sin país registrado</option>
-                  {countries.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.name}
+                  {countryFilterOptions(query.country).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>

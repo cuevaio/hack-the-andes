@@ -1,5 +1,5 @@
 import { playableChallenges } from "@chofex/challenges-contract";
-import { countries, countryName } from "@chofex/registration-contract";
+import { countryName } from "@chofex/registration-contract";
 import {
   BrandContainer,
   BrandHeader,
@@ -11,6 +11,8 @@ import type { ReactNode } from "react";
 import {
   type CandidateCountryFilter,
   candidateFilterQuery,
+  countryFilterLabel,
+  countryFilterOptions,
   countryFilterValue,
 } from "@/lib/admin/candidate-filters";
 import type { AdminInsights, InsightsFilters } from "@/lib/admin/insights";
@@ -93,10 +95,7 @@ export function ParticipantInsights({
   readonly filters: InsightsFilters;
 }) {
   const { totals } = data;
-  let countryScope = "Todos los países";
-  if (filters.country?.kind === "unknown") countryScope = "Sin país registrado";
-  if (filters.country?.kind === "country")
-    countryScope = countryName(filters.country.code);
+  const countryScope = countryFilterLabel(filters.country);
   let challengeScope = "Todas las personas, con o sin actividad en retos";
   if (filters.challenge)
     challengeScope = `Personas que iniciaron ${challengeLabel(filters.challenge)}, en su versión vigente`;
@@ -163,11 +162,9 @@ export function ParticipantInsights({
                 defaultValue={countryFilterValue(filters.country)}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2"
               >
-                <option value="">Todos los países</option>
-                <option value="unknown">Sin país registrado</option>
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.name}
+                {countryFilterOptions(filters.country).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
