@@ -14,7 +14,7 @@ test("publishes the mandatory ranked admission policy to CLI clients", () => {
   );
 });
 
-test("does not advertise an unimplemented challenge as open", () => {
+test("the implemented third challenge is playable but not open before its launch", () => {
   const challenge = challengeBySlug("make-it-fast");
   if (!challenge) throw new Error("missing make-it-fast");
 
@@ -24,9 +24,9 @@ test("does not advertise an unimplemented challenge as open", () => {
     false,
   );
 
-  expect(item.playable).toBe(false);
+  expect(item.playable).toBe(true);
   expect(item.open).toBe(false);
-  expect(item.challengeVersion).toBeUndefined();
+  expect(item.challengeVersion).toBe("slow-service-v3");
 });
 
 test("advertises only the current playable challenge version", () => {

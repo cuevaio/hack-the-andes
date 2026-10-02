@@ -73,8 +73,10 @@ const browserFailureMessage = (cause: unknown): string => {
 
 export function EvaluationApprovalButton({
   approvalId,
+  apiBasePath = `/api/v1/challenges/broken-agent/approvals/${approvalId}`,
 }: {
   readonly approvalId: string;
+  readonly apiBasePath?: string;
 }) {
   const [state, setState] = useState<"idle" | "approved">("idle");
   const [pending, setPending] = useState<ApprovalAuthenticator>();
@@ -85,7 +87,7 @@ export function EvaluationApprovalButton({
     setPending(authenticator);
     setError(undefined);
     try {
-      const basePath = `/api/v1/challenges/broken-agent/approvals/${approvalId}`;
+      const basePath = apiBasePath;
       const optionsResponse = await fetch(`${basePath}/options`, {
         method: "POST",
         headers: { "content-type": "application/json" },

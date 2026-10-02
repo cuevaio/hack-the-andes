@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import {
   BrokenAgentEvaluationSolutionSchema,
-  type BrokenAgentHumanReview,
   blackBoxChallengeSlug,
   brokenAgentChallengeSlug,
   type ChallengeAttemptView,
@@ -17,13 +16,19 @@ import {
   challengeBySlug,
   challengeCatalog,
   compareChallengeScores,
+  type EvaluationApprovalReview,
   isChallengeRankingVisibleAt,
   JavascriptSourceSolutionSchema,
   type ParticipantChallengeMilestone,
   type ParticipantChallengeProgress,
   type Shipment,
   ShipmentSchema,
+  SlowServiceEvaluationSolutionSchema,
 } from "@chofex/challenges-contract";
+import {
+  isSlowServiceSourceWithinLimit,
+  slowServiceChallengeSlug,
+} from "@chofex/challenges-contract/slow-service";
 import { db } from "@chofex/db";
 import { and, asc, desc, eq, inArray } from "@chofex/db/orm";
 import {
@@ -43,6 +48,7 @@ import {
   ChallengeEngineError,
   challengeEngine,
   currentChallengeVersionFor,
+  slowServiceEngineEvaluateTimeoutMs,
 } from "./engine";
 import {
   consumeEvaluationApproval,
@@ -70,6 +76,7 @@ import {
 import { runShippingSolution } from "./sandbox";
 import { participantVisibleScore, scoreFromStored } from "./score";
 import { attemptSeed, shareCodeFromSeed } from "./seed";
+import { runSlowServicePublicTests } from "./slow-service-public";
 
 type AttemptRecord = typeof challengeAttempts.$inferSelect;
 type EvaluationRecord = typeof challengeEvaluations.$inferSelect;
@@ -181,7 +188,8 @@ const requireImplementedChallenge = (
   const challenge = requirePlayableChallenge(slug, now);
   if (
     challenge.slug !== blackBoxChallengeSlug &&
-    challenge.slug !== brokenAgentChallengeSlug
+    challenge.slug !== brokenAgentChallengeSlug &&
+    challenge.slug !== slowServiceChallengeSlug
   ) {
     throw new HttpError(
       404,
@@ -353,6 +361,15 @@ const shareTextFor = (
   },
 ): string => {
   const accuracyPercent = (result.accuracy * 100).toFixed(2);
+  if (challenge.slug === slowServiceChallengeSlug) {
+    const lines = [
+      `THE SLOW SERVICE #${result.shareCode}`,
+      `${accuracyPercent}% de puntaje oficial`,
+    ];
+    if (result.rank !== undefined) lines.push(`Puesto #${result.rank}`);
+    lines.push("Respuestas exactas, menos trabajo de ejecución.");
+    return lines.join("\n");
+  }
   if (challenge.slug === brokenAgentChallengeSlug) {
     const lines = [
       `🛠️ BROKEN AGENT #${result.shareCode}`,
@@ -390,6 +407,19 @@ const shareTextFor = (
 const loadBestEvaluation = async (
   attempt: AttemptRecord,
 ): Promise<EvaluationRecord | undefined> => {
+  if (attempt.challengeSlug === slowServiceChallengeSlug) {
+    const [evaluation] = await db
+      .select()
+      .from(challengeEvaluations)
+      .where(eq(challengeEvaluations.attemptId, attempt.id))
+      .orderBy(
+        desc(challengeEvaluations.accuracy),
+        asc(challengeEvaluations.createdAt),
+        asc(challengeEvaluations.id),
+      )
+      .limit(1);
+    return evaluation;
+  }
   const [evaluation] = await db
     .select()
     .from(challengeEvaluations)
@@ -675,6 +705,10 @@ export const getChallengeAttempt = async (
     localTestHint =
       "Ejecuta `npm test` dentro de broken-agent y luego `andes challenge test --challenge broken-agent --source ./scheduler.js`. Los tests públicos son ilimitados. Antes de evaluar, el participante debe elegir una traza de falla y completar su review vinculado al source.";
   }
+  if (challenge.slug === slowServiceChallengeSlug) {
+    localTestHint =
+      "Slow Service v3 usa createLedger({ accounts }), amend() y report({ account, from, to, asOf, percentile }). El reporte incluye debits y debitAmountAtPercentile exactos. Ejecuta `bun install`, `bun test ./.kit/ledger.test.ts` y `bun run benchmark ledger.js 1000` dentro de slow-service. Comprueba las cargas completas con `bun run benchmark ledger.js 6000`, `bun run benchmark ledger.js 6000 --max-history` y `bun run benchmark ledger.js 6000 --max-history --negative-heavy`. La última usa 2,000 y 8,000 journals para diagnosticar memoria, no los tamaños oficiales de 6,000 y 24,000. Los tests públicos y benchmarks son ilimitados y no certifican el puntaje oculto. Antes de evaluar, el participante revisa con su agente un caso concreto y evidencia real, guarda review.json vinculado al código y aprueba la versión exacta en el navegador. Una aprobación registra responsabilidad, no comprensión ni autoría independiente.";
+  }
 
   return {
     admission: {
@@ -769,6 +803,8 @@ export const testChallengeSolution = async (
   if (challenge.slug === brokenAgentChallengeSlug) {
     return runBrokenAgentPublicTests(solution.source);
   }
+  if (challenge.slug === slowServiceChallengeSlug)
+    return runSlowServicePublicTests(solution.source);
   const observations = await loadObservations(attempt.id);
   if (observations.length === 0) {
     throw new HttpError(
@@ -830,8 +866,11 @@ export const evaluateChallenge = async (
 ): Promise<ChallengeEvaluationResult> => {
   const challenge = requireImplementedChallenge(slug, now);
   let solution: ChallengeSolution;
-  let brokenAgentReview: BrokenAgentHumanReview | undefined;
   let brokenAgentSourceDigest: string | undefined;
+  let approvalReview: EvaluationApprovalReview | undefined;
+  const companionReviewRequired =
+    challenge.slug === slowServiceChallengeSlug &&
+    currentChallengeVersionFor(challenge.slug) === "slow-service-v3";
   if (challenge.slug === brokenAgentChallengeSlug) {
     if (!isRecord(rawInput) || rawInput.review === undefined) {
       const unreviewedSolution = parseInput(
@@ -862,15 +901,97 @@ export const evaluateChallenge = async (
         },
       );
     }
-    brokenAgentReview = reviewedSolution.review;
     brokenAgentSourceDigest = sourceDigest;
     solution = reviewedSolution;
+    approvalReview = reviewedSolution.review;
+  } else if (companionReviewRequired) {
+    if (!isRecord(rawInput) || rawInput.review === undefined) {
+      const unreviewed = parseInput(JavascriptSourceSolutionSchema, rawInput);
+      if (!isSlowServiceSourceWithinLimit(unreviewed.source)) {
+        throw new HttpError(
+          422,
+          "INVALID_SOURCE",
+          "El source debe tener entre 1 y 32,768 bytes UTF-8.",
+        );
+      }
+      const sourceDigest = createHash("sha256")
+        .update(unreviewed.source)
+        .digest("hex");
+      throw new HttpError(
+        428,
+        "HUMAN_REVIEW_REQUIRED",
+        "The Slow Service requiere una revisión y aprobación del participante antes de evaluar.",
+        false,
+        {
+          sourceDigest,
+          requiredFields: [
+            "sourceDigest",
+            "focus",
+            "failureScenario",
+            "evidence",
+            "decision",
+            "confidence",
+            "remainingRisk",
+          ],
+          next: "Con ayuda del agente, elige un caso concreto, revisa evidencia real y decide ship o block. Guarda review.json y repite con --review ./review.json.",
+        },
+      );
+    }
+    const reviewed = parseInput(SlowServiceEvaluationSolutionSchema, rawInput);
+    const sourceDigest = createHash("sha256")
+      .update(reviewed.source)
+      .digest("hex");
+    if (reviewed.review.sourceDigest !== sourceDigest) {
+      throw new HttpError(
+        409,
+        "STALE_HUMAN_REVIEW",
+        "La revisión no coincide con el código enviado.",
+        false,
+        {
+          expectedSourceDigest: sourceDigest,
+          reviewSourceDigest: reviewed.review.sourceDigest,
+        },
+      );
+    }
+    if (reviewed.review.decision === "block") {
+      throw new HttpError(
+        409,
+        "REVIEW_BLOCKED",
+        "La decisión block no autoriza una evaluación. Revisa el código y la evidencia antes de cambiarla.",
+      );
+    }
+    solution = reviewed;
+    brokenAgentSourceDigest = sourceDigest;
+    approvalReview = {
+      challengeSlug: "make-it-fast",
+      challengeVersion: "slow-service-v3",
+      source: reviewed.source,
+      review: reviewed.review,
+    };
   } else {
     solution = parseInput(JavascriptSourceSolutionSchema, rawInput);
   }
+  if (
+    challenge.slug === slowServiceChallengeSlug &&
+    !isSlowServiceSourceWithinLimit(solution.source)
+  )
+    throw new HttpError(
+      422,
+      "INVALID_SOURCE",
+      "El source debe tener entre 1 y 32,768 bytes UTF-8.",
+    );
   const participantId = await participantIdFor(clerkUserId);
   const attempt = await attemptFor(participantId, challenge);
-  const reservation = await reserveChallengeUse(attempt.id, "evaluation");
+  const reservationLifetime =
+    challenge.slug === slowServiceChallengeSlug
+      ? slowServiceEngineEvaluateTimeoutMs + 60_000
+      : undefined;
+  const reservation = await reserveChallengeUse(
+    attempt.id,
+    "evaluation",
+    undefined,
+    reservationLifetime,
+  );
 
   if (!reservation) {
     throw new HttpError(
@@ -881,20 +1002,20 @@ export const evaluateChallenge = async (
   }
 
   let approvalId: string | undefined;
-  if (brokenAgentReview && brokenAgentSourceDigest) {
+  if (approvalReview && brokenAgentSourceDigest) {
     approvalId = await consumeEvaluationApproval(
       attempt.id,
       brokenAgentSourceDigest,
-      brokenAgentReview,
+      approvalReview,
     );
     if (!approvalId) {
       await releaseAfterFailure(reservation, "evaluation");
       const approval = await createOrReuseEvaluationApproval(
         attempt.id,
         brokenAgentSourceDigest,
-        brokenAgentReview,
+        approvalReview,
       );
-      const approvalUrl = `${publicOrigin}/challenges/broken-agent/approve/${approval.id}`;
+      const approvalUrl = `${publicOrigin}/challenges/${challenge.slug}/approve/${approval.id}`;
       throw new HttpError(
         428,
         "HUMAN_APPROVAL_REQUIRED",
@@ -906,8 +1027,9 @@ export const evaluateChallenge = async (
           sourceDigest: approval.sourceDigest,
           evaluationsRemaining:
             attempt.evaluationsLimit - attempt.evaluationsUsed,
-          retryCommand:
-            "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
+          retryCommand: companionReviewRequired
+            ? "andes challenge evaluate --challenge make-it-fast --source ./ledger.js --review ./review.json"
+            : "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",
         },
       );
     }
@@ -935,11 +1057,14 @@ export const evaluateChallenge = async (
       challengeVersion,
       attempt.id,
       solution.source,
-      reservation.queriesUsed,
+      challenge.slug === slowServiceChallengeSlug ? 0 : reservation.queriesUsed,
     );
   } catch (error) {
     if (error instanceof ChallengeEngineError) {
-      if (isConfirmedSolutionExecutionFailure(error)) {
+      if (
+        challenge.slug !== slowServiceChallengeSlug &&
+        isConfirmedSolutionExecutionFailure(error)
+      ) {
         try {
           const consumed =
             await consumeFailedEvaluationReservation(reservation);
@@ -969,9 +1094,19 @@ export const evaluateChallenge = async (
 
   let completed: Awaited<ReturnType<typeof completeEvaluationReservation>>;
   try {
+    let storedSolution: ChallengeSolution & {
+      readonly challengeSlug?: "make-it-fast";
+      readonly approvalId?: string;
+    } = solution;
+    if (challenge.slug === slowServiceChallengeSlug)
+      storedSolution = {
+        ...solution,
+        challengeSlug: slowServiceChallengeSlug,
+        ...(approvalId ? { approvalId } : {}),
+      };
     completed = await completeEvaluationReservation(
       reservation,
-      solution,
+      storedSolution,
       score,
     );
   } catch (error) {

@@ -237,7 +237,7 @@ describe("CLI JSON mode", () => {
     }
   });
 
-  test("creates the live Broken Agent starter without overwriting work", async () => {
+  test("rejects the closed Broken Agent starter without overwriting work", async () => {
     const directory = await mkdtemp(join(tmpdir(), "chofex-broken-agent-"));
     const challengeDirectory = join(directory, "broken-agent");
     const solutionPath = join(challengeDirectory, "scheduler.js");
@@ -251,21 +251,13 @@ describe("CLI JSON mode", () => {
         "broken-agent",
       );
 
-      expect(created.exitCode).toBe(0);
-      expect(created.stderr).toBe("");
-      expect(created.stdout).toContain("Se creó broken-agent");
-      expect(created.stdout).toContain("Todo pasa");
-      expect(await Bun.file(solutionPath).text()).toContain(
-        "function createScheduler",
-      );
-      expect(
-        await Bun.file(join(challengeDirectory, "README.md")).text(),
-      ).toContain("Contrato normativo");
-      expect(
-        await Bun.file(join(challengeDirectory, "scheduler.test.js")).text(),
-      ).toContain('test("ejecuta vencidos');
+      expect(created.exitCode).toBe(2);
+      expect(created.stdout).toBe("");
+      expect(created.stderr).toContain("CHALLENGE_CLOSED");
+      expect(created.stderr).toContain("Espera el próximo challenge");
+      expect(await Bun.file(solutionPath).exists()).toBe(false);
 
-      await writeFile(solutionPath, "// repaired by me\n", "utf8");
+      await Bun.write(solutionPath, "// repaired by me\n");
 
       const repeated = await runCliFrom(
         directory,
@@ -274,8 +266,8 @@ describe("CLI JSON mode", () => {
         "--challenge",
         "broken-agent",
       );
-      expect(repeated.exitCode).toBe(0);
-      expect(repeated.stdout).toContain("broken-agent ya existe");
+      expect(repeated.exitCode).toBe(2);
+      expect(repeated.stderr).toContain("CHALLENGE_CLOSED");
       expect(await Bun.file(solutionPath).text()).toBe("// repaired by me\n");
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -615,6 +607,131 @@ describe("CLI JSON mode", () => {
     } finally {
       server.stop(true);
       await unlink(sourcePath).catch(() => undefined);
+    }
+  });
+
+  test("Slow Service CLI blocks missing, stale and blocked reviews, then emits one JSON browser handoff", async () => {
+    const sourcePath = join(cliDirectory, `.ledger-${crypto.randomUUID()}.js`);
+    const reviewPath = join(
+      cliDirectory,
+      `.review-${crypto.randomUUID()}.json`,
+    );
+    const source = "function createLedger() { return {}; }\n";
+    const review = {
+      sourceDigest: createHash("sha256").update(source).digest("hex"),
+      focus: "historical_percentiles",
+      failureScenario:
+        "Two debits of 100 and 300 must select the exact nearest rank.",
+      evidence:
+        "The local test returned P50=100 and P100=300 with the provided inputs.",
+      decision: "ship",
+      confidence: 80,
+      remainingRisk:
+        "The full retained history still needs its capacity benchmark.",
+    };
+    let submitted = 0;
+    const approvalUrl =
+      "https://hacktheandes.com/challenges/make-it-fast/approve/approval_1";
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        if (request.method === "GET")
+          return new Response(null, { status: 503 });
+        submitted += 1;
+        expect(await request.json()).toMatchObject({
+          kind: "javascript_source",
+          source,
+          review,
+        });
+        return Response.json(
+          {
+            version: 1,
+            ok: false,
+            requestId: "companion-handoff",
+            error: {
+              code: "HUMAN_APPROVAL_REQUIRED",
+              message: "Participant approval required",
+              retryable: false,
+              details: {
+                approvalUrl,
+                expiresAt: "2026-10-03T00:00:00Z",
+                evaluationsRemaining: 5,
+                sourceDigest: review.sourceDigest,
+              },
+            },
+          },
+          { status: 428 },
+        );
+      },
+    });
+    try {
+      await writeFile(sourcePath, source, "utf8");
+      const args = [
+        "--api-url",
+        server.url.toString(),
+        "--token",
+        "cli-token",
+        "--output",
+        "json",
+        "challenge",
+        "evaluate",
+        "--challenge",
+        "make-it-fast",
+        "--source",
+        sourcePath,
+      ];
+      const missing = await runCli(...args);
+      expect(JSON.parse(missing.stdout)).toMatchObject({
+        version: 1,
+        ok: false,
+        error: {
+          code: "HUMAN_REVIEW_REQUIRED",
+          details: {
+            sourceDigest: review.sourceDigest,
+            focusValues: [
+              "atomic_corrections",
+              "retroactive_solvency",
+              "historical_percentiles",
+              "history_capacity",
+              "cpu_growth",
+            ],
+          },
+        },
+      });
+      expect(missing.exitCode).toBe(2);
+      for (const [input, code] of [
+        [{ ...review, sourceDigest: "0".repeat(64) }, "STALE_HUMAN_REVIEW"],
+        [{ ...review, decision: "block" }, "REVIEW_BLOCKED"],
+        [{ ...review, focus: "lease_recovery" }, "INVALID_HUMAN_REVIEW"],
+      ]) {
+        await writeFile(reviewPath, JSON.stringify(input), "utf8");
+        const rejected = await runCli(...args, "--review", reviewPath);
+        expect(rejected.exitCode).toBe(2);
+        expect(JSON.parse(rejected.stdout)).toMatchObject({
+          ok: false,
+          error: { code },
+        });
+        expect(rejected.stderr).toBe("");
+      }
+      expect(submitted).toBe(0);
+      await writeFile(reviewPath, JSON.stringify(review), "utf8");
+      const handoff = await runCli(...args, "--review", reviewPath);
+      expect(handoff.exitCode).not.toBe(0);
+      expect(handoff.stderr).toBe("");
+      expect(JSON.parse(handoff.stdout)).toMatchObject({
+        version: 1,
+        ok: false,
+        error: {
+          code: "HUMAN_APPROVAL_REQUIRED",
+          details: { approvalUrl, evaluationsRemaining: 5 },
+        },
+      });
+      expect(submitted).toBe(1);
+    } finally {
+      server.stop(true);
+      await unlink(sourcePath).catch(() => undefined);
+      await unlink(reviewPath).catch(() => undefined);
     }
   });
 

@@ -2,6 +2,7 @@ import {
   blackBoxChallengeSlug,
   brokenAgentChallengeSlug,
   type ChallengeRanking,
+  challengeClosingNotice,
   isChallengeRankingVisibleAt,
 } from "@chofex/challenges-contract";
 import {
@@ -16,6 +17,7 @@ import { formatChallengeScore } from "@/lib/challenges/score";
 import { BrokenAgentChallengeGuide } from "./broken-agent-guide";
 import { BlackBoxChallengeGuide } from "./challenge-guide";
 import { RankingCountdown } from "./ranking-countdown-view";
+import { SlowServiceChallengeGuide } from "./slow-service-guide";
 
 const executionMetricText = (
   entry: ChallengeRanking["entries"][number],
@@ -45,9 +47,11 @@ const LinkedInIcon = () => (
 
 const RankingResults = ({
   brokenAgent,
+  slowService,
   entries,
 }: {
   readonly brokenAgent: boolean;
+  readonly slowService: boolean;
   readonly entries: ChallengeRanking["entries"];
 }) => {
   if (entries.length === 0) {
@@ -69,11 +73,17 @@ const RankingResults = ({
             <th className="px-4 py-3">Puesto</th>
             <th className="px-4 py-3">Participante</th>
             <th className="px-4 py-3">
-              {brokenAgent ? "Puntaje" : "Accuracy"}
+              {brokenAgent || slowService ? "Puntaje" : "Accuracy"}
             </th>
-            <th className="px-4 py-3">{brokenAgent ? "Puntos" : "Exactas"}</th>
-            {!brokenAgent && <th className="px-4 py-3">Queries</th>}
-            {!brokenAgent && <th className="px-4 py-3">Runtime</th>}
+            <th className="px-4 py-3">
+              {brokenAgent || slowService ? "Puntos" : "Exactas"}
+            </th>
+            {!brokenAgent && !slowService && (
+              <th className="px-4 py-3">Queries</th>
+            )}
+            {!brokenAgent && !slowService && (
+              <th className="px-4 py-3">Runtime</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -122,10 +132,10 @@ const RankingResults = ({
               <td className="px-4 py-3 font-mono">
                 {entry.exactCount}/{entry.sampleSize}
               </td>
-              {!brokenAgent && (
+              {!brokenAgent && !slowService && (
                 <td className="px-4 py-3 font-mono">{entry.queriesUsed}</td>
               )}
-              {!brokenAgent && (
+              {!brokenAgent && !slowService && (
                 <td className="px-4 py-3 font-mono">
                   {executionMetricText(entry)}
                 </td>
@@ -147,6 +157,7 @@ export function ChallengeRankingView({
 }) {
   const { challenge, entries } = ranking;
   const brokenAgent = challenge.slug === brokenAgentChallengeSlug;
+  const slowService = challenge.slug === "make-it-fast";
   const rankingVisible = isChallengeRankingVisibleAt(challenge, new Date(now));
   let cliHint = "andes challenge list";
   if (challenge.closed) {
@@ -157,14 +168,22 @@ export function ChallengeRankingView({
   if (brokenAgent && !challenge.closed) {
     cliHint = "andes challenge init --challenge broken-agent";
   }
+  if (slowService && challenge.open)
+    cliHint = "andes challenge init --challenge make-it-fast";
   let challengeState = "En vivo";
   if (challenge.closed) {
     challengeState = "Cerrado";
+  } else if (!challenge.playable) {
+    challengeState = "Próximamente";
   } else if (!challenge.open) {
     challengeState = `Abre ${challenge.opensAt.slice(0, 10)}`;
   }
   let rankingContent = (
-    <RankingResults brokenAgent={brokenAgent} entries={entries} />
+    <RankingResults
+      brokenAgent={brokenAgent}
+      slowService={slowService}
+      entries={entries}
+    />
   );
   if (!rankingVisible && challenge.rankingVisibleAt) {
     rankingContent = (
@@ -181,12 +200,17 @@ export function ChallengeRankingView({
   if (challenge.slug === brokenAgentChallengeSlug && !challenge.closed) {
     challengeGuide = <BrokenAgentChallengeGuide />;
   }
+  if (slowService && !challenge.closed)
+    challengeGuide = <SlowServiceChallengeGuide />;
   let rankingDescription =
     "Ranking público de solo lectura: accuracy, empates por predicciones exactas y menos queries. Las implementaciones no se publican.";
   if (brokenAgent) {
     rankingDescription =
       "Ranking público de solo lectura: puntaje de producción, menos evaluaciones oficiales y, al final, hora de envío. Aparecen todos los puntajes válidos de personas con una postulación enviada; los casos ocultos y las implementaciones no se publican.";
   }
+  if (slowService)
+    rankingDescription =
+      "Ranking público de solo lectura para personas con una postulación enviada. Ordena por puntaje sobre 100, menos evaluaciones oficiales y la hora del mejor envío. Los milisegundos de CPU son un diagnóstico, no un desempate. Los casos ocultos y las implementaciones no se publican.";
 
   return (
     <section
@@ -231,6 +255,12 @@ export function ChallengeRankingView({
         </div>
 
         {challengeGuide}
+
+        {challenge.closed && (
+          <p className={`p-5 text-base leading-relaxed ${brandFrameClassName}`}>
+            {challengeClosingNotice(challenge.title)}
+          </p>
+        )}
 
         <section aria-labelledby="ranking-heading" className="mt-14">
           <BrandKicker className="mb-3 text-[var(--hud-kicker)]">

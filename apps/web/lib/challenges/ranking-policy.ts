@@ -2,6 +2,7 @@ import {
   type ChallengeScore,
   compareChallengeScores,
 } from "@chofex/challenges-contract";
+import { slowServiceChallengeSlug } from "@chofex/challenges-contract/slow-service";
 
 const publicRankingEntryLimit = 17;
 
@@ -45,7 +46,11 @@ export const compareRankedChallengeEvaluations = (
 ): number => {
   const scoreOrder = compareChallengeScores(left.score, right.score);
   if (scoreOrder !== 0) return scoreOrder;
-  if (left.score.breakdown && right.score.breakdown) {
+  if (
+    (left.score.breakdown && right.score.breakdown) ||
+    (left.score.challengeSlug === slowServiceChallengeSlug &&
+      right.score.challengeSlug === slowServiceChallengeSlug)
+  ) {
     return left.evaluatedAt.getTime() - right.evaluatedAt.getTime();
   }
   return 0;

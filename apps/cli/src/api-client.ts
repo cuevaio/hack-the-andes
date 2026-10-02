@@ -12,6 +12,7 @@ import {
   type ChallengeRanking,
   ChallengeRankingSchema,
 } from "@chofex/challenges-contract";
+import { slowServiceChallengeSlug } from "@chofex/challenges-contract/slow-service";
 import {
   ApiFailureSchema,
   type ApiSuccess,
@@ -73,6 +74,7 @@ const resolveAuthentication = (
 
 const defaultRequestTimeoutMs = 20_000;
 export const challengeEvaluateRequestTimeoutMs = 30_000;
+export const slowServiceEvaluateRequestTimeoutMs = 360_000;
 
 const sendRequest = (
   options: ApiClientOptions,
@@ -424,7 +426,9 @@ export const evaluateChallenge = (
     `/api/v1/challenges/${slug}/evaluate`,
     { method: "POST", body: JSON.stringify(input) },
     decodeChallengeEvaluation,
-    challengeEvaluateRequestTimeoutMs,
+    slug === slowServiceChallengeSlug
+      ? slowServiceEvaluateRequestTimeoutMs
+      : challengeEvaluateRequestTimeoutMs,
   );
 
 export const getChallengeRanking = (

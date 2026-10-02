@@ -11,7 +11,7 @@ import {
 } from "@/lib/registration/http";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 360;
 
 export const POST = (
   request: Request,

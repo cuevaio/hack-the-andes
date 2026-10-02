@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
-import type { BrokenAgentHumanReview } from "@chofex/challenges-contract";
+import {
+  type EvaluationApprovalReview,
+  EvaluationApprovalReviewSchema,
+} from "@chofex/challenges-contract";
+import { isSlowServiceSourceWithinLimit } from "@chofex/challenges-contract/slow-service";
 import type { db } from "@chofex/db";
 import { sql } from "@chofex/db/orm";
 import {
@@ -10,6 +14,7 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
+import { Schema } from "effect";
 
 import { HttpError } from "@/lib/registration/http";
 
@@ -24,7 +29,7 @@ interface ApprovalRow extends Record<string, unknown> {
   readonly participant_id: string;
   readonly source_digest: string;
   readonly review_digest: string;
-  readonly review: BrokenAgentHumanReview;
+  readonly review: unknown;
   readonly ceremony_challenge: string | null;
   readonly ceremony_kind: string | null;
   readonly webauthn_origin: string | null;
@@ -48,7 +53,7 @@ interface IdentifierRow extends Record<string, unknown> {
 export interface EvaluationApprovalView {
   readonly id: string;
   readonly sourceDigest: string;
-  readonly review: BrokenAgentHumanReview;
+  readonly review: EvaluationApprovalReview;
   readonly expiresAt: string;
   readonly approvedAt?: string;
   readonly consumedAt?: string;
@@ -64,6 +69,24 @@ const approvalDatabase = async (
 const instant = (value: Date | string): string => new Date(value).toISOString();
 
 const toView = (row: ApprovalRow): EvaluationApprovalView => {
+  const review = Schema.decodeUnknownSync(EvaluationApprovalReviewSchema, {
+    onExcessProperty: "error",
+  })(row.review);
+  if ("challengeSlug" in review) {
+    if (
+      !isSlowServiceSourceWithinLimit(review.source) ||
+      createHash("sha256").update(review.source).digest("hex") !==
+        row.source_digest ||
+      review.review.sourceDigest !== row.source_digest ||
+      reviewDigestFor(review) !== row.review_digest
+    ) {
+      throw new HttpError(
+        409,
+        "STALE_HUMAN_REVIEW",
+        "La aprobación no coincide con el código y la revisión almacenados.",
+      );
+    }
+  }
   let approved: { readonly approvedAt?: string } = {};
   if (row.approved_at) approved = { approvedAt: instant(row.approved_at) };
   let consumed: { readonly consumedAt?: string } = {};
@@ -71,15 +94,32 @@ const toView = (row: ApprovalRow): EvaluationApprovalView => {
   return {
     id: row.id,
     sourceDigest: row.source_digest,
-    review: row.review,
+    review,
     expiresAt: instant(row.expires_at),
     ...approved,
     ...consumed,
   };
 };
 
-export const reviewDigestFor = (review: BrokenAgentHumanReview): string =>
-  createHash("sha256")
+export const reviewDigestFor = (review: EvaluationApprovalReview): string => {
+  if ("challengeSlug" in review) {
+    return createHash("sha256")
+      .update(
+        JSON.stringify({
+          challengeSlug: review.challengeSlug,
+          challengeVersion: review.challengeVersion,
+          sourceDigest: review.review.sourceDigest,
+          focus: review.review.focus,
+          failureScenario: review.review.failureScenario,
+          evidence: review.review.evidence,
+          decision: review.review.decision,
+          confidence: review.review.confidence,
+          remainingRisk: review.review.remainingRisk,
+        }),
+      )
+      .digest("hex");
+  }
+  return createHash("sha256")
     .update(
       JSON.stringify({
         sourceDigest: review.sourceDigest,
@@ -92,11 +132,12 @@ export const reviewDigestFor = (review: BrokenAgentHumanReview): string =>
       }),
     )
     .digest("hex");
+};
 
 export const createOrReuseEvaluationApproval = async (
   attemptId: string,
   sourceDigest: string,
-  review: BrokenAgentHumanReview,
+  review: EvaluationApprovalReview,
   database?: EvaluationApprovalDatabase,
 ): Promise<EvaluationApprovalView> => {
   const client = await approvalDatabase(database);
@@ -189,7 +230,7 @@ export const createOrReuseEvaluationApproval = async (
 export const consumeEvaluationApproval = async (
   attemptId: string,
   sourceDigest: string,
-  review: BrokenAgentHumanReview,
+  review: EvaluationApprovalReview,
   database?: EvaluationApprovalDatabase,
 ): Promise<string | undefined> => {
   const client = await approvalDatabase(database);
@@ -205,6 +246,7 @@ export const consumeEvaluationApproval = async (
         and "source_digest" = ${sourceDigest}
         and "review_digest" = ${reviewDigest}
         and "approved_at" is not null
+        ${"challengeSlug" in review ? sql`and "review" = ${JSON.stringify(review)}::jsonb` : sql``}
         and "consumed_at" is null
         and "expires_at" > now()
       order by "approved_at" desc
@@ -244,6 +286,7 @@ const approvalForParticipant = async (
   clerkUserId: string,
   approvalId: string,
   database?: EvaluationApprovalDatabase,
+  scope: "broken-agent" | "slow-service-v3" = "broken-agent",
 ): Promise<ApprovalRow | undefined> => {
   const client = await approvalDatabase(database);
   const result = await client.execute<ApprovalRow>(sql`
@@ -258,7 +301,8 @@ const approvalForParticipant = async (
     where
       approval."id" = ${approvalId}
       and participant."clerk_user_id" = ${clerkUserId}
-      and attempt."challenge_slug" = 'broken-agent'
+      and attempt."challenge_slug" = ${scope === "broken-agent" ? "broken-agent" : "make-it-fast"}
+      ${scope === "slow-service-v3" ? sql`and attempt."challenge_version" = 'slow-service-v3'` : sql``}
     limit 1
   `);
   return result.rows[0];
@@ -268,13 +312,42 @@ export const evaluationApprovalForParticipant = async (
   clerkUserId: string,
   approvalId: string,
   database?: EvaluationApprovalDatabase,
+  scope: "broken-agent" | "slow-service-v3" = "broken-agent",
 ): Promise<EvaluationApprovalView | undefined> => {
-  const row = await approvalForParticipant(clerkUserId, approvalId, database);
+  const row = await approvalForParticipant(
+    clerkUserId,
+    approvalId,
+    database,
+    scope,
+  );
   if (!row) return;
-  return toView(row);
+  const view = toView(row);
+  if ((scope === "slow-service-v3") !== "challengeSlug" in view.review) return;
+  return view;
 };
 
-const activeApproval = (row: ApprovalRow): void => {
+const activeApproval = (
+  row: ApprovalRow,
+  scope: "broken-agent" | "slow-service-v3",
+): void => {
+  const view = toView(row);
+  if ((scope === "slow-service-v3") !== "challengeSlug" in view.review) {
+    throw new HttpError(
+      404,
+      "EVALUATION_APPROVAL_NOT_FOUND",
+      "Approval not found",
+    );
+  }
+  if (
+    "challengeSlug" in view.review &&
+    view.review.review.decision === "block"
+  ) {
+    throw new HttpError(
+      409,
+      "REVIEW_BLOCKED",
+      "La decisión block no autoriza una evaluación oficial.",
+    );
+  }
   if (row.consumed_at) {
     throw new HttpError(
       409,
@@ -365,6 +438,7 @@ export const evaluationApprovalOptions = async (
   origin: string,
   authenticator: ApprovalAuthenticator = "local-device",
   database?: EvaluationApprovalDatabase,
+  scope: "broken-agent" | "slow-service-v3" = "broken-agent",
 ): Promise<{
   readonly kind: "registration" | "authentication";
   readonly options: unknown;
@@ -374,6 +448,7 @@ export const evaluationApprovalOptions = async (
     clerkUserId,
     approvalId,
     database,
+    scope,
   );
   if (!approval) {
     throw new HttpError(
@@ -382,7 +457,7 @@ export const evaluationApprovalOptions = async (
       "Approval not found",
     );
   }
-  activeApproval(approval);
+  activeApproval(approval, scope);
 
   const passkeys = await client.execute<PasskeyRow>(sql`
     select "credential_id", "public_key", "counter", "transports"
@@ -593,12 +668,14 @@ export const verifyEvaluationApproval = async (
   approvalId: string,
   response: unknown,
   database?: EvaluationApprovalDatabase,
+  scope: "broken-agent" | "slow-service-v3" = "broken-agent",
 ): Promise<EvaluationApprovalView> => {
   const client = await approvalDatabase(database);
   const approval = await approvalForParticipant(
     clerkUserId,
     approvalId,
     database,
+    scope,
   );
   if (!approval) {
     throw new HttpError(
@@ -607,7 +684,7 @@ export const verifyEvaluationApproval = async (
       "Approval not found",
     );
   }
-  activeApproval(approval);
+  activeApproval(approval, scope);
   if (
     !approval.ceremony_challenge ||
     !approval.webauthn_origin ||
@@ -647,6 +724,7 @@ export const verifyEvaluationApproval = async (
     clerkUserId,
     approvalId,
     database,
+    scope,
   );
   if (!verified?.approved_at) throw invalidVerification();
   return toView(verified);

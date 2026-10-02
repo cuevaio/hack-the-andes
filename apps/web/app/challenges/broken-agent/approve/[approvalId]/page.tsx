@@ -64,6 +64,7 @@ export default async function EvaluationApprovalPage({
 
   const expired = Date.parse(approval.expiresAt) <= Date.now();
   const review = approval.review;
+  if ("challengeSlug" in review) notFound();
   let action: React.ReactNode;
   if (approval.consumedAt && approval.approvedAt) {
     action = (

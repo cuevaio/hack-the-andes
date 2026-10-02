@@ -9,10 +9,12 @@ import type {
 } from "@chofex/challenges-contract";
 import {
   challengeAdmissionNotice,
+  challengeClosingNotice,
   challengeOpeningNotice,
   formatChallengeOpeningInPeru,
   isChallengeRankingVisibleAt,
 } from "@chofex/challenges-contract";
+import { slowServiceChallengeVersion } from "@chofex/challenges-contract/slow-service";
 import type { RegistrationResult } from "@chofex/registration-contract";
 
 import { eventName } from "./brand.js";
@@ -43,7 +45,7 @@ export const challengeParticipationNotice = (
   now: Date = new Date(),
 ): string | undefined => {
   if (closesAt && now.getTime() >= Date.parse(closesAt)) {
-    return `${title} está cerrado. Las consultas, pruebas locales y evaluaciones oficiales están deshabilitadas.`;
+    return challengeClosingNotice(title);
   }
   return challengeLaunchNotice(title, opensAt, now);
 };
@@ -98,9 +100,31 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
   const queriesRemaining = progress.queriesLimit - progress.queriesUsed;
   const evaluationsRemaining =
     progress.evaluationsLimit - progress.evaluationsUsed;
+  if (challenge.slug === "make-it-fast") {
+    const lines = [
+      `${challenge.title.toUpperCase()} / #${challenge.code}`,
+      challenge.summary,
+      "",
+      attempt.admission?.notice ?? challengeAdmissionNotice,
+      `Versión vigente: ${challenge.challengeVersion ?? slowServiceChallengeVersion}`,
+      `Evaluaciones restantes: ${evaluationsRemaining} / ${progress.evaluationsLimit}`,
+      "Los tests públicos son ilimitados. No certifican el rendimiento oculto.",
+      "No necesitas review.json ni aprobación de navegador.",
+    ];
+    if (progress.bestAccuracy !== undefined)
+      lines.push(`Mejor puntaje: ${percent(progress.bestAccuracy)}`);
+    if (progress.rank !== undefined) lines.push(`Puesto: #${progress.rank}`);
+    if (challenge.closed || !challenge.open) {
+      lines.push("Los envíos están deshabilitados.", "Siguiente: andes status");
+    } else {
+      lines.push("", attempt.localTestHint, "Siguiente: andes status");
+    }
+    return lines.join("\n");
+  }
   if (challenge.slug === "broken-agent") {
     let caseStatus = "LISTO PARA AUDITAR";
     if (attempt.latestEvaluation) caseStatus = "EVALUADO";
+    if (challenge.closed) caseStatus = "CERRADO";
     const lines = [
       `${challenge.title.toUpperCase()} — CASO #${challenge.code}`,
       challenge.summary,
@@ -122,6 +146,9 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
         lines.push(`Puesto         #${progress.rank}`);
       if (progress.shareCode)
         lines.push(`Código         #${progress.shareCode}`);
+    }
+    if (challenge.closed) {
+      lines.push("", challengeClosingNotice(challenge.title));
     }
     if (
       attempt.latestEvaluation ||
@@ -365,6 +392,26 @@ export const notebookCsvText = (
 };
 
 export const challengeTestText = (result: ChallengeLocalTestResult): string => {
+  if (result.kind === "slow_service") {
+    const lines = [
+      "TESTS PÚBLICOS / THE SLOW SERVICE",
+      `${result.matchedObservations} / ${result.observationCount} escenarios pasan`,
+      "No se consumió una evaluación oficial. Estos tests comprueban semántica, no el rendimiento oculto.",
+    ];
+    for (const mismatch of result.mismatches)
+      lines.push(
+        `#${mismatch.sequence}: esperado ${JSON.stringify(mismatch.expected)}, recibido ${JSON.stringify(mismatch.actual)}`,
+      );
+    if (result.accuracy === 1)
+      lines.push(
+        "Siguiente: andes challenge evaluate --challenge make-it-fast --source ./ledger.js",
+      );
+    else
+      lines.push(
+        "Siguiente: andes challenge test --challenge make-it-fast --source ./ledger.js",
+      );
+    return lines.join("\n");
+  }
   if (result.kind === "broken_agent") {
     const lines = [
       "TESTS PÚBLICOS — BROKEN AGENT",
@@ -435,6 +482,22 @@ export const challengeTestText = (result: ChallengeLocalTestResult): string => {
 export const challengeEvaluateText = (
   result: ChallengeEvaluationResult,
 ): string => {
+  if (result.rankingPath === "/challenges/make-it-fast") {
+    const lines = [
+      "VEREDICTO OFICIAL / THE SLOW SERVICE",
+      `Puntaje: ${result.exactCount} / ${result.sampleSize}`,
+      `CPU diagnóstico: ${result.runtimeMs} ms. No es un desempate.`,
+    ];
+    if (result.rank !== undefined) lines.push(`Puesto: #${result.rank}`);
+    lines.push(
+      `Evaluaciones restantes: ${result.evaluationsRemaining} / ${result.evaluationsLimit}`,
+      "",
+      result.shareText,
+      "",
+      "Siguiente: andes challenge ranking --challenge make-it-fast",
+    );
+    return lines.join("\n");
+  }
   if (result.rankingPath === "/challenges/broken-agent") {
     const lines = [
       "VEREDICTO OFICIAL — BROKEN AGENT — PREPARACIÓN PARA PRODUCCIÓN",
@@ -530,6 +593,18 @@ export const challengeRankingText = (
       "",
       "El ranking no confirma tu aceptación. Consulta tu siguiente paso:",
       "  andes status",
+    );
+    return lines.join("\n");
+  }
+  if (ranking.challenge.slug === "make-it-fast") {
+    lines.push("Psto  Puntaje  Puntos  Nombre");
+    for (const entry of ranking.entries)
+      lines.push(
+        `${entry.rank}  ${percent(entry.accuracy)}  ${entry.exactCount}/${entry.sampleSize}  ${entry.displayName}`,
+      );
+    lines.push(
+      "",
+      "El ranking no confirma tu aceptación. Siguiente: andes status",
     );
     return lines.join("\n");
   }

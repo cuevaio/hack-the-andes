@@ -4,16 +4,26 @@ import { readFile } from "node:fs/promises";
 import {
   type BrokenAgentHumanReview,
   BrokenAgentHumanReviewSchema,
+  challengeCatalog,
+  isChallengeOpenAt,
   type Shipment,
   ShipmentSchema,
+  SlowServiceCompanionReviewSchema,
 } from "@chofex/challenges-contract";
+import { isSlowServiceSourceWithinLimit } from "@chofex/challenges-contract/slow-service";
 import { Effect, Schema } from "effect";
 import { Prompt } from "effect/unstable/cli";
 import type * as PromptModule from "effect/unstable/cli/Prompt";
 
 import { CliError, cliError } from "./errors.js";
 
-export const defaultChallengeSlug = "broken-agent";
+export const defaultChallengeSlug =
+  challengeCatalog
+    .filter(
+      (challenge) =>
+        challenge.playable && isChallengeOpenAt(challenge, new Date()),
+    )
+    .at(-1)?.slug ?? "broken-agent";
 
 const readStdin = async (): Promise<string> => {
   const chunks: Array<Buffer> = [];
@@ -38,12 +48,13 @@ export const readTextFile = (path: string): Effect.Effect<string, CliError> =>
 
 export const javascriptSourceFromPath = (
   path: string | undefined,
-  challenge = defaultChallengeSlug,
+  challenge: string = defaultChallengeSlug,
 ): Effect.Effect<{ kind: "javascript_source"; source: string }, CliError> => {
   if (!path) {
     let expectedFunction = "calculateShipping(input)";
     if (challenge === "broken-agent")
       expectedFunction = "createScheduler(dependencies)";
+    if (challenge === "make-it-fast") expectedFunction = "createLedger()";
     return Effect.fail(
       cliError(
         "SOURCE_REQUIRED",
@@ -52,6 +63,19 @@ export const javascriptSourceFromPath = (
     );
   }
   return readTextFile(path).pipe(
+    Effect.flatMap((source) => {
+      if (
+        challenge === "make-it-fast" &&
+        !isSlowServiceSourceWithinLimit(source)
+      )
+        return Effect.fail(
+          cliError(
+            "INVALID_SOURCE",
+            "El source debe tener entre 1 y 32,768 bytes UTF-8.",
+          ),
+        );
+      return Effect.succeed(source);
+    }),
     Effect.map((source) => ({ kind: "javascript_source" as const, source })),
   );
 };
@@ -67,6 +91,18 @@ const humanReviewRequiredDetails = {
     "remainingRisk",
   ],
   next: "Ask the participant to reason about the patch and provide these answers in review.json, then pass --review review.json.",
+};
+
+const slowServiceReviewRequiredDetails = {
+  requiredFields: humanReviewRequiredDetails.requiredFields,
+  focusValues: [
+    "atomic_corrections",
+    "retroactive_solvency",
+    "historical_percentiles",
+    "history_capacity",
+    "cpu_growth",
+  ],
+  next: "Work with the participant to choose a failure case, inspect real evidence and record their ship or block decision in review.json. Pass --review review.json, then hand approvalUrl to the participant for browser/passkey approval of the exact source.",
 };
 
 export const brokenAgentReviewFromPath = (
@@ -115,32 +151,75 @@ export const challengeEvaluationInput = (
 ) =>
   Effect.gen(function* () {
     const solution = yield* javascriptSourceFromPath(sourcePath, challenge);
-    if (challenge !== "broken-agent") return solution;
+    if (challenge !== "broken-agent" && challenge !== "make-it-fast")
+      return solution;
     const sourceDigest = createHash("sha256")
       .update(solution.source)
       .digest("hex");
+    const requiredDetails =
+      challenge === "make-it-fast"
+        ? slowServiceReviewRequiredDetails
+        : humanReviewRequiredDetails;
     if (!reviewPath) {
       return yield* Effect.fail(
         cliError(
           "HUMAN_REVIEW_REQUIRED",
-          "Broken Agent requires the participant's engineering review before an official evaluation",
+          challenge === "make-it-fast"
+            ? "The Slow Service requires a source-bound companion review and participant approval before evaluation"
+            : "Broken Agent requires the participant's engineering review before an official evaluation",
           false,
-          { ...humanReviewRequiredDetails, sourceDigest },
+          { ...requiredDetails, sourceDigest },
         ),
       );
     }
-    const review = yield* brokenAgentReviewFromPath(reviewPath);
+    const review =
+      challenge === "make-it-fast"
+        ? yield* readTextFile(reviewPath).pipe(
+            Effect.flatMap((contents) =>
+              Effect.try({
+                try: (): unknown => JSON.parse(contents),
+                catch: () =>
+                  cliError(
+                    "INVALID_REVIEW_FILE",
+                    "Could not parse JSON review",
+                  ),
+              }),
+            ),
+            Effect.flatMap((input) =>
+              Schema.decodeUnknownEffect(SlowServiceCompanionReviewSchema, {
+                onExcessProperty: "error",
+              })(input).pipe(
+                Effect.mapError((error) =>
+                  cliError(
+                    "INVALID_HUMAN_REVIEW",
+                    error.message,
+                    false,
+                    slowServiceReviewRequiredDetails,
+                  ),
+                ),
+              ),
+            ),
+          )
+        : yield* brokenAgentReviewFromPath(reviewPath);
     if (review.sourceDigest !== sourceDigest) {
       return yield* Effect.fail(
         cliError(
           "STALE_HUMAN_REVIEW",
-          "review.json does not match the current scheduler.js",
+          "review.json does not match the current source file",
           false,
           {
             expectedSourceDigest: sourceDigest,
             reviewSourceDigest: review.sourceDigest,
             next: "Show the participant the updated evidence, obtain a fresh decision, and replace review.json.",
           },
+        ),
+      );
+    }
+    if (challenge === "make-it-fast" && review.decision === "block") {
+      return yield* Effect.fail(
+        cliError(
+          "REVIEW_BLOCKED",
+          "La decisión block no autoriza una evaluación. Revisa el código y la evidencia antes de enviarlo.",
         ),
       );
     }

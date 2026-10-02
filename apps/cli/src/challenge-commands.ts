@@ -3,6 +3,10 @@ import {
   isChallengeClosedAt,
   isChallengeOpenAt,
 } from "@chofex/challenges-contract";
+import {
+  slowServiceChallengeVersion,
+  slowServicePublicPerformance,
+} from "@chofex/challenges-contract/slow-service";
 import { Effect, Option } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
 
@@ -140,6 +144,99 @@ const challengeQuickstart = {
   helpCommand: "andes challenge test --help",
 } as const;
 
+const slowServiceQuickstart = {
+  title: "THE SLOW SERVICE",
+  story: [
+    "Un diario contable acepta correcciones solo si ninguna cuenta queda negativa en ningún momento. Sus saldos y percentiles históricos exactos nunca cambian.",
+  ],
+  mission:
+    "Optimiza createLedger({ accounts }), amend() y report() sin cambiar ningún resultado.",
+  rules: [
+    "5 evaluaciones oficiales y tests públicos ilimitados.",
+    "Revisiones optimistas, reemplazos completos y solvencia por grupos de timestamp. report({ account, from, to, asOf, percentile }) devuelve los cinco campos de saldo, debits y debitAmountAtPercentile.",
+    "percentile es entero de 1 a 100. Usa ceil(debits * percentile / 100) sobre las magnitudes de legs negativas, con multiplicidad. El percentil 50 de [100, 300] es 100, no 200; el 100 es 300.",
+    "Los créditos no cuentan. Débitos con importe o timestamp igual sí cuentan por separado. Sin débitos o en un intervalo vacío: debits = 0 y debitAmountAtPercentile = null. Rechazar una corrección no cambia la distribución.",
+    "Trabaja con tu agente: puede implementar y probar. El participante elige un caso de falla, revisa evidencia real y aprueba el código exacto antes de evaluar. Puedes usar AI en la revisión; la aprobación registra responsabilidad, no comprensión ni autoría independiente.",
+    `${slowServiceChallengeVersion} está disponible con revisión vinculada al código y aprobación en navegador.`,
+    `La eficiencia compara ${slowServicePublicPerformance.smallJournalCount.toLocaleString("en-US")} y ${slowServicePublicPerformance.largeJournalCount.toLocaleString("en-US")} journals, N y 4N, con ${slowServicePublicPerformance.phaseOperations.toLocaleString("en-US")} operaciones posteriores. Crecimiento normalizado = crecimiento de tu CPU dividido por el de la referencia. Costo relativo = CPU de fase grande dividida por la referencia.`,
+    ...slowServicePublicPerformance.tiers.map(
+      (tier) =>
+        `${tier.points} puntos por familia: crecimiento normalizado ≤ ${tier.normalizedGrowth} y costo relativo ≤ ${tier.relativeCpu}.`,
+    ),
+    "0 puntos si no cumple ningún nivel.",
+    "La eficiencia también requiere reportes exactos con el historial máximo: 24,000 journals o entradas de ocho legs con 63,000 ediciones de débitos. Ambos casos alcanzan 72,000 ediciones de legs y pueden usar 1,024 cuentas con IDs de 64 unidades UTF-16. No agregan puntos ni grupos de correctitud. Si fallas por resultados, tiempo o memoria bajo los mismos límites de 640 MiB, 25 segundos de CPU y 30 de reloj para toda la ejecución, conservas solo los puntos de correctitud.",
+    "Una respuesta incorrecta o ejecución incompleta en cualquier traza de rendimiento anula toda la eficiencia. Si pasaste los seis grupos exactos, conservas 60 puntos de correctitud.",
+    "Un error del servidor o rechazo de inicialización no consume un intento oficial.",
+    "Límites: 24,000 journals activos, 72,000 ediciones de legs aceptadas y heap del guest de 640 MiB. Retener checkpoints cuesta memoria; el benchmark debe mostrar la carga máxima y el pico de RSS del proceso Node, que no equivale al heap del guest.",
+    "Los checkpoints de QuickJS solo son un límite de seguridad. No se exige un algoritmo específico.",
+    "El ranking requiere una postulación enviada. No reserva un cupo.",
+  ],
+  workflow: [
+    {
+      step: 1,
+      action: "Prepara el ledger",
+      command: "andes challenge init --challenge make-it-fast",
+      note: "Crea slow-service/ sin sobrescribir tu trabajo.",
+    },
+    {
+      step: 2,
+      action: "Lee el contrato y prueba",
+      command:
+        "cd slow-service && bun install && bun test ./.kit/ledger.test.ts",
+      note: "Conserva .kit, package.json y bun.lock. El README define todos los inputs y resultados y el formato de review.json.",
+    },
+    {
+      step: 3,
+      action: "Optimiza y comprueba en QuickJS",
+      command:
+        "andes challenge test --challenge make-it-fast --source ./ledger.js",
+      note: "No consume intentos. Los tests públicos no certifican rendimiento oculto.",
+    },
+    {
+      step: 4,
+      action: "Mide una carga reducida",
+      command: "bun run benchmark ledger.js 1000",
+      note: "Empieza reducido. Tamaño base de 1 a 6000; default 6000. Verifica respuestas y mide CPU de fase y RSS. memory, budget o timeout no son mediciones válidas de velocidad.",
+    },
+    {
+      step: 5,
+      action: "Mide el tamaño completo",
+      command: "bun run benchmark ledger.js 6000",
+      note: "Compara 6,000 y 24,000 journals con 1,024 operaciones posteriores. Usa montos variados. RSS incluye Node y WASM; no equivale al heap del guest.",
+    },
+    {
+      step: 6,
+      action: "Comprueba el historial máximo",
+      command: "bun run benchmark ledger.js 6000 --max-history",
+      note: "Requiere 6000 y alcanza 72,000 ediciones de legs aceptadas. Pasar tests pequeños no prueba que la historia quepa.",
+    },
+    {
+      step: 7,
+      action: "Comprueba el historial máximo de débitos",
+      command:
+        "bun run benchmark ledger.js 6000 --max-history --negative-heavy",
+      note: "Requiere ambos flags y 6000. Diagnóstico de memoria con 2,000 y 8,000 journals de ocho legs, siete negativas, hasta 72,000 ediciones de legs y 63,000 ediciones de débitos. No cambia los tamaños oficiales de 6,000 y 24,000.",
+    },
+    {
+      step: 8,
+      action: "Evalúa oficialmente",
+      command:
+        "andes challenge evaluate --challenge make-it-fast --source ./ledger.js --review ./review.json",
+      note: "Elige con tu agente un caso concreto y revisa sus resultados. Guarda review.json vinculado al SHA-256 del código. Abre personalmente approvalUrl, revisa el código exacto y aprueba con tu passkey. Repite el mismo comando antes de que venza. La espera no consume evaluaciones. block detiene el envío.",
+    },
+    {
+      step: 9,
+      action: "Consulta tu siguiente paso",
+      command: "andes status",
+      note: "Revisa también andes challenge ranking --challenge make-it-fast.",
+    },
+  ],
+  helpCommand: "andes challenge test --help",
+};
+type ChallengeQuickstart =
+  | typeof challengeQuickstart
+  | typeof slowServiceQuickstart;
+
 const launchNoticeFor = (slug: string): string | undefined => {
   const challenge = challengeBySlug(slug);
   if (!challenge) return undefined;
@@ -164,8 +261,9 @@ const participationStateFor = (slug: string): ChallengeParticipationState => {
 const challengeQuickstartText = (
   participationState: ChallengeParticipationState,
   launchNotice?: string,
+  guide: ChallengeQuickstart = challengeQuickstart,
 ): string => {
-  const lines: Array<string> = [challengeQuickstart.title];
+  const lines: Array<string> = [guide.title];
   if (launchNotice) lines.push("", "LAUNCH NOTICE", launchNotice);
   if (participationState === "closed") {
     lines.push("", "RANKING FINAL", "  andes challenge ranking");
@@ -177,23 +275,23 @@ const challengeQuickstartText = (
   }
   lines.push(
     "",
-    ...challengeQuickstart.story,
+    ...guide.story,
     "",
     "YOUR MISSION",
-    challengeQuickstart.mission,
+    guide.mission,
     "",
     "RULES OF THE GAME",
-    ...challengeQuickstart.rules.map((rule) => `• ${rule}`),
+    ...guide.rules.map((rule) => `• ${rule}`),
     "",
     "FIELD GUIDE",
     "",
   );
-  for (const item of challengeQuickstart.workflow) {
+  for (const item of guide.workflow) {
     lines.push(`${item.step}. ${item.action}`);
     lines.push(`   ${item.command}`);
     lines.push(`   ${item.note}`, "");
   }
-  lines.push(`More detail: ${challengeQuickstart.helpCommand}`);
+  lines.push(`More detail: ${guide.helpCommand}`);
   return lines.join("\n");
 };
 
@@ -202,7 +300,7 @@ const optionalString = (name: string, description: string) =>
 
 const challengeFlag = Flag.string("challenge").pipe(
   Flag.withDefault(defaultChallengeSlug),
-  Flag.withDescription("Challenge slug (default: broken-agent)"),
+  Flag.withDescription(`Challenge slug (default: ${defaultChallengeSlug})`),
 );
 
 const sourceFlag = optionalString(
@@ -212,20 +310,30 @@ const sourceFlag = optionalString(
 
 const reviewFlag = optionalString(
   "review",
-  "Participant-authored Broken Agent engineering review JSON",
+  "Source-bound participant engineering review JSON for Broken Agent or The Slow Service",
 );
 
 const officialEvaluateRetryCommand =
   "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json";
 
-const evaluationErrorText = (error: CliError): string | undefined => {
+const evaluationErrorText = (
+  error: CliError,
+  challenge: string = defaultChallengeSlug,
+): string | undefined => {
   if (error.code === "CHALLENGE_ENGINE_UNAVAILABLE") {
+    let retryCommand = officialEvaluateRetryCommand;
+    if (challenge === "make-it-fast")
+      retryCommand =
+        "andes challenge evaluate --challenge make-it-fast --source ./ledger.js";
+    if (challenge === "black-box")
+      retryCommand =
+        "andes challenge evaluate --challenge black-box --source ./shipping.js";
     return [
       "La evaluación oficial no se pudo completar.",
       "No es un error de tu computadora, y este intento no se consumió.",
       "",
       "Vuelve a ejecutar el mismo comando en unos segundos:",
-      `  ${officialEvaluateRetryCommand}`,
+      `  ${retryCommand}`,
     ].join("\n");
   }
   if (error.code !== "HUMAN_APPROVAL_REQUIRED") return undefined;
@@ -273,6 +381,18 @@ const booleanFromOption = (
 };
 
 const challengeInitText = (result: ChallengeScaffoldResult): string => {
+  if (result.challenge === "make-it-fast") {
+    const message =
+      result.status === "exists"
+        ? `${result.path} ya existe. No se modificó.`
+        : `Se creó ${result.path}. El starter es correcto, pero lento.`;
+    return [
+      message,
+      "Lee README.md, optimiza ledger.js y ejecuta los tests públicos:",
+      `  cd ${result.path} && bun install && bun test ./.kit/ledger.test.ts`,
+      "  andes challenge test --challenge make-it-fast --source ./ledger.js",
+    ].join("\n");
+  }
   if (result.challenge === "broken-agent") {
     if (result.status === "exists") {
       return [
@@ -378,8 +498,8 @@ const initCommand = Command.make(
       description: "Prepara el repositorio de Broken Agent",
     },
     {
-      command: "andes challenge init --challenge broken-agent",
-      description: "Usa explícitamente el slug del challenge",
+      command: "andes challenge init --challenge make-it-fast",
+      description: "Prepara el ledger de The Slow Service",
     },
   ]),
 );
@@ -576,12 +696,12 @@ const evaluateCommand = Command.make(
       operation,
       (result) =>
         `${challengeEvaluateText(result)}\n\n${nextStepText(result.nextStep)}`,
-      evaluationErrorText,
+      (error) => evaluationErrorText(error, challenge),
     );
   }),
 ).pipe(
   Command.withDescription(
-    "Score a solution on hidden cases. Broken Agent requires participant browser approval before a limited evaluation is consumed.",
+    "Score a solution on hidden cases. Broken Agent and The Slow Service require participant browser approval before a limited evaluation is consumed.",
   ),
   Command.withExamples([
     {
@@ -628,7 +748,7 @@ export const challengeCommand = Command.make(
     const operation = loadParticipantGuidance(client).pipe(
       Effect.map((response) => {
         const { nextStep } = response.data;
-        let guide: typeof challengeQuickstart | undefined;
+        let guide: ChallengeQuickstart | undefined;
         if (
           (nextStep.kind === "challenge_start" ||
             nextStep.kind === "challenge_continue") &&
@@ -636,12 +756,18 @@ export const challengeCommand = Command.make(
         ) {
           guide = challengeQuickstart;
         }
+        if (
+          (nextStep.kind === "challenge_start" ||
+            nextStep.kind === "challenge_continue") &&
+          nextStep.challengeSlug === "make-it-fast"
+        )
+          guide = slowServiceQuickstart;
         return { ...response, data: { ...response.data, guide } };
       }),
     );
     yield* execute(options.output, operation, (result) => {
       if (!result.guide) return nextStepText(result.nextStep);
-      return `${challengeQuickstartText("open")}\n\n${nextStepText(result.nextStep)}`;
+      return `${challengeQuickstartText("open", undefined, result.guide)}\n\n${nextStepText(result.nextStep)}`;
     });
   }),
 ).pipe(

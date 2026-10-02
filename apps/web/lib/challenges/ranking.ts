@@ -235,6 +235,7 @@ export const getChallengeRanking = async (
         meanError: row.score.meanError,
         queriesUsed: row.score.queriesUsed,
         runtimeMs: row.score.runtimeMs,
+        executionCost: row.score.executionCost,
         evaluatedAt: row.evaluatedAt.toISOString(),
       };
     },

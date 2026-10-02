@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto";
 import type {
   ChallengeObservation,
   ChallengeScore,
+  ChallengeSlug,
   ChallengeSolution,
 } from "@chofex/challenges-contract";
 import type { db } from "@chofex/db";
@@ -101,10 +103,11 @@ export const reserveChallengeUse = async (
   attemptId: string,
   kind: ChallengeReservationKind,
   database?: ReservationDatabase,
+  lifetimeMs = reservationLifetimeMs,
 ): Promise<ChallengeReservation | undefined> => {
   const client = await reservationDatabase(database);
   const reservationId = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + reservationLifetimeMs);
+  const expiresAt = new Date(Date.now() + lifetimeMs);
   const result = await client.execute<ReservationRow>(sql`
     with expired as (
       delete from "challenge_reservations"
@@ -327,12 +330,17 @@ export const consumeFailedEvaluationReservation = async (
 
 export const completeEvaluationReservation = async (
   reservation: ChallengeReservation,
-  solution: ChallengeSolution,
+  solution: ChallengeSolution & { readonly challengeSlug?: ChallengeSlug },
   score: ChallengeScore,
   database?: ReservationDatabase,
 ): Promise<CompletedEvaluation | undefined> => {
   const client = await reservationDatabase(database);
   let storedSolution: Record<string, unknown> = { ...solution };
+  if (solution.challengeSlug === "make-it-fast")
+    storedSolution = {
+      ...storedSolution,
+      sourceDigest: createHash("sha256").update(solution.source).digest("hex"),
+    };
   if (score.breakdown) {
     storedSolution = { ...storedSolution, scoreBreakdown: score.breakdown };
   }

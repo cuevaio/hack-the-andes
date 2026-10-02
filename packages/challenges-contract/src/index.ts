@@ -1,3 +1,4 @@
+import { slowServiceChallengeSlug } from "@chofex/challenges-contract/slow-service";
 import { Schema } from "effect";
 
 export const blackBoxChallengeSlug = "black-box" as const;
@@ -81,21 +82,21 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     solutionKind: "javascript_source",
   },
   {
-    slug: "make-it-fast",
+    slug: slowServiceChallengeSlug,
     number: 3,
     code: "03",
     theme: "Make It Fast",
     title: "The Slow Service",
     summary:
-      "Produce exactly the same result as a correct but inefficient implementation, ranked by runtime.",
-    coreSkill: "Performance engineering",
-    format: "runtime",
-    formatLabel: "Runtime score",
+      "Optimiza un diario contable con correcciones atómicas, solvencia retroactiva y percentiles históricos exactos de débitos. Conserva cada respuesta sin copiar toda la historia.",
+    coreSkill: "Ingeniería de rendimiento y estructuras de datos",
+    format: "optimization",
+    formatLabel: "Correctitud y crecimiento de CPU",
     opensAt: "2026-10-02T05:00:00.000Z",
     queryLimit: 0,
-    evaluationLimit: 3,
-    hiddenSampleSize: 1,
-    playable: false,
+    evaluationLimit: 5,
+    hiddenSampleSize: 100,
+    playable: true,
     solutionKind: "javascript_source",
   },
   {
@@ -113,7 +114,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     queryLimit: 0,
     evaluationLimit: 3,
     hiddenSampleSize: 1,
-    playable: false,
+    playable: true,
     solutionKind: "javascript_source",
   },
   {
@@ -206,6 +207,9 @@ export const challengeOpeningNotice = (
 ): string =>
   `${title} abre el ${formatChallengeOpeningInPeru(opensAt)}. Las consultas y evaluaciones están deshabilitadas hasta entonces; no se consumirá ningún intento.`;
 
+export const challengeClosingNotice = (title: string): string =>
+  `${title} está cerrado. Ya no se reciben soluciones ni evaluaciones. Espera el próximo challenge; lo anunciaremos en esta página. Tu historial y el ranking siguen disponibles.`;
+
 export const ChallengeSlugSchema = Schema.Literals([
   "black-box",
   "broken-agent",
@@ -271,6 +275,49 @@ export const BrokenAgentHumanReviewSchema = Schema.Struct({
 
 export type BrokenAgentHumanReview = typeof BrokenAgentHumanReviewSchema.Type;
 
+export const SlowServiceCompanionReviewSchema = Schema.Struct({
+  sourceDigest: BrokenAgentHumanReviewSchema.fields.sourceDigest,
+  focus: Schema.Literals([
+    "atomic_corrections",
+    "retroactive_solvency",
+    "historical_percentiles",
+    "history_capacity",
+    "cpu_growth",
+  ]),
+  failureScenario: HumanReviewAnswerSchema,
+  evidence: HumanReviewAnswerSchema,
+  decision: Schema.Literals(["ship", "block"]),
+  confidence: BrokenAgentHumanReviewSchema.fields.confidence,
+  remainingRisk: HumanReviewAnswerSchema,
+});
+
+export type SlowServiceCompanionReview =
+  typeof SlowServiceCompanionReviewSchema.Type;
+
+export const SlowServiceEvaluationSolutionSchema = Schema.Struct({
+  ...JavascriptSourceSolutionSchema.fields,
+  review: SlowServiceCompanionReviewSchema,
+});
+
+export type SlowServiceEvaluationSolution =
+  typeof SlowServiceEvaluationSolutionSchema.Type;
+
+export const SlowServiceApprovalSnapshotSchema = Schema.Struct({
+  challengeSlug: Schema.Literal("make-it-fast"),
+  challengeVersion: Schema.Literal("slow-service-v3"),
+  source: JavascriptSourceSolutionSchema.fields.source,
+  review: SlowServiceCompanionReviewSchema,
+});
+
+export type SlowServiceApprovalSnapshot =
+  typeof SlowServiceApprovalSnapshotSchema.Type;
+export const EvaluationApprovalReviewSchema = Schema.Union([
+  BrokenAgentHumanReviewSchema,
+  SlowServiceApprovalSnapshotSchema,
+]);
+export type EvaluationApprovalReview =
+  typeof EvaluationApprovalReviewSchema.Type;
+
 export const BrokenAgentEvaluationSolutionSchema = Schema.Struct({
   ...JavascriptSourceSolutionSchema.fields,
   review: BrokenAgentHumanReviewSchema,
@@ -282,6 +329,7 @@ export type BrokenAgentEvaluationSolution =
 export const ChallengeSolutionSchema = Schema.Union([
   JavascriptSourceSolutionSchema,
   BrokenAgentEvaluationSolutionSchema,
+  SlowServiceEvaluationSolutionSchema,
 ]);
 
 export type ChallengeSolution = typeof ChallengeSolutionSchema.Type;
@@ -296,6 +344,7 @@ export const ChallengeObservationSchema = Schema.Struct({
 export type ChallengeObservation = typeof ChallengeObservationSchema.Type;
 
 export const ChallengeScoreSchema = Schema.Struct({
+  challengeSlug: Schema.optional(ChallengeSlugSchema),
   accuracy: Schema.Number,
   exactCount: Schema.Number,
   sampleSize: Schema.Number,
@@ -452,7 +501,9 @@ export const ChallengeQueryResultSchema = Schema.Struct({
 export type ChallengeQueryResult = typeof ChallengeQueryResultSchema.Type;
 
 export const ChallengeLocalTestResultSchema = Schema.Struct({
-  kind: Schema.optional(Schema.Literals(["black_box", "broken_agent"])),
+  kind: Schema.optional(
+    Schema.Literals(["black_box", "broken_agent", "slow_service"]),
+  ),
   matchedObservations: Schema.Number,
   observationCount: Schema.Number,
   accuracy: Schema.Number,
@@ -577,6 +628,18 @@ export const compareChallengeScores = (
   right: ChallengeScore,
 ): number => {
   if (left.accuracy !== right.accuracy) return right.accuracy - left.accuracy;
+  if (
+    left.challengeSlug === slowServiceChallengeSlug &&
+    right.challengeSlug === slowServiceChallengeSlug
+  ) {
+    if (
+      left.evaluationsUsed !== undefined &&
+      right.evaluationsUsed !== undefined &&
+      left.evaluationsUsed !== right.evaluationsUsed
+    )
+      return left.evaluationsUsed - right.evaluationsUsed;
+    return 0;
+  }
   if (left.exactCount !== right.exactCount) {
     return right.exactCount - left.exactCount;
   }

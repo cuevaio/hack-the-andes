@@ -5,6 +5,7 @@ import {
   authenticationRecoveryMessage,
   beginPictureUpload,
   completePictureUpload,
+  evaluateChallenge,
   getBadge,
   getCurrentUser,
   getRegistration,
@@ -48,6 +49,64 @@ const registrationResult = {
 } as const;
 
 describe("registration API client", () => {
+  test("Slow Service waits through cold evaluation while Scheduler keeps its existing timeout", async () => {
+    const originalTimeout = AbortSignal.timeout;
+    const timeouts: number[] = [];
+    const requests: string[] = [];
+    AbortSignal.timeout = (ms: number) => {
+      timeouts.push(ms);
+      return originalTimeout(ms);
+    };
+    globalThis.fetch = async (input) => {
+      requests.push(String(input));
+      return Response.json({
+        version: 1,
+        ok: true,
+        requestId: "request-evaluation",
+        data: {
+          accuracy: 0.85,
+          exactCount: 85,
+          sampleSize: 100,
+          meanError: 15,
+          queriesUsed: 0,
+          runtimeMs: 100,
+          shareCode: "LEDGER",
+          evaluationsUsed: 1,
+          evaluationsRemaining: 4,
+          evaluationsLimit: 5,
+          rankingPath: "/challenges/make-it-fast",
+          shareText: "85/100",
+        },
+      });
+    };
+    try {
+      const response = await Effect.runPromise(
+        evaluateChallenge(
+          { apiUrl: "https://hack.example", token: "oauth-token" },
+          "make-it-fast",
+          { kind: "javascript_source", source: "function createLedger() {}" },
+        ),
+      );
+      expect(response.data.exactCount).toBe(85);
+      await Effect.runPromise(
+        evaluateChallenge(
+          { apiUrl: "https://hack.example", token: "oauth-token" },
+          "broken-agent",
+          {
+            kind: "javascript_source",
+            source: "function createScheduler() {}",
+          },
+        ),
+      );
+      expect(timeouts).toEqual([360_000, 30_000]);
+      expect(requests).toEqual([
+        "https://hack.example/api/v1/challenges/make-it-fast/evaluate",
+        "https://hack.example/api/v1/challenges/broken-agent/evaluate",
+      ]);
+    } finally {
+      AbortSignal.timeout = originalTimeout;
+    }
+  });
   test("verifies the supplied token without requiring a registration", async () => {
     let authorization: string | null = null;
     let attribution: string | null = null;

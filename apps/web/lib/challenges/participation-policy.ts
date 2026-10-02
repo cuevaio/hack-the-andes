@@ -1,5 +1,6 @@
 import {
   type ChallengeDefinition,
+  challengeClosingNotice,
   challengeOpeningNotice,
   isChallengeClosedAt,
   isChallengeOpenAt,
@@ -23,7 +24,7 @@ export const requireChallengeParticipationOpen = (
     throw new HttpError(
       403,
       "CHALLENGE_CLOSED",
-      `${challenge.title} está cerrado. Las consultas, pruebas locales y evaluaciones oficiales están deshabilitadas.`,
+      challengeClosingNotice(challenge.title),
       false,
       { closesAt: challenge.closesAt },
     );

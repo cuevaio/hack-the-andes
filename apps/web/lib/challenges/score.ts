@@ -2,6 +2,7 @@ import type {
   ChallengeScore,
   ChallengeScoreBreakdown,
 } from "@chofex/challenges-contract";
+import { slowServiceChallengeSlug } from "@chofex/challenges-contract/slow-service";
 
 export interface StoredChallengeScore {
   readonly accuracy: number;
@@ -40,6 +41,18 @@ export const scoreFromStored = (
   };
   const breakdown = scoreBreakdownFrom(score.solution);
   if (
+    score.solution &&
+    typeof score.solution === "object" &&
+    "challengeSlug" in score.solution &&
+    score.solution.challengeSlug === slowServiceChallengeSlug
+  ) {
+    return {
+      ...stored,
+      executionCost: score.executionCost ?? undefined,
+      challengeSlug: slowServiceChallengeSlug,
+    };
+  }
+  if (
     breakdown &&
     score.executionCost !== null &&
     score.executionCost !== undefined
@@ -64,6 +77,8 @@ export const participantVisibleScore = (
     queriesUsed: score.queriesUsed,
     runtimeMs: score.runtimeMs,
   };
+  if (score.challengeSlug === slowServiceChallengeSlug)
+    return { ...visible, executionCost: score.executionCost };
   if (score.evaluationsUsed !== undefined) {
     return { ...visible, evaluationsUsed: score.evaluationsUsed };
   }

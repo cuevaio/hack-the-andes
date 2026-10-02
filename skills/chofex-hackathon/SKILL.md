@@ -240,6 +240,17 @@ Broken Agent—read and follow
 required human–agent reasoning loop and the source-bound review needed before an
 official evaluation.
 
+## Slow Service challenge
+
+When the server lists challenge 3, `make-it-fast`, as open, read
+[`references/slow-service.md`](references/slow-service.md). Its canonical version
+is `slow-service-v3`. It uses source-bound companion review and browser/passkey
+approval of the exact implementation. AI help is allowed in both stages. Do not
+invent evidence or the participant's decision. The approval records responsibility,
+not proof of understanding or independent authorship.
+Check `challenge list` before starting; a closed challenge retains its ranking
+and historical results but does not accept new submissions.
+
 ## Next steps
 
 Read the application and server-calculated requirements together:

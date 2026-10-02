@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["bun", "node"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["./**/*.ts", "../announce-slow-service.ts"]
+}

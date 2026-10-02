@@ -29,7 +29,7 @@ test("rejects an unknown participant filter", () => {
 test("accepts only playable challenges as ranking sorts", () => {
   expect(parseCandidateRankingSort("black-box")).toBe("black-box");
   expect(parseCandidateRankingSort("broken-agent")).toBe("broken-agent");
-  expect(parseCandidateRankingSort("make-it-fast")).toBeUndefined();
+  expect(parseCandidateRankingSort("make-it-fast")).toBe("make-it-fast");
   expect(parseCandidateRankingSort("unknown")).toBeUndefined();
   expect(parseCandidateRankingSort(undefined)).toBeUndefined();
 });

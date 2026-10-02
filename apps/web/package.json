@@ -45,6 +45,7 @@
     "posthog-js": "^1.433.10",
     "posthog-node": "^5.52.4",
     "qrcode": "1.5.4",
+    "quickjs-emscripten": "0.32.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",

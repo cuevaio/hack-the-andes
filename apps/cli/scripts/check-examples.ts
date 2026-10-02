@@ -25,6 +25,15 @@ const files = execFileSync(
   .filter((file) => /\.(md|ts|tsx)$/.test(file));
 const patch = process.argv.includes("--patch");
 const sections: string[] = [];
+// The reviewed v3 campaign pins the supported chofex alias. Do not rewrite its
+// source, matching guide, or literal verification fixtures after content freeze.
+const frozenSlowServiceCampaignFiles = new Set([
+  "apps/web/lib/emails/slow-service-announcement.ts",
+  "apps/web/components/challenges/slow-service-guide.tsx",
+  "docs/announce-slow-service.md",
+  "scripts/slow-service-announcement/campaign.test.ts",
+  "scripts/slow-service-announcement/script.test.ts",
+]);
 
 for (const file of files) {
   const lines = (await readFile(join(root, file), "utf8")).split("\n");
@@ -33,7 +42,16 @@ for (const file of files) {
     const updated = line
       .replace(
         /\bchofex(?= (?:--|login\b|logout\b|register\b|confirm\b|status\b|requirements\b|whoami\b|update\b|upgrade\b|schema\b|validate\b|challenge\b|badge\b))/g,
-        "andes",
+        (command: string, offset: number) => {
+          if (
+            frozenSlowServiceCampaignFiles.has(file) &&
+            line
+              .slice(offset)
+              .startsWith(`${command} challenge init --challenge make-it-fast`)
+          )
+            return command;
+          return "andes";
+        },
       )
       .replace(
         /(npm install --global |npx --yes )chofex-cli/g,

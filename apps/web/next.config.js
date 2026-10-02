@@ -34,6 +34,10 @@ const nextConfig = {
   // insurance, it is a comment that reads like one.
   outputFileTracingIncludes: {
     "/deck/[...slug]": ["./content/decks/**/*"],
+    "/api/v1/challenges/*/test": [
+      "../../node_modules/quickjs-emscripten*/**/*",
+      "../../node_modules/@jitl/quickjs-*/**/*",
+    ],
   },
   async redirects() {
     return [

@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import type { BrokenAgentHumanReview } from "@chofex/challenges-contract";
+import { createHash } from "node:crypto";
+import type {
+  BrokenAgentHumanReview,
+  SlowServiceApprovalSnapshot,
+} from "@chofex/challenges-contract";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 
@@ -14,6 +18,7 @@ import {
   parseApprovalAuthenticator,
   releaseEvaluationApproval,
   reviewDigestFor,
+  verifyEvaluationApproval,
 } from "./evaluation-approvals";
 
 const review: BrokenAgentHumanReview = {
@@ -46,7 +51,8 @@ describe("Broken Agent evaluation approvals", () => {
       create table challenge_attempts (
         id uuid primary key,
         participant_id uuid not null references participants(id),
-        challenge_slug text not null
+        challenge_slug text not null,
+        challenge_version text not null default 'broken-agent-v3'
       );
       create table challenge_evaluation_approvals (
         id uuid primary key,
@@ -99,6 +105,182 @@ describe("Broken Agent evaluation approvals", () => {
 
   afterEach(async () => {
     await client.close();
+  });
+
+  test("v3 displays the exact owned source and rejects foreign scope and tampered snapshots", async () => {
+    await client.query(
+      "update challenge_attempts set challenge_slug='make-it-fast', challenge_version='slow-service-v3' where id=$1",
+      [attemptId],
+    );
+    const source = "function createLedger() { return {}; }";
+    const sourceDigest = createHash("sha256").update(source).digest("hex");
+    const snapshot: SlowServiceApprovalSnapshot = {
+      challengeSlug: "make-it-fast",
+      challengeVersion: "slow-service-v3",
+      source,
+      review: { ...review, sourceDigest, focus: "historical_percentiles" },
+    };
+    const approval = await createOrReuseEvaluationApproval(
+      attemptId,
+      sourceDigest,
+      snapshot,
+      database,
+    );
+    expect(
+      (
+        await evaluationApprovalForParticipant(
+          "user_1",
+          approval.id,
+          database,
+          "slow-service-v3",
+        )
+      )?.review,
+    ).toEqual(snapshot);
+    expect(
+      await evaluationApprovalForParticipant(
+        "foreign_user",
+        approval.id,
+        database,
+        "slow-service-v3",
+      ),
+    ).toBeUndefined();
+    expect(
+      await evaluationApprovalForParticipant("user_1", approval.id, database),
+    ).toBeUndefined();
+    await expect(
+      evaluationApprovalOptions(
+        "foreign_user",
+        "foreign@example.com",
+        "Foreign",
+        approval.id,
+        "https://hacktheandes.com",
+        "local-device",
+        database,
+        "slow-service-v3",
+      ),
+    ).rejects.toMatchObject({ code: "EVALUATION_APPROVAL_NOT_FOUND" });
+    await expect(
+      evaluationApprovalOptions(
+        "user_1",
+        "owner@example.com",
+        "Owner",
+        approval.id,
+        "https://hacktheandes.com",
+        "local-device",
+        database,
+      ),
+    ).rejects.toMatchObject({ code: "EVALUATION_APPROVAL_NOT_FOUND" });
+    await expect(
+      verifyEvaluationApproval(
+        "foreign_user",
+        approval.id,
+        {},
+        database,
+        "slow-service-v3",
+      ),
+    ).rejects.toMatchObject({ code: "EVALUATION_APPROVAL_NOT_FOUND" });
+    await client.query(
+      "update challenge_evaluation_approvals set approved_at=now() where id=$1",
+      [approval.id],
+    );
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        sourceDigest,
+        {
+          ...snapshot,
+          review: {
+            ...snapshot.review,
+            evidence:
+              "Different evidence must require another approval from the participant.",
+          },
+        },
+        database,
+      ),
+    ).toBeUndefined();
+    const competingConsumers = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        consumeEvaluationApproval(attemptId, sourceDigest, snapshot, database),
+      ),
+    );
+    expect(competingConsumers.filter((id) => id !== undefined)).toEqual([
+      approval.id,
+    ]);
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        sourceDigest,
+        snapshot,
+        database,
+      ),
+    ).toBeUndefined();
+    await releaseEvaluationApproval(approval.id, database);
+    expect(
+      await consumeEvaluationApproval(
+        attemptId,
+        sourceDigest,
+        snapshot,
+        database,
+      ),
+    ).toBe(approval.id);
+    await client.query(
+      "update challenge_evaluation_approvals set review=jsonb_set(review, '{source}', to_jsonb($2::text)) where id=$1",
+      [approval.id, source + " // changed"],
+    );
+    await expect(
+      evaluationApprovalForParticipant(
+        "user_1",
+        approval.id,
+        database,
+        "slow-service-v3",
+      ),
+    ).rejects.toMatchObject({ code: "STALE_HUMAN_REVIEW" });
+  });
+
+  test("v3 block decision cannot begin the browser ceremony", async () => {
+    await client.query(
+      "update challenge_attempts set challenge_slug='make-it-fast', challenge_version='slow-service-v3' where id=$1",
+      [attemptId],
+    );
+    const source = "function createLedger() { return {}; }";
+    const sourceDigest = createHash("sha256").update(source).digest("hex");
+    const snapshot: SlowServiceApprovalSnapshot = {
+      challengeSlug: "make-it-fast",
+      challengeVersion: "slow-service-v3",
+      source,
+      review: {
+        ...review,
+        sourceDigest,
+        focus: "cpu_growth",
+        decision: "block",
+      },
+    };
+    const approval = await createOrReuseEvaluationApproval(
+      attemptId,
+      sourceDigest,
+      snapshot,
+      database,
+    );
+    await expect(
+      evaluationApprovalOptions(
+        "user_1",
+        "owner@example.com",
+        "Owner",
+        approval.id,
+        "https://hacktheandes.com",
+        "local-device",
+        database,
+        "slow-service-v3",
+      ),
+    ).rejects.toMatchObject({ code: "REVIEW_BLOCKED" });
+    expect(
+      (
+        await client.query<{ ceremony_challenge: string | null }>(
+          "select ceremony_challenge from challenge_evaluation_approvals where id=$1",
+          [approval.id],
+        )
+      ).rows[0]?.ceremony_challenge,
+    ).toBeNull();
   });
 
   test("creates one source-bound handoff without consuming evaluation budget", async () => {

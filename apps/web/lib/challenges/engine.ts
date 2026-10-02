@@ -6,21 +6,28 @@ import {
   type ChallengeSlug,
   type Shipment,
 } from "@chofex/challenges-contract";
+import {
+  slowServiceChallengeSlug,
+  slowServiceChallengeVersion,
+} from "@chofex/challenges-contract/slow-service";
 
 export const currentChallengeVersion = "black-box-v2" as const;
 export const brokenAgentChallengeVersion = "broken-agent-v3" as const;
 export type CurrentChallengeVersion =
   | typeof currentChallengeVersion
-  | typeof brokenAgentChallengeVersion;
+  | typeof brokenAgentChallengeVersion
+  | typeof slowServiceChallengeVersion;
 
 export const challengeEngineQueryTimeoutMs = 8_000;
 export const challengeEngineEvaluateTimeoutMs = 25_000;
+export const slowServiceEngineEvaluateTimeoutMs = 330_000;
 
 export const currentChallengeVersionFor = (
   slug: ChallengeSlug | string,
 ): CurrentChallengeVersion | undefined => {
   if (slug === blackBoxChallengeSlug) return currentChallengeVersion;
   if (slug === brokenAgentChallengeSlug) return brokenAgentChallengeVersion;
+  if (slug === slowServiceChallengeSlug) return slowServiceChallengeVersion;
 };
 
 type Fetch = (
@@ -146,6 +153,7 @@ const parseScore = (value: unknown): ChallengeScore | undefined => {
     if (executionCost === undefined) return;
     return { ...parsed, breakdown, executionCost };
   }
+  if (executionCost !== undefined) return { ...parsed, executionCost };
   return parsed;
 };
 
@@ -231,7 +239,9 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
             source,
             queriesUsed,
           },
-          challengeEngineEvaluateTimeoutMs,
+          challengeVersion === slowServiceChallengeVersion
+            ? slowServiceEngineEvaluateTimeoutMs
+            : challengeEngineEvaluateTimeoutMs,
         ),
       );
       const score = parseScore(result?.score);
@@ -242,6 +252,8 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
           "The challenge engine returned an invalid evaluation response",
         );
       }
+      if (challengeVersion === slowServiceChallengeVersion)
+        return { ...score, challengeSlug: slowServiceChallengeSlug };
       return score;
     },
   };

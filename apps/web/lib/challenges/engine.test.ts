@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { Shipment } from "@chofex/challenges-contract";
+import { slowServiceChallengeVersion } from "@chofex/challenges-contract/slow-service";
 
 import {
   brokenAgentChallengeVersion,
@@ -9,6 +10,8 @@ import {
   challengeEngineQueryTimeoutMs,
   createChallengeEngine,
   currentChallengeVersion,
+  currentChallengeVersionFor,
+  slowServiceEngineEvaluateTimeoutMs,
 } from "./engine";
 
 const shipment: Shipment = {
@@ -20,6 +23,52 @@ const shipment: Shipment = {
 };
 
 describe("private challenge engine adapter", () => {
+  test("Slow Service uses the existing v1 evaluate envelope and preserves CPU diagnostics", async () => {
+    let request: unknown;
+    const engine = createChallengeEngine({
+      baseUrl: "https://private-engine.example",
+      apiSecret: "test",
+      fetch: async (_url, init) => {
+        request = JSON.parse(String(init?.body));
+        return Response.json({
+          version: 1,
+          score: {
+            accuracy: 0.85,
+            exactCount: 85,
+            sampleSize: 100,
+            meanError: 15,
+            queriesUsed: 0,
+            runtimeMs: 321,
+            executionCost: 321_000,
+          },
+        });
+      },
+    });
+    expect(currentChallengeVersionFor("make-it-fast")).toBe("slow-service-v3");
+    const score = await engine.evaluate(
+      slowServiceChallengeVersion,
+      "attempt-1",
+      "function createLedger() {}",
+      0,
+    );
+    expect(request).toEqual({
+      version: 1,
+      challengeVersion: "slow-service-v3",
+      participantKey: "attempt-1",
+      source: "function createLedger() {}",
+      queriesUsed: 0,
+    });
+    expect(score).toEqual({
+      challengeSlug: "make-it-fast",
+      accuracy: 0.85,
+      exactCount: 85,
+      sampleSize: 100,
+      meanError: 15,
+      queriesUsed: 0,
+      runtimeMs: 321,
+      executionCost: 321_000,
+    });
+  });
   test("pins Broken Agent submissions to the current admission version", () => {
     expect(brokenAgentChallengeVersion).toBe("broken-agent-v3");
   });
@@ -38,7 +87,7 @@ describe("private challenge engine adapter", () => {
         import.meta.url,
       ),
     ).text();
-    expect(route).toContain("export const maxDuration = 30");
+    expect(route).toContain("export const maxDuration = 360");
   });
 
   test("authenticates and maps query and evaluation responses", async () => {
@@ -126,10 +175,10 @@ describe("private challenge engine adapter", () => {
   test("gives official evaluations a longer abort budget than queries", async () => {
     const originalTimeout = AbortSignal.timeout;
     const timeouts: Array<number> = [];
-    AbortSignal.timeout = ((ms: number) => {
+    AbortSignal.timeout = (ms: number) => {
       timeouts.push(ms);
       return originalTimeout(ms);
-    }) as typeof AbortSignal.timeout;
+    };
 
     try {
       const queryEngine = createChallengeEngine({
@@ -164,6 +213,15 @@ describe("private challenge engine adapter", () => {
         0,
       );
       expect(timeouts).toEqual([challengeEngineEvaluateTimeoutMs]);
+      timeouts.length = 0;
+      await evaluateEngine.evaluate(
+        slowServiceChallengeVersion,
+        "participant_1",
+        "function createLedger() { return {}; }",
+        0,
+      );
+      expect(timeouts).toEqual([330_000]);
+      expect(slowServiceEngineEvaluateTimeoutMs).toBe(330_000);
     } finally {
       AbortSignal.timeout = originalTimeout;
     }

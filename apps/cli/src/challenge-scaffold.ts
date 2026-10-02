@@ -8,6 +8,12 @@ import {
   brokenAgentSolutionPath,
   brokenAgentStarterSource,
 } from "@chofex/challenges-contract/broken-agent";
+import {
+  slowServiceChallengeSlug,
+  slowServiceChallengeVersion,
+  slowServiceScaffoldDirectory,
+} from "@chofex/challenges-contract/slow-service";
+import { slowServiceToolkit } from "@chofex/challenges-contract/slow-service/toolkit";
 import { Effect, Predicate } from "effect";
 
 import { type CliError, cliError } from "./errors.js";
@@ -52,6 +58,47 @@ export const createChallengeScaffold = Effect.fn("createChallengeScaffold")(
           `Challenge ${challengeSlug} is not available`,
         ),
       );
+    }
+
+    if (challengeSlug === slowServiceChallengeSlug) {
+      if (
+        slowServiceToolkit.kind !== "ready" ||
+        slowServiceToolkit.version !== slowServiceChallengeVersion
+      )
+        return yield* Effect.fail(
+          cliError(
+            "SLOW_SERVICE_TOOLKIT_NOT_READY",
+            `El toolkit de ${slowServiceChallengeVersion} todavía no está listo. El challenge sigue cerrado.`,
+            true,
+          ),
+        );
+      const files = slowServiceToolkit.files;
+      const directory = slowServiceScaffoldDirectory;
+      const status = yield* Effect.tryPromise({
+        try: async () => {
+          await mkdir(directory);
+          await mkdir(`${directory}/.kit`);
+          await Promise.all(
+            Object.entries(files).map(([name, contents]) =>
+              writeFile(`${directory}/${name}`, contents, "utf8"),
+            ),
+          );
+          return "created" as const;
+        },
+        catch: (error) => error,
+      }).pipe(
+        Effect.catch((error) => {
+          if (Predicate.hasProperty(error, "code") && error.code === "EEXIST")
+            return Effect.succeed("exists" as const);
+          return Effect.fail(
+            cliError(
+              "SCAFFOLD_FAILED",
+              `Could not create ${directory}: ${String(error)}`,
+            ),
+          );
+        }),
+      );
+      return { challenge: challengeSlug, path: directory, status };
     }
 
     if (challengeSlug === "broken-agent") {

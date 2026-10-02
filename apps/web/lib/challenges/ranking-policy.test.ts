@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { ChallengeScore } from "@chofex/challenges-contract";
 import {
+  compareRankedChallengeEvaluations,
   competitionRanks,
   competitionRanksBy,
   publicRankingEntries,
@@ -17,6 +18,39 @@ const score = (overrides: Partial<ChallengeScore> = {}): ChallengeScore => ({
 });
 
 describe("challenge ranking policy", () => {
+  test("Slow Service ranks points, fewer official evaluations and earliest best, not raw CPU", () => {
+    const left = {
+      score: score({
+        challengeSlug: "make-it-fast",
+        evaluationsUsed: 2,
+        runtimeMs: 900,
+        executionCost: 900_000,
+      }),
+      evaluatedAt: new Date("2026-10-02T12:00:00Z"),
+    };
+    const right = {
+      score: score({
+        challengeSlug: "make-it-fast",
+        evaluationsUsed: 3,
+        runtimeMs: 1,
+        executionCost: 1_000,
+      }),
+      evaluatedAt: new Date("2026-10-02T11:00:00Z"),
+    };
+    expect(compareRankedChallengeEvaluations(left, right)).toBeLessThan(0);
+    expect(
+      compareRankedChallengeEvaluations(left, {
+        ...right,
+        score: { ...right.score, evaluationsUsed: 2 },
+      }),
+    ).toBeGreaterThan(0);
+    expect(
+      compareRankedChallengeEvaluations(left, {
+        ...right,
+        score: { ...right.score, accuracy: 0.8 },
+      }),
+    ).toBeLessThan(0);
+  });
   test("breaks otherwise identical scores by their numeric execution cost", () => {
     expect(
       competitionRanks([

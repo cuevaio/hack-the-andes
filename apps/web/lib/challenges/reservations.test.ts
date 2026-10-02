@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -18,6 +19,7 @@ const migration = [
   "0018_rank_challenge_runtime.sql",
   "0022_burly_mesmero.sql",
   "0024_broken_agent_rank.sql",
+  "0028_slow_service_rank.sql",
 ]
   .map((name) =>
     readFileSync(
@@ -38,6 +40,7 @@ describe("challenge reservations", () => {
     await client.exec(`
       create table challenge_attempts (
         id uuid primary key,
+        challenge_slug varchar(64) not null default 'black-box',
         share_code varchar(8) not null,
         queries_used integer default 0 not null,
         queries_limit integer not null,
@@ -276,6 +279,29 @@ describe("challenge reservations", () => {
     expect(result.rows[0]).toEqual({ queries_used: 0, queries_pending: 1 });
   });
 
+  test("keeps Slow Service reservations beyond cold calibration and the engine timeout", async () => {
+    const reservedAt = Date.now();
+    const reservation = await reserveChallengeUse(
+      attemptId,
+      "evaluation",
+      database,
+      390_000,
+    );
+    if (!reservation) throw new Error("missing reservation");
+    const result = await client.query<{ expires_at: Date }>(
+      "select expires_at from challenge_reservations where id = $1",
+      [reservation.id],
+    );
+    const expiresAt = result.rows[0]?.expires_at.getTime();
+    if (expiresAt === undefined) throw new Error("missing reservation expiry");
+    expect(expiresAt).toBeGreaterThanOrEqual(reservedAt + 390_000);
+    expect(expiresAt).toBeLessThanOrEqual(Date.now() + 390_000);
+    await releaseChallengeReservation(reservation, "evaluation", database);
+    expect(
+      (await client.query("select * from challenge_reservations")).rows,
+    ).toEqual([]);
+  });
+
   test("atomically persists successful and confirmed failed evaluations", async () => {
     const successful = await reserveChallengeUse(
       attemptId,
@@ -319,6 +345,71 @@ describe("challenge reservations", () => {
     );
     expect(result.rows[0]?.evaluations).toBe(1);
     expect(result.rows[0]?.best_evaluation_id).not.toBeNull();
+  });
+
+  test("Slow Service caps concurrent evaluations at five, stores source SHA and keeps the earliest tied best regardless of CPU", async () => {
+    await client.query(
+      "update challenge_attempts set challenge_slug = 'make-it-fast', queries_limit = 0, evaluations_limit = 5 where id = $1",
+      [attemptId],
+    );
+    const reservations = (
+      await Promise.all(
+        Array.from({ length: 10 }, () =>
+          reserveChallengeUse(attemptId, "evaluation", database),
+        ),
+      )
+    ).filter((reservation) => reservation !== undefined);
+    expect(reservations).toHaveLength(5);
+    const first = reservations[0];
+    const second = reservations[1];
+    if (!first || !second) throw new Error("missing reservation");
+    const source = "function createLedger() { return {}; }";
+    const solution = {
+      kind: "javascript_source",
+      source,
+      challengeSlug: "make-it-fast",
+    } as const;
+    await completeEvaluationReservation(
+      first,
+      solution,
+      {
+        challengeSlug: "make-it-fast",
+        accuracy: 0.9,
+        exactCount: 90,
+        sampleSize: 100,
+        meanError: 10,
+        queriesUsed: 0,
+        runtimeMs: 100,
+      },
+      database,
+    );
+    await completeEvaluationReservation(
+      second,
+      solution,
+      {
+        challengeSlug: "make-it-fast",
+        accuracy: 0.9,
+        exactCount: 90,
+        sampleSize: 100,
+        meanError: 10,
+        queriesUsed: 0,
+        runtimeMs: 1,
+      },
+      database,
+    );
+    const result = await client.query<{
+      runtime_ms: number;
+      source_digest: string;
+      challenge_slug: string;
+    }>(
+      `select evaluation.runtime_ms, evaluation.solution->>'sourceDigest' as source_digest, evaluation.solution->>'challengeSlug' as challenge_slug from challenge_attempts as attempt join challenge_evaluations as evaluation on evaluation.id = attempt.best_evaluation_id where attempt.id = $1`,
+      [attemptId],
+    );
+    expect(result.rows[0]).toEqual({
+      runtime_ms: 100,
+      source_digest: createHash("sha256").update(source).digest("hex"),
+      challenge_slug: "make-it-fast",
+    });
   });
 
   test("keeps the better evaluation when completions race", async () => {

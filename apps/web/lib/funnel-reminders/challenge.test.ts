@@ -11,9 +11,16 @@ test("reminders target Broken Agent after Black Box has closed", () => {
   ).toBe("broken-agent");
 });
 
-test("reminders stop when no playable challenge is open", () => {
+test("reminders target Slow Service without reopening the closed Scheduler", () => {
   expect(
     reminderChallenge({
+      now: new Date("2027-01-01T12:00:00Z"),
+      forceOpen: false,
+    })?.slug,
+  ).toBe("make-it-fast");
+  expect(
+    reminderChallenge({
+      slug: "broken-agent",
       now: new Date("2027-01-01T12:00:00Z"),
       forceOpen: false,
     }),
