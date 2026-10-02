@@ -55,12 +55,15 @@ const RankingResults = ({
   readonly entries: ChallengeRanking["entries"];
 }) => {
   if (entries.length === 0) {
+    let emptyMessage =
+      "Nadie ha enviado una evaluación oficial todavía. Las soluciones se envían por la CLI; esta página solo muestra el ranking.";
+    if (brokenAgent) {
+      emptyMessage =
+        "Todavía no hay participantes con un puntaje de 95% o más en el ranking.";
+    }
     return (
       <div className={`p-6 ${brandFrameClassName}`}>
-        <p className="text-sm text-[var(--hud-muted)]">
-          Nadie ha enviado una evaluación oficial todavía. Las soluciones se
-          envían por la CLI; esta página solo muestra el ranking.
-        </p>
+        <p className="text-sm text-[var(--hud-muted)]">{emptyMessage}</p>
       </div>
     );
   }
@@ -206,7 +209,7 @@ export function ChallengeRankingView({
     "Ranking público de solo lectura: accuracy, empates por predicciones exactas y menos queries. Las implementaciones no se publican.";
   if (brokenAgent) {
     rankingDescription =
-      "Ranking público de solo lectura: puntaje de producción, menos evaluaciones oficiales y, al final, hora de envío. Aparecen todos los puntajes válidos de personas con una postulación enviada; los casos ocultos y las implementaciones no se publican.";
+      "Ranking público de solo lectura: puntaje de producción, menos evaluaciones oficiales y, al final, hora de envío. Aparecen todas las personas con una postulación enviada y un puntaje de 95% o más, sin límite de participantes; los casos ocultos y las implementaciones no se publican.";
   }
   if (slowService)
     rankingDescription =

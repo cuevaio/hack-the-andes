@@ -127,7 +127,7 @@ test("publishes winner devtool prizes and participant credits separately", () =>
   expect(qatom?.participantBenefit).toEqual({
     duration: "6 meses",
     plan: "Plan Max",
-    value: "Gratis · sin tarjeta para comenzar",
+    value: "$300 USD/mes · $1800 USD en total",
   });
   expect(qatom?.winnerPrizes).toEqual([
     {
