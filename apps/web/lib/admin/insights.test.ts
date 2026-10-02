@@ -70,6 +70,28 @@ describe("participant insights", () => {
     `);
   });
 
+  test("groups known countries outside Peru without absorbing unknown residence", async () => {
+    await client.exec(
+      "insert into participants values ('I', 'CL'); insert into applications values ('i1', 'I', 'submitted', '2026-09-01', '2026-09-01')",
+    );
+    const report = await getAdminInsights(
+      { country: { kind: "outside_peru" } },
+      database,
+    );
+    expect(report.totals).toEqual({
+      people: 2,
+      submitted: 2,
+      challengeStarted: 0,
+      challengeCompleted: 0,
+      approved: 1,
+      rejected: 0,
+    });
+    expect(report.countries.map((country) => country.countryCode)).toEqual([
+      "CL",
+      "CO",
+    ]);
+  });
+
   afterEach(async () => {
     await client.close();
   });

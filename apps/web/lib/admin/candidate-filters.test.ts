@@ -57,7 +57,7 @@ test("normalizes repeated and invalid URL values identically for server and API"
 
 test("keeps unknown, known and unrestricted country results in separate caches", () => {
   expect(
-    [undefined, "unknown", "PE", "CO"].map((country) =>
+    [undefined, "unknown", "PE", "CO", "outside_peru"].map((country) =>
       candidateKeys.list(parseCandidateFilters({ country })),
     ),
   ).toEqual([
@@ -65,5 +65,18 @@ test("keeps unknown, known and unrestricted country results in separate caches",
     ["admin", "candidates", "list", "country=unknown"],
     ["admin", "candidates", "list", "country=PE"],
     ["admin", "candidates", "list", "country=CO"],
+    ["admin", "candidates", "list", "country=outside_peru"],
   ]);
+});
+
+test("preserves outside-Peru scope through API and history serialization", () => {
+  const filters = parseCandidateFilters({
+    country: "outside_peru",
+    page: "2",
+    q: "Ana",
+  });
+  expect(filters.country).toEqual({ kind: "outside_peru" });
+  expect(candidateFilterQuery(filters)).toBe(
+    "page=2&q=Ana&country=outside_peru",
+  );
 });

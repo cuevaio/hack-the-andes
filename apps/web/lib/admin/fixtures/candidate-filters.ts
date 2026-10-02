@@ -67,10 +67,30 @@ mock.module("../../badges/enqueue", () => ({
 }));
 
 const { listCandidates } = await import("../candidates");
+await client.query("update participants set country_code='BR' where id=$1", [
+  id(14),
+]);
+const outside = await listCandidates(
+  parseCandidateFilters({ country: "outside_peru" }),
+);
+assert.equal(outside.total, 2);
+assert.equal(outside.counts.all, 2);
+assert.deepEqual(
+  outside.candidates.map((candidate) => candidate.participantId),
+  [id(14), id(13)],
+);
+await client.query("update participants set country_code='CO' where id=$1", [
+  id(14),
+]);
 const first = await listCandidates(parseCandidateFilters({ country: "PE" }));
 assert.equal(first.total, 12);
 assert.equal(first.counts.all, 12);
 assert.equal(first.counts.approved, 1);
+assert.deepEqual(first.funnel, {
+  submitted: 12,
+  challengeStarted: 0,
+  challengeCompleted: 0,
+});
 assert.equal(first.totalPages, 2);
 assert.deepEqual(
   first.candidates.map((person) => person.participantId),
@@ -88,6 +108,11 @@ const approved = await listCandidates(
 );
 assert.equal(approved.total, 1);
 assert.equal(approved.counts.all, 12);
+assert.deepEqual(approved.funnel, {
+  submitted: 12,
+  challengeStarted: 0,
+  challengeCompleted: 0,
+});
 assert.equal(approved.candidates[0]?.participantId, id(1));
 const search = await listCandidates(
   parseCandidateFilters({ country: "PE", q: "Person 1" }),
@@ -123,6 +148,46 @@ const cohort = await listCandidates(
 assert.equal(cohort.total, 1);
 assert.equal(cohort.counts.all, 1);
 assert.equal(cohort.candidates[0]?.participantId, id(1));
+assert.deepEqual(cohort.funnel, {
+  submitted: 1,
+  challengeStarted: 1,
+  challengeCompleted: 0,
+});
+await client.query(
+  "insert into challenge_evaluations (attempt_id,solution_kind,solution,accuracy,exact_count,sample_size,mean_error,queries_used,runtime_ms) select a.id,'javascript','{}',0,0,10,1,0,1 from challenge_attempts a cross join generate_series(1,2) where a.participant_id=$1",
+  [id(1)],
+);
+const evaluated = await listCandidates(
+  parseCandidateFilters({ country: "PE", status: "approved" }),
+);
+assert.equal(evaluated.total, 1);
+assert.deepEqual(evaluated.funnel, {
+  submitted: 12,
+  challengeStarted: 2,
+  challengeCompleted: 1,
+});
+const brokenOnly = await listCandidates(
+  parseCandidateFilters({ country: "PE", challenge: "broken-agent" }),
+);
+assert.deepEqual(brokenOnly.funnel, {
+  submitted: 1,
+  challengeStarted: 1,
+  challengeCompleted: 0,
+});
+await client.query("update applications set submitted_at=null where id=$1", [
+  id(1),
+]);
+const missingSubmission = await listCandidates(
+  parseCandidateFilters({ country: "PE" }),
+);
+assert.deepEqual(missingSubmission.funnel, {
+  submitted: 11,
+  challengeStarted: 2,
+  challengeCompleted: 1,
+});
+await client.query("update applications set submitted_at=now() where id=$1", [
+  id(1),
+]);
 
 await client.query(
   "update participants set country_code = 'CO' where id = $1",
@@ -138,6 +203,22 @@ const corrected = await listCandidates(
 assert.equal(corrected.page, 1);
 assert.equal(corrected.total, 10);
 assert.equal(corrected.counts.approved, 0);
+assert.deepEqual(corrected.funnel, {
+  submitted: 10,
+  challengeStarted: 1,
+  challengeCompleted: 0,
+});
+const outsideCorrected = await listCandidates(
+  parseCandidateFilters({ country: "outside_peru", status: "approved" }),
+);
+assert.equal(outsideCorrected.total, 1);
+assert.equal(outsideCorrected.counts.all, 4);
+assert.deepEqual(outsideCorrected.funnel, {
+  submitted: 4,
+  challengeStarted: 1,
+  challengeCompleted: 1,
+});
+assert.equal(outsideCorrected.candidates[0]?.participantId, id(1));
 await client.query(
   "update applications set status = 'withdrawn' where id = $1",
   [id(1)],

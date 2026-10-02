@@ -66,6 +66,8 @@ export const getAdminInsights = async (
     countryCondition = sql`p.country_code is null`;
   } else if (filters.country?.kind === "country") {
     countryCondition = sql`p.country_code = ${filters.country.code}`;
+  } else if (filters.country?.kind === "outside_peru") {
+    countryCondition = sql`p.country_code <> 'PE'`;
   }
   let selectedChallenge = sql`true`;
   let cohortCondition = sql`true`;

@@ -323,6 +323,21 @@ describe("participant history production SQL", () => {
     expect(report.current).toEqual(emptyCurrent);
   });
 
+  test("outside-Peru history excludes unknown residence and leaves the attendance goal global", async () => {
+    await person(1, "PE");
+    await person(2, "CO");
+    await person(3, "BR");
+    await person(4, null);
+    await application(1, 1, "accepted");
+    const report = await getParticipantHistory(
+      { ...query, country: { kind: "outside_peru" } },
+      database,
+    );
+    expect(report.days.at(-1)?.people).toBe(2);
+    expect(report.days.at(-1)?.stages.registered).toBe(2);
+    expect(report.current.onSiteAccepted).toBe(1);
+  });
+
   test("uses current-country/current-version cohorts without filtering the live goal or earlier cohort days", async () => {
     await person(1, "CO");
     await application(

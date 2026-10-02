@@ -128,6 +128,11 @@ export type CandidateCounts = Readonly<
 export interface CandidatePage {
   readonly candidates: ReadonlyArray<Candidate>;
   readonly counts: CandidateCounts;
+  readonly funnel: {
+    readonly submitted: number;
+    readonly challengeStarted: number;
+    readonly challengeCompleted: number;
+  };
   readonly page: number;
   readonly pageSize: number;
   readonly total: number;
