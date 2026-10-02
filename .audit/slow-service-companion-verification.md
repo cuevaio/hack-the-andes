@@ -78,3 +78,7 @@ main pushes occurred in this verification task. The parent still owns the live
 private-engine blocker, production checks, origin/main reconciliation, and push.
 The preexisting public diff also activates `power-grid`; that unrelated hunk is
 preserved for the parent's reconciliation, not verified as part of this release.
+
+Parent reconciliation identifies the `power-grid` activation as an accidental
+earlier parent edit, not user work. Removed it and added a catalog regression
+covering both future dates and force-open. Only Slow Service is newly playable.

@@ -40,3 +40,19 @@ test("advertises only the current playable challenge version", () => {
   );
   expect(item.challengeVersion).not.toBe("broken-agent-v1");
 });
+
+test("future dates and force-open cannot activate unimplemented challenges", () => {
+  for (const slug of ["power-grid", "agent-arena"]) {
+    const challenge = challengeBySlug(slug);
+    if (!challenge) throw new Error(`missing ${slug}`);
+    for (const forceOpen of [false, true]) {
+      const item = catalogItemFor(
+        challenge,
+        new Date("2026-11-01T00:00:00Z"),
+        forceOpen,
+      );
+      expect(item.playable).toBe(false);
+      expect(item.open).toBe(false);
+    }
+  }
+});

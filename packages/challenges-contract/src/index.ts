@@ -114,7 +114,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     queryLimit: 0,
     evaluationLimit: 3,
     hiddenSampleSize: 1,
-    playable: true,
+    playable: false,
     solutionKind: "javascript_source",
   },
   {
