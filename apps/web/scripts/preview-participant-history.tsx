@@ -1,3 +1,4 @@
+import { mock } from "bun:test";
 import { readdir, readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import tailwind from "@tailwindcss/postcss";
@@ -6,11 +7,28 @@ import postcss from "postcss";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { ParticipantHistory } from "@/components/participant-history";
+import { ParticipantInsights } from "@/components/participant-insights";
+import { parseCandidateFilters } from "@/lib/admin/candidate-filters";
 import { parseHistoryQuery } from "@/lib/admin/history-query";
+import { getAdminInsights } from "@/lib/admin/insights";
 import { getParticipantHistory } from "@/lib/admin/participant-history";
 import { currentChallengeVersionFor } from "@/lib/challenges/engine";
 
 const client = new PGlite();
+const database = drizzle(client);
+mock.module("server-only", () => ({}));
+mock.module("@chofex/db", () => ({ db: database }));
+mock.module("@clerk/nextjs/server", () => ({
+  clerkClient: async () => ({
+    users: {
+      getUser: async () => ({
+        createdAt: Date.parse("2026-09-01"),
+        emailAddresses: [],
+      }),
+    },
+  }),
+}));
+const { listCandidates } = await import("@/lib/admin/candidates");
 const migrations = new URL("../../../packages/db/drizzle/", import.meta.url);
 for (const file of (await readdir(migrations))
   .filter((name) => name.endsWith(".sql"))
@@ -112,6 +130,70 @@ const server = Bun.serve({
   port: 4321,
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/admin/applications") {
+      return Response.json({
+        ok: true,
+        data: await listCandidates(parseCandidateFilters(url.searchParams)),
+      });
+    }
+    if (
+      url.pathname.startsWith("/api/admin/participants/") &&
+      url.pathname.endsWith("/country") &&
+      request.method === "PATCH"
+    ) {
+      const participantId = url.pathname.split("/").at(-2);
+      const { countryCode } = await request.json();
+      await client.query(
+        "update participants set country_code=$1 where id=$2",
+        [countryCode, participantId],
+      );
+      return Response.json({ ok: true, data: { participantId, countryCode } });
+    }
+    if (url.pathname === "/participant-dashboard.js") {
+      const build = await Bun.build({
+        entrypoints: [
+          new URL("./participant-dashboard-preview.tsx", import.meta.url)
+            .pathname,
+        ],
+        target: "browser",
+        define: { "process.env": JSON.stringify({ NODE_ENV: "development" }) },
+        plugins: [
+          {
+            name: "fixture-clerk",
+            setup(builder) {
+              builder.onResolve({ filter: /^@clerk\/nextjs$/ }, () => ({
+                path: "clerk",
+                namespace: "fixture",
+              }));
+              builder.onResolve({ filter: /^next\/image$/ }, () => ({
+                path: "image",
+                namespace: "fixture",
+              }));
+              builder.onLoad(
+                { filter: /^clerk$/, namespace: "fixture" },
+                () => ({
+                  contents:
+                    'export const useUser = () => ({ user: { firstName: "Reviewer" } }); export const UserButton = () => null;',
+                  loader: "js",
+                }),
+              );
+              builder.onLoad(
+                { filter: /^image$/, namespace: "fixture" },
+                () => ({
+                  contents:
+                    'import { createElement } from "react"; export default function Image({ fill, unoptimized, priority, loader, quality, ...props }) { return createElement("img", props); }',
+                  loader: "js",
+                }),
+              );
+            },
+          },
+        ],
+      });
+      if (!build.success) throw new Error(build.logs.join("\n"));
+      return new Response(build.outputs[0], {
+        headers: { "content-type": "application/javascript" },
+      });
+    }
     if (url.pathname === "/styles.css")
       return new Response(styles.css, {
         headers: { "content-type": "text/css" },
@@ -120,11 +202,24 @@ const server = Bun.serve({
       Object.fromEntries(url.searchParams),
       new Date("2026-10-01T20:00:00Z"),
     );
-    const data = await getParticipantHistory(query, drizzle(client));
+    const data = await getParticipantHistory(query, database);
     if (url.pathname === "/report.json") return Response.json(data);
-    const markup = renderToStaticMarkup(
+    let markup = renderToStaticMarkup(
       <ParticipantHistory data={data} query={query} />,
     );
+    if (url.pathname === "/admin/insights") {
+      const filters = parseCandidateFilters(url.searchParams);
+      markup = renderToStaticMarkup(
+        <ParticipantInsights
+          filters={filters}
+          data={await getAdminInsights(filters, database)}
+        />,
+      );
+    }
+    if (url.pathname === "/admin/participants") {
+      markup =
+        '<div id="root"></div><script type="module" src="/participant-dashboard.js"></script>';
+    }
     return new Response(
       `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Historical insights fixture</title><link rel="stylesheet" href="/styles.css"></head><body>${markup}</body></html>`,
       { headers: { "content-type": "text/html; charset=utf-8" } },

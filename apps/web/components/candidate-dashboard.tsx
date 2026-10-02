@@ -61,6 +61,7 @@ import {
 import Image from "next/image";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
+import { CandidateFunnel } from "@/components/candidate-funnel";
 import { CountryFilter } from "@/components/country-filter";
 import { brandName } from "@/components/landing/content";
 import { ParticipantCountry } from "@/components/participant-country";
@@ -1343,6 +1344,11 @@ export function CandidateDashboard({
             </ButtonLink>
           </section>
 
+          <CandidateFunnel
+            data={currentData}
+            unavailable={resultsUnavailable}
+          />
+
           <section className="mt-8">
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(16rem,1.5fr)_minmax(12rem,1fr)_minmax(12rem,1fr)]">
               <form
@@ -1375,6 +1381,7 @@ export function CandidateDashboard({
                 <select
                   className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   value={filters.status ?? ""}
+                  name="status"
                   onChange={(event) =>
                     navigateTo({
                       ...filters,
@@ -1450,6 +1457,7 @@ export function CandidateDashboard({
                 <select
                   className="h-11 min-w-0 flex-1 border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
                   value={filters.ranking ?? ""}
+                  name="ranking"
                   onChange={(event) => {
                     const ranking = parseCandidateRankingSort(
                       event.target.value || undefined,

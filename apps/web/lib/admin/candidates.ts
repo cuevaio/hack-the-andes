@@ -23,7 +23,10 @@ import { storeAcceptanceBadgeProfile } from "@/lib/badges/acceptance";
 import { enqueueBadgeGeneration } from "@/lib/badges/enqueue";
 import { emailAddresses } from "@/lib/emails/config";
 import { HttpError } from "@/lib/registration/http";
-import { startedChallengeParticipantCondition } from "../challenges/metrics";
+import {
+  completedChallengeParticipantCondition,
+  startedChallengeParticipantCondition,
+} from "../challenges/metrics";
 import { rankedEvaluationsFor } from "../challenges/ranking";
 import { challengeActivityForParticipants } from "../challenges/service";
 import { participantHasLatestRankedChallengeResult } from "./admission-policy";
@@ -433,7 +436,20 @@ export const listCandidates = async (
     )
     .as("latest_applications");
   const funnelSummary = db
-    .select({ status: funnelStatus.as("status") })
+    .select({
+      status: funnelStatus.as("status"),
+      submitted: sql<boolean>`${applications.submittedAt} is not null`.as(
+        "submitted",
+      ),
+      started: startedChallengeParticipantCondition(
+        sql`${applications.participantId}`,
+        input.challenge,
+      ).as("started"),
+      completed: completedChallengeParticipantCondition(
+        sql`${applications.participantId}`,
+        input.challenge,
+      ).as("completed"),
+    })
     .from(applications)
     .innerJoin(latestApplications, eq(latestApplications.id, applications.id))
     .innerJoin(participants, eq(participants.id, applications.participantId))
@@ -462,7 +478,13 @@ export const listCandidates = async (
       .innerJoin(participants, eq(participants.id, applications.participantId))
       .where(whereCondition),
     db
-      .select({ status: funnelSummary.status, value: count() })
+      .select({
+        status: funnelSummary.status,
+        value: count(),
+        submitted: sql<number>`count(*) filter (where ${funnelSummary.submitted})::integer`,
+        started: sql<number>`count(*) filter (where ${funnelSummary.started})::integer`,
+        completed: sql<number>`count(*) filter (where ${funnelSummary.completed})::integer`,
+      })
       .from(funnelSummary)
       .groupBy(funnelSummary.status),
   ]);
@@ -544,9 +566,13 @@ export const listCandidates = async (
   }
 
   const counts = emptyCounts();
+  const funnel = { submitted: 0, challengeStarted: 0, challengeCompleted: 0 };
   for (const result of statusResults) {
     counts[result.status] = result.value;
     counts.all += result.value;
+    funnel.submitted += result.submitted;
+    funnel.challengeStarted += result.started;
+    funnel.challengeCompleted += result.completed;
   }
 
   const candidates = await toCandidates(await addAttemptHistory(records));
@@ -554,6 +580,7 @@ export const listCandidates = async (
   return {
     candidates,
     counts,
+    funnel,
     page: currentPage,
     pageSize,
     total,

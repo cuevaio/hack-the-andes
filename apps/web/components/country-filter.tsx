@@ -27,6 +27,7 @@ export function CountryFilter({
       </label>
       <select
         id={id}
+        name="country"
         value={countryFilterValue(value)}
         onChange={(event) => onChange(parseCountryFilter(event.target.value))}
         className="h-11 w-full border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
