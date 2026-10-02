@@ -27,12 +27,60 @@ describe("challenge ranking policy", () => {
     ).toEqual([1, 2, 3]);
   });
 
-  test("shows only the first 17 ranked entries", () => {
+  test("keeps the first 17 entries for other challenges", () => {
     const ranked = Array.from({ length: 20 }, (_, index) => ({
       position: index + 1,
+      accuracy: 0.9,
     }));
 
-    expect(publicRankingEntries(ranked)).toEqual(ranked.slice(0, 17));
+    for (const slug of ["black-box", "slow-service"]) {
+      expect(publicRankingEntries({ slug, ranked })).toEqual(
+        ranked.slice(0, 17),
+      );
+    }
+  });
+
+  test("shows every Broken Agent score of at least 95%, beyond position 17", () => {
+    const ranked = Array.from({ length: 22 }, (_, index) => ({
+      position: index + 1,
+      accuracy: index < 19 ? 0.97 : 0.95,
+    }));
+    ranked.push({ position: 23, accuracy: 0.9499 });
+
+    expect(
+      publicRankingEntries({ slug: "broken-agent", ranked }).map(
+        (entry) => entry.position,
+      ),
+    ).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+      22,
+    ]);
+  });
+
+  test("excludes Broken Agent scores below 95% even within the first 17", () => {
+    expect(
+      publicRankingEntries({
+        slug: "broken-agent",
+        ranked: [
+          { position: 1, accuracy: 1 },
+          { position: 2, accuracy: 0.95 },
+          { position: 3, accuracy: 0.9499 },
+          { position: 4, accuracy: 0.8 },
+        ],
+      }),
+    ).toEqual([
+      { position: 1, accuracy: 1 },
+      { position: 2, accuracy: 0.95 },
+    ]);
+  });
+
+  test("returns no Broken Agent entries when nobody meets 95%", () => {
+    expect(
+      publicRankingEntries({
+        slug: "broken-agent",
+        ranked: [{ accuracy: 0.94 }],
+      }),
+    ).toEqual([]);
   });
 
   test("supports final tie breakers that produce distinct ranks", () => {

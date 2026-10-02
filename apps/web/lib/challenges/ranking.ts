@@ -212,8 +212,7 @@ export const getChallengeRanking = async (
   }
 
   const ranks = competitionRanksForEvaluations(ranked);
-  const publicRanked = publicRankingEntries(ranked);
-  const entries: Array<ChallengeRankingEntry> = publicRanked.map(
+  const rankedEntries: Array<ChallengeRankingEntry> = ranked.map(
     (row, index) => {
       const identity = identityByParticipant.get(row.participantId);
       const profileLinks = publicProfileLinksFor({
@@ -239,6 +238,7 @@ export const getChallengeRanking = async (
       };
     },
   );
+  const entries = publicRankingEntries({ slug, ranked: rankedEntries });
 
   return {
     challenge: challengeItem,
