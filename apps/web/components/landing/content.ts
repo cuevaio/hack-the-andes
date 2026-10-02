@@ -380,7 +380,7 @@ export const devtoolPartners = [
     participantBenefit: {
       duration: "6 meses",
       plan: "Plan Max",
-      value: "Gratis · sin tarjeta para comenzar",
+      value: "$300 USD/mes · $1800 USD en total",
     },
     winnerPrizes: [
       {
