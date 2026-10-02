@@ -2,6 +2,7 @@ import {
   blackBoxChallengeSlug,
   brokenAgentChallengeSlug,
   type ChallengeRanking,
+  challengeClosingNotice,
   isChallengeRankingVisibleAt,
 } from "@chofex/challenges-contract";
 import {
@@ -231,6 +232,12 @@ export function ChallengeRankingView({
         </div>
 
         {challengeGuide}
+
+        {challenge.closed && (
+          <p className={`p-5 text-base leading-relaxed ${brandFrameClassName}`}>
+            {challengeClosingNotice(challenge.title)}
+          </p>
+        )}
 
         <section aria-labelledby="ranking-heading" className="mt-14">
           <BrandKicker className="mb-3 text-[var(--hud-kicker)]">

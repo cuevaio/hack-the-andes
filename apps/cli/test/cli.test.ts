@@ -237,7 +237,7 @@ describe("CLI JSON mode", () => {
     }
   });
 
-  test("creates the live Broken Agent starter without overwriting work", async () => {
+  test("rejects the closed Broken Agent starter without overwriting work", async () => {
     const directory = await mkdtemp(join(tmpdir(), "chofex-broken-agent-"));
     const challengeDirectory = join(directory, "broken-agent");
     const solutionPath = join(challengeDirectory, "scheduler.js");
@@ -251,21 +251,13 @@ describe("CLI JSON mode", () => {
         "broken-agent",
       );
 
-      expect(created.exitCode).toBe(0);
-      expect(created.stderr).toBe("");
-      expect(created.stdout).toContain("Se creó broken-agent");
-      expect(created.stdout).toContain("Todo pasa");
-      expect(await Bun.file(solutionPath).text()).toContain(
-        "function createScheduler",
-      );
-      expect(
-        await Bun.file(join(challengeDirectory, "README.md")).text(),
-      ).toContain("Contrato normativo");
-      expect(
-        await Bun.file(join(challengeDirectory, "scheduler.test.js")).text(),
-      ).toContain('test("ejecuta vencidos');
+      expect(created.exitCode).toBe(2);
+      expect(created.stdout).toBe("");
+      expect(created.stderr).toContain("CHALLENGE_CLOSED");
+      expect(created.stderr).toContain("Espera el próximo challenge");
+      expect(await Bun.file(solutionPath).exists()).toBe(false);
 
-      await writeFile(solutionPath, "// repaired by me\n", "utf8");
+      await Bun.write(solutionPath, "// repaired by me\n");
 
       const repeated = await runCliFrom(
         directory,
@@ -274,8 +266,8 @@ describe("CLI JSON mode", () => {
         "--challenge",
         "broken-agent",
       );
-      expect(repeated.exitCode).toBe(0);
-      expect(repeated.stdout).toContain("broken-agent ya existe");
+      expect(repeated.exitCode).toBe(2);
+      expect(repeated.stderr).toContain("CHALLENGE_CLOSED");
       expect(await Bun.file(solutionPath).text()).toBe("// repaired by me\n");
     } finally {
       await rm(directory, { recursive: true, force: true });

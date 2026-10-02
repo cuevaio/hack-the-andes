@@ -36,3 +36,24 @@ test("keeps the explicit development override", () => {
     ),
   ).toBe(challenge);
 });
+
+test("Scheduler rejects new work at its deadline and tells participants to wait", () => {
+  const challenge = challengeBySlug("broken-agent");
+  if (!challenge) throw new Error("missing broken-agent");
+  try {
+    requireChallengeParticipationOpen(
+      challenge,
+      new Date("2026-10-02T05:00:00.000Z"),
+      false,
+    );
+    throw new Error("expected Scheduler to be closed");
+  } catch (error) {
+    if (!(error instanceof HttpError)) throw error;
+    expect(error.status).toBe(403);
+    expect(error.code).toBe("CHALLENGE_CLOSED");
+    expect(error.message).toContain("Espera el próximo challenge");
+    expect(error.message).toContain(
+      "Tu historial y el ranking siguen disponibles",
+    );
+  }
+});

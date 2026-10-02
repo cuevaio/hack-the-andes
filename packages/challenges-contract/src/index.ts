@@ -206,6 +206,9 @@ export const challengeOpeningNotice = (
 ): string =>
   `${title} abre el ${formatChallengeOpeningInPeru(opensAt)}. Las consultas y evaluaciones están deshabilitadas hasta entonces; no se consumirá ningún intento.`;
 
+export const challengeClosingNotice = (title: string): string =>
+  `${title} está cerrado. Ya no se reciben soluciones ni evaluaciones. Espera el próximo challenge; lo anunciaremos en esta página. Tu historial y el ranking siguen disponibles.`;
+
 export const ChallengeSlugSchema = Schema.Literals([
   "black-box",
   "broken-agent",

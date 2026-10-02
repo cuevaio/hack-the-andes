@@ -9,6 +9,7 @@ import type {
 } from "@chofex/challenges-contract";
 import {
   challengeAdmissionNotice,
+  challengeClosingNotice,
   challengeOpeningNotice,
   formatChallengeOpeningInPeru,
   isChallengeRankingVisibleAt,
@@ -43,7 +44,7 @@ export const challengeParticipationNotice = (
   now: Date = new Date(),
 ): string | undefined => {
   if (closesAt && now.getTime() >= Date.parse(closesAt)) {
-    return `${title} está cerrado. Las consultas, pruebas locales y evaluaciones oficiales están deshabilitadas.`;
+    return challengeClosingNotice(title);
   }
   return challengeLaunchNotice(title, opensAt, now);
 };
@@ -101,6 +102,7 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
   if (challenge.slug === "broken-agent") {
     let caseStatus = "LISTO PARA AUDITAR";
     if (attempt.latestEvaluation) caseStatus = "EVALUADO";
+    if (challenge.closed) caseStatus = "CERRADO";
     const lines = [
       `${challenge.title.toUpperCase()} — CASO #${challenge.code}`,
       challenge.summary,
@@ -122,6 +124,9 @@ export const challengeShowText = (attempt: ChallengeAttemptView): string => {
         lines.push(`Puesto         #${progress.rank}`);
       if (progress.shareCode)
         lines.push(`Código         #${progress.shareCode}`);
+    }
+    if (challenge.closed) {
+      lines.push("", challengeClosingNotice(challenge.title));
     }
     if (
       attempt.latestEvaluation ||
