@@ -1,0 +1,211 @@
+{
+  "metadata": {
+    "generated_at": "2026-10-03T19:22:25.514Z",
+    "today": "2026-10-03T05:00:00.000Z",
+    "first_signup": "2026-09-16T18:55:18.556Z",
+    "participants": 172,
+    "undated_decisions": 0,
+    "undated_withdrawals": 0,
+    "undated_first_confirmations": 17
+  },
+  "days": [
+    {
+      "date": "2026-09-16",
+      "registered": 13,
+      "draft": 13,
+      "submitted": 10,
+      "challenge_started": 0,
+      "challenge_completed": 0,
+      "accepted": 0,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-17",
+      "registered": 21,
+      "draft": 20,
+      "submitted": 17,
+      "challenge_started": 5,
+      "challenge_completed": 4,
+      "accepted": 0,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-18",
+      "registered": 52,
+      "draft": 43,
+      "submitted": 41,
+      "challenge_started": 25,
+      "challenge_completed": 21,
+      "accepted": 0,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-19",
+      "registered": 65,
+      "draft": 50,
+      "submitted": 48,
+      "challenge_started": 37,
+      "challenge_completed": 31,
+      "accepted": 0,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-20",
+      "registered": 70,
+      "draft": 55,
+      "submitted": 53,
+      "challenge_started": 42,
+      "challenge_completed": 35,
+      "accepted": 0,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-21",
+      "registered": 84,
+      "draft": 66,
+      "submitted": 64,
+      "challenge_started": 51,
+      "challenge_completed": 41,
+      "accepted": 1,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-22",
+      "registered": 93,
+      "draft": 75,
+      "submitted": 73,
+      "challenge_started": 60,
+      "challenge_completed": 48,
+      "accepted": 1,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-23",
+      "registered": 106,
+      "draft": 88,
+      "submitted": 86,
+      "challenge_started": 70,
+      "challenge_completed": 59,
+      "accepted": 4,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-24",
+      "registered": 113,
+      "draft": 95,
+      "submitted": 93,
+      "challenge_started": 74,
+      "challenge_completed": 64,
+      "accepted": 5,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-25",
+      "registered": 123,
+      "draft": 104,
+      "submitted": 102,
+      "challenge_started": 80,
+      "challenge_completed": 67,
+      "accepted": 16,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-26",
+      "registered": 126,
+      "draft": 107,
+      "submitted": 105,
+      "challenge_started": 83,
+      "challenge_completed": 68,
+      "accepted": 16,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-27",
+      "registered": 132,
+      "draft": 113,
+      "submitted": 111,
+      "challenge_started": 88,
+      "challenge_completed": 72,
+      "accepted": 16,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-28",
+      "registered": 135,
+      "draft": 116,
+      "submitted": 114,
+      "challenge_started": 94,
+      "challenge_completed": 75,
+      "accepted": 16,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-29",
+      "registered": 137,
+      "draft": 118,
+      "submitted": 116,
+      "challenge_started": 95,
+      "challenge_completed": 77,
+      "accepted": 16,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-09-30",
+      "registered": 148,
+      "draft": 129,
+      "submitted": 127,
+      "challenge_started": 99,
+      "challenge_completed": 82,
+      "accepted": 16,
+      "confirmed": 0,
+      "rejected": 0
+    },
+    {
+      "date": "2026-10-01",
+      "registered": 164,
+      "draft": 144,
+      "submitted": 142,
+      "challenge_started": 118,
+      "challenge_completed": 96,
+      "accepted": 41,
+      "confirmed": 2,
+      "rejected": 0
+    },
+    {
+      "date": "2026-10-02",
+      "registered": 168,
+      "draft": 150,
+      "submitted": 149,
+      "challenge_started": 118,
+      "challenge_completed": 97,
+      "accepted": 50,
+      "confirmed": 11,
+      "rejected": 0
+    },
+    {
+      "date": "2026-10-03",
+      "registered": 172,
+      "draft": 154,
+      "submitted": 153,
+      "challenge_started": 121,
+      "challenge_completed": 101,
+      "accepted": 50,
+      "confirmed": 11,
+      "rejected": 0
+    }
+  ]
+}

@@ -45,3 +45,9 @@ The public presentation of an accepted participant's badge: display name, one-li
 ## Challenge placement
 
 A participant's best exact rank across the latest playable challenge versions. Challenge rankings are the engineering selection mechanism for seats: only participants with a ranked result from a latest challenge version are eligible for acceptance, and organizers select the strongest results. Attempts from superseded versions remain historical and do not confer eligibility. The best placement is also printed on the participant's badge.
+
+## Funnel milestone dates
+
+`participant_funnel_milestones` records the first known date each participant reached a funnel stage. Database triggers capture signup, application creation and submission, challenge start and evaluation, review, waitlist, acceptance, rejection, withdrawal, confirmation, and check-in in the same transaction as the change. Repeated updates and new application or challenge attempts preserve the earliest date. Challenge milestones include all versions; they do not establish eligibility under current challenge rules.
+
+The migration backfills explicitly recorded dates. Historical review, waitlist, withdrawal, and confirmations without a reliable first date remain unknown. An edit to an already completed legacy confirmation does not invent its first date. A withdrawn application does not retain its prior decision outcome, so its decision date alone cannot establish an acceptance or rejection. New rows inserted directly into review, waitlist, withdrawal, or an undated terminal status use the database observation time rather than a backdated creation date. Milestones describe stages reached across a participant's history, so the same person may count in several cumulative stage totals. Current state and active-application rules still come from the application records.

@@ -204,6 +204,13 @@
       "when": 1790921251966,
       "tag": "0028_slow_service_rank",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791055630605,
+      "tag": "0029_sweet_steel_serpent",
+      "breakpoints": true
     }
   ]
 }
