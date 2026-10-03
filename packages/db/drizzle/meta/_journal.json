@@ -211,6 +211,13 @@
       "when": 1791055630605,
       "tag": "0029_sweet_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791068941055,
+      "tag": "0030_idempotent_slow_service_evaluation",
+      "breakpoints": true
     }
   ]
 }

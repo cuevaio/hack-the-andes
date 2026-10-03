@@ -20,6 +20,7 @@ const migration = [
   "0022_burly_mesmero.sql",
   "0024_broken_agent_rank.sql",
   "0028_slow_service_rank.sql",
+  "0030_idempotent_slow_service_evaluation.sql",
 ]
   .map((name) =>
     readFileSync(
@@ -410,6 +411,81 @@ describe("challenge reservations", () => {
       source_digest: createHash("sha256").update(source).digest("hex"),
       challenge_slug: "make-it-fast",
     });
+  });
+
+  test("charges a reviewed Slow Service submission once across concurrent completions", async () => {
+    await client.query(
+      "update challenge_attempts set challenge_slug = 'make-it-fast', evaluations_limit = 5 where id = $1",
+      [attemptId],
+    );
+    const first = await reserveChallengeUse(attemptId, "evaluation", database);
+    const second = await reserveChallengeUse(attemptId, "evaluation", database);
+    if (!first || !second) throw new Error("missing reservation");
+    const solution = {
+      kind: "javascript_source",
+      challengeSlug: "make-it-fast",
+      source: "function createLedger() { return {}; }",
+      review: {
+        sourceDigest: createHash("sha256")
+          .update("function createLedger() { return {}; }")
+          .digest("hex"),
+        focus: "cpu_growth",
+        decision: "ship",
+        confidence: 80,
+        failureScenario: "Repeated amendments can consume excessive CPU.",
+        evidence: "The participant reviewed this exact code.",
+        remainingRisk:
+          "Production workloads may contain more rejected amendments.",
+      },
+    } as const;
+    const score = {
+      accuracy: 1,
+      exactCount: 100,
+      sampleSize: 100,
+      meanError: 0,
+      queriesUsed: 0,
+      runtimeMs: 100,
+    };
+    const firstSubmission = { ...solution, approvalId: crypto.randomUUID() };
+    const secondSubmission = { ...solution, approvalId: crypto.randomUUID() };
+    const completed = await Promise.all([
+      completeEvaluationReservation(first, firstSubmission, score, database),
+      completeEvaluationReservation(second, secondSubmission, score, database),
+    ]);
+    expect(completed.map((result) => result?.evaluationsUsed)).toEqual([1, 1]);
+    expect(
+      (
+        await client.query(
+          "select evaluations_used, evaluations_pending from challenge_attempts",
+        )
+      ).rows,
+    ).toEqual([{ evaluations_used: 1, evaluations_pending: 0 }]);
+    expect(
+      (await client.query("select id from challenge_evaluations")).rows,
+    ).toHaveLength(1);
+    expect(
+      (await client.query("select id from challenge_reservations")).rows,
+    ).toHaveLength(0);
+
+    const changed = await reserveChallengeUse(
+      attemptId,
+      "evaluation",
+      database,
+    );
+    if (!changed) throw new Error("missing reservation");
+    const next = await completeEvaluationReservation(
+      changed,
+      {
+        ...solution,
+        source: "function createLedger() { return { amended: true }; }",
+      },
+      score,
+      database,
+    );
+    expect(next?.evaluationsUsed).toBe(2);
+    expect(
+      (await client.query("select id from challenge_evaluations")).rows,
+    ).toHaveLength(2);
   });
 
   test("keeps the better evaluation when completions race", async () => {

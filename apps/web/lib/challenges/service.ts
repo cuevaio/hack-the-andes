@@ -30,7 +30,7 @@ import {
   slowServiceChallengeSlug,
 } from "@chofex/challenges-contract/slow-service";
 import { db } from "@chofex/db";
-import { and, asc, desc, eq, inArray } from "@chofex/db/orm";
+import { and, asc, desc, eq, inArray, sql } from "@chofex/db/orm";
 import {
   challengeAttempts,
   challengeEvaluations,
@@ -857,6 +857,80 @@ export const testChallengeSolution = async (
   };
 };
 
+const evaluationResult = async (
+  challenge: ChallengeDefinition,
+  attemptId: string,
+  completed: {
+    readonly shareCode: string;
+    readonly evaluationsUsed: number;
+    readonly evaluationsLimit: number;
+  },
+  score: ChallengeScore,
+  now: Date,
+): Promise<ChallengeEvaluationResult> => {
+  let standing: { rank: number; competitorCount: number } | undefined;
+  if (isChallengeRankingVisibleAt(challenge, now)) {
+    try {
+      const ranked = await rankedEvaluationsFor(challenge.slug);
+      standing = rankForAttempt(ranked, attemptId);
+    } catch (error) {
+      console.error("Could not load challenge ranking after evaluation", error);
+    }
+  }
+
+  const rankingResult: {
+    rank?: number;
+    competitorCount?: number;
+    percentile?: number;
+  } = {};
+  if (standing) {
+    rankingResult.rank = standing.rank;
+    rankingResult.competitorCount = standing.competitorCount;
+    rankingResult.percentile = percentileFor(
+      standing.rank,
+      standing.competitorCount,
+    );
+  }
+
+  return {
+    ...participantVisibleScore(score),
+    shareCode: completed.shareCode,
+    ...rankingResult,
+    evaluationsUsed: completed.evaluationsUsed,
+    evaluationsRemaining:
+      completed.evaluationsLimit - completed.evaluationsUsed,
+    evaluationsLimit: completed.evaluationsLimit,
+    rankingPath: rankingPathFor(challenge.slug),
+    shareText: shareTextFor(challenge, {
+      accuracy: score.accuracy,
+      queriesUsed: score.queriesUsed,
+      rank: standing?.rank,
+      competitorCount: standing?.competitorCount,
+      shareCode: completed.shareCode,
+    }),
+  };
+};
+
+const findSlowServiceEvaluation = async (
+  attemptId: string,
+  solution: ChallengeSolution,
+): Promise<EvaluationRecord | undefined> => {
+  if (!("review" in solution)) return undefined;
+  const [evaluation] = await db
+    .select()
+    .from(challengeEvaluations)
+    .where(
+      and(
+        eq(challengeEvaluations.attemptId, attemptId),
+        sql`${challengeEvaluations.solution}->>'source' = ${solution.source}`,
+        sql`${challengeEvaluations.solution}->'review' = ${JSON.stringify(solution.review)}::jsonb`,
+      ),
+    )
+    .orderBy(asc(challengeEvaluations.createdAt), asc(challengeEvaluations.id))
+    .limit(1);
+  return evaluation;
+};
+
 export const evaluateChallenge = async (
   clerkUserId: string,
   slug: string,
@@ -982,6 +1056,18 @@ export const evaluateChallenge = async (
     );
   const participantId = await participantIdFor(clerkUserId);
   const attempt = await attemptFor(participantId, challenge);
+  if (challenge.slug === slowServiceChallengeSlug) {
+    const persisted = await findSlowServiceEvaluation(attempt.id, solution);
+    if (persisted) {
+      return evaluationResult(
+        challenge,
+        attempt.id,
+        attempt,
+        scoreFromStored(persisted),
+        now,
+      );
+    }
+  }
   const reservationLifetime =
     challenge.slug === slowServiceChallengeSlug
       ? slowServiceEngineEvaluateTimeoutMs + 60_000
@@ -1118,45 +1204,9 @@ export const evaluateChallenge = async (
     throw engineUnavailableError();
   }
 
-  let standing: { rank: number; competitorCount: number } | undefined;
-  if (isChallengeRankingVisibleAt(challenge, now)) {
-    try {
-      const ranked = await rankedEvaluationsFor(challenge.slug);
-      standing = rankForAttempt(ranked, attempt.id);
-    } catch (error) {
-      console.error("Could not load challenge ranking after evaluation", error);
-    }
+  if (challenge.slug === slowServiceChallengeSlug) {
+    const persisted = await findSlowServiceEvaluation(attempt.id, solution);
+    if (persisted) score = scoreFromStored(persisted);
   }
-
-  const rankingResult: {
-    rank?: number;
-    competitorCount?: number;
-    percentile?: number;
-  } = {};
-  if (standing) {
-    rankingResult.rank = standing.rank;
-    rankingResult.competitorCount = standing.competitorCount;
-    rankingResult.percentile = percentileFor(
-      standing.rank,
-      standing.competitorCount,
-    );
-  }
-
-  return {
-    ...participantVisibleScore(score),
-    shareCode: completed.shareCode,
-    ...rankingResult,
-    evaluationsUsed: completed.evaluationsUsed,
-    evaluationsRemaining:
-      completed.evaluationsLimit - completed.evaluationsUsed,
-    evaluationsLimit: completed.evaluationsLimit,
-    rankingPath: rankingPathFor(challenge.slug),
-    shareText: shareTextFor(challenge, {
-      accuracy: score.accuracy,
-      queriesUsed: score.queriesUsed,
-      rank: standing?.rank,
-      competitorCount: standing?.competitorCount,
-      shareCode: completed.shareCode,
-    }),
-  };
+  return evaluationResult(challenge, attempt.id, completed, score, now);
 };

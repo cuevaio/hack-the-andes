@@ -145,6 +145,65 @@ try {
   assert.equal(saved.rows.length, 1);
   assert.deepEqual(saved.rows[0]?.solution, solution);
   await assert.rejects(evaluate, errorCode("HUMAN_APPROVAL_REQUIRED"));
+  const slowAttemptId = crypto.randomUUID();
+  await client.query(
+    `insert into challenge_attempts (
+      id, participant_id, challenge_slug, challenge_version, share_code, queries_limit, evaluations_limit
+    ) values ($1, $2, 'make-it-fast', 'slow-service-v3', 'SLOW', 0, 5)`,
+    [slowAttemptId, participantId],
+  );
+  const ledgerSource = "function createLedger() { return {}; }";
+  const ledgerSolution = {
+    kind: "javascript_source",
+    source: ledgerSource,
+    review: {
+      ...solution.review,
+      focus: "cpu_growth",
+      sourceDigest: createHash("sha256").update(ledgerSource).digest("hex"),
+    },
+  };
+  const evaluateLedger = () =>
+    evaluateChallenge(
+      "user_retry",
+      "make-it-fast",
+      ledgerSolution,
+      new Date("2026-10-03T04:00:00Z"),
+    );
+  await assert.rejects(evaluateLedger, errorCode("HUMAN_APPROVAL_REQUIRED"));
+  await client.query(
+    "update challenge_evaluation_approvals set approved_at = now() where attempt_id = $1",
+    [slowAttemptId],
+  );
+  // The server persisted the verdict, but the caller lost the response.
+  const delivered = await evaluateLedger();
+  globalThis.fetch = mock(async () => {
+    throw new Error("must reuse stored verdict");
+  }) as unknown as typeof fetch;
+  const replay = await evaluateLedger();
+  assert.deepEqual(replay, delivered);
+  assert.equal(replay.evaluationsUsed, 1);
+  assert.equal(replay.evaluationsRemaining, 4);
+  // Recovery also works after approval expiration and exhaustion of the budget.
+  await client.query(
+    "update challenge_evaluation_approvals set expires_at = now() - interval '1 hour' where attempt_id = $1",
+    [slowAttemptId],
+  );
+  await client.query(
+    "update challenge_attempts set evaluations_used = 5 where id = $1",
+    [slowAttemptId],
+  );
+  const exhaustedReplay = await evaluateLedger();
+  assert.equal(exhaustedReplay.evaluationsUsed, 5);
+  assert.equal(exhaustedReplay.accuracy, delivered.accuracy);
+  assert.equal(
+    (
+      await client.query(
+        "select id from challenge_evaluations where attempt_id = $1",
+        [slowAttemptId],
+      )
+    ).rows.length,
+    1,
+  );
   console.log("evaluation retry passed");
 } finally {
   await client.close();

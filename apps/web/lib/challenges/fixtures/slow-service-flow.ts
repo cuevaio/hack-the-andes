@@ -2,7 +2,10 @@ import { mock } from "bun:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
-import { challengeBySlug } from "@chofex/challenges-contract";
+import {
+  challengeBySlug,
+  JavascriptSourceSolutionSchema,
+} from "@chofex/challenges-contract";
 import {
   slowServiceChallengeVersion,
   slowServiceStarterSource,
@@ -10,7 +13,7 @@ import {
 import { slowServiceToolkit } from "@chofex/challenges-contract/slow-service/toolkit";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 // The released catalog is active; do not modify it in this fixture.
 const challenge = challengeBySlug("make-it-fast");
@@ -179,8 +182,11 @@ const evaluateReviewed = async (
   const usageBefore = (
     await getChallengeAttempt("user_ledger", "make-it-fast", now)
   ).progress.evaluationsUsed;
-  const candidate = solution.source;
-  const reviewed = { ...solution, review: reviewFor(candidate) };
+  const candidateSolution = Schema.decodeUnknownSync(
+    JavascriptSourceSolutionSchema,
+  )(args[2]);
+  const candidate = candidateSolution.source;
+  const reviewed = { ...candidateSolution, review: reviewFor(candidate) };
   const invoke = () => evaluateChallenge(args[0], args[1], reviewed, args[3]);
   try {
     return await invoke();
@@ -555,10 +561,16 @@ try {
     1,
   );
   enginePoints = 60;
+  const revisedSource = `${source}\n// Revised submission`;
+  const revisedSolution = {
+    ...solution,
+    source: revisedSource,
+    review: reviewFor(revisedSource),
+  };
   const correctnessOnly = await evaluateReviewed(
     "user_ledger",
     "make-it-fast",
-    solution,
+    revisedSolution,
     now,
   );
   assert.equal(correctnessOnly.exactCount, 60);
