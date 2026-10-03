@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "biome lint --error-on-warnings .",
     "format": "biome format --write .",
-    "check-types": "next typegen && tsc --noEmit",
+    "check-types": "next typegen && tsc --noEmit && tsc --noEmit -p tsconfig.fixtures.json",
     "vendor:vision": "node scripts/vendor-vision.mjs",
     "prebuild": "node scripts/vendor-vision.mjs",
     "predev": "node scripts/vendor-vision.mjs"

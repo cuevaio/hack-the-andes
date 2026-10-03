@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["lib/challenges/fixtures/slow-service-flow.ts"],
+  "exclude": ["node_modules"]
+}

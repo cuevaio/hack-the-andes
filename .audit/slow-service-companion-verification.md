@@ -106,3 +106,18 @@ Parent receipts are `/tmp/opencode/companion-parent-tests-merged.log`,
 `companion-parent-final-image-recovery.jsonl`. The last audience dry run found
 165 participants, 164 eligible and one suppressed, with zero emails sent.
 Public deployment, published CLI and live catalog/guide checks precede sending.
+
+The first public image workflow failed production type-checking because the
+isolated integration fixture imports the CLI, which Turbo correctly prunes from
+the web image. Production tsconfig now excludes that test-only fixture. A separate
+fixture tsconfig remains part of the normal web type-check command, so the fixture
+is still checked in the full repository. The real fixture test, root types and
+lint pass. Both actual Docker builds pass. The image with the existing public
+Clerk configuration also serves health and the live-shaped catalog on localhost,
+with Slow Service open, Scheduler closed and Power Grid unplayable. Its owned
+container was stopped after verification.
+
+Published `chofex-cli@0.1.216` was installed from its registry tarball. The actual
+Node executable initializes eight files, including six byte-exact approved sources
+and the companion README. npm metadata propagation was inconsistent during the
+check; no package was republished or registry tag changed manually.
