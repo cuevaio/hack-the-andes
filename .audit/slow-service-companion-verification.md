@@ -82,3 +82,27 @@ preserved for the parent's reconciliation, not verified as part of this release.
 Parent reconciliation identifies the `power-grid` activation as an accidental
 earlier parent edit, not user work. Removed it and added a catalog regression
 covering both future dates and force-open. Only Slow Service is newly playable.
+
+## Parent release verification
+
+Reconciled with public main through `75f4ffe`, including Scheduler closure,
+all participants scoring at least 95 percent, and the Qatom benefit change.
+The conflict retained main's complete closed-ranking test, which includes the
+draft's original assertions. The merged implementation passes 736 tests,
+9,005 assertions, zero failures, root types, lint, CLI/Next build, source exposure,
+and the actual compiled runner with all sixteen children closed.
+
+The final private image `a282196` is verified by immutable tag and image ID.
+Its cold reference evaluation returned an unchargeable 503 while calibration
+prepared, with 298 successful health checks and zero failures. An explicit
+recovery evaluation on that final image completed HTTP 200, score 100, in
+130,995 ms. This proves the warmed evaluator, not a cold-start latency guarantee.
+Runner, participant files, workloads, scoring thresholds and guest caps are
+unchanged. Production migration 0028 is applied and directly verified.
+
+Parent receipts are `/tmp/opencode/companion-parent-tests-merged.log`,
+`companion-parent-{types,lint,build}-merged.log`,
+`companion-parent-compiled-merged.json`, and
+`companion-parent-final-image-recovery.jsonl`. The last audience dry run found
+165 participants, 164 eligible and one suppressed, with zero emails sent.
+Public deployment, published CLI and live catalog/guide checks precede sending.
