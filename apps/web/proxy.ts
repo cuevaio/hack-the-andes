@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 const clerk = clerkMiddleware();
 
 function isPublicMarketingPath(pathname: string) {
-  if (pathname.startsWith("/challenges/broken-agent/approve/")) {
+  if (/^\/challenges\/[^/]+\/approve(?:\/|$)/.test(pathname)) {
     return false;
   }
   if (
