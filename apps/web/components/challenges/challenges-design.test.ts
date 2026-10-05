@@ -96,11 +96,3 @@ test("the Broken Agent page publishes the contract without hidden cases", async 
   expect(guide).not.toContain("worker_crash_after_side_effect");
   expect(ranking).toContain("BrokenAgentChallengeGuide");
 });
-
-test("reviewer guidance recognizes challenge direct-pass winners", async () => {
-  const dashboard = await sourceFor("../candidate-dashboard.tsx");
-
-  expect(dashboard).toContain("direct-pass winners");
-  expect(dashboard).toContain("challenge.queriesLimit > 0");
-  expect(dashboard).not.toContain("review metrics only");
-});

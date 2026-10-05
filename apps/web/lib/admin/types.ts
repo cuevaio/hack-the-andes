@@ -1,4 +1,5 @@
 import type {
+  ChallengeScore,
   ParticipantChallengeMilestone,
   ParticipantChallengeProgress,
 } from "@chofex/challenges-contract";
@@ -119,6 +120,12 @@ export interface Candidate {
   readonly nationalIdProvided: boolean;
   readonly challenges: ReadonlyArray<ParticipantChallengeProgress>;
   readonly challengeHistory: ReadonlyArray<ParticipantChallengeMilestone>;
+  readonly rankingResult?: {
+    readonly slug: CandidateRankingSort;
+    readonly rank: number;
+    readonly score: ChallengeScore;
+    readonly evaluatedAt: string;
+  };
 }
 
 export type CandidateCounts = Readonly<
@@ -137,6 +144,11 @@ export interface CandidatePage {
   readonly pageSize: number;
   readonly total: number;
   readonly totalPages: number;
+  readonly ranking?: {
+    readonly slug: CandidateRankingSort;
+    readonly competitorCount: number;
+    readonly updatedAt: string;
+  };
 }
 
 export interface CandidateDecisionResult {

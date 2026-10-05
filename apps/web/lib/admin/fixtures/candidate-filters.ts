@@ -60,7 +60,20 @@ mock.module("../../challenges/service", () => ({
 }));
 mock.module("../../challenges/ranking", () => ({
   rankedEvaluationsFor: async () =>
-    [13, 1, 3].map((value) => ({ participantId: id(value) })),
+    [13, 1, 3].map((value, index) => ({
+      participantId: id(value),
+      attemptId: id(value),
+      shareCode: `fixture${value}`,
+      evaluatedAt: new Date("2026-09-01"),
+      score: {
+        accuracy: 0.9 - index * 0.1,
+        exactCount: 9 - index,
+        sampleSize: 10,
+        meanError: index,
+        queriesUsed: 0,
+        runtimeMs: 1,
+      },
+    })),
 }));
 mock.module("../../badges/enqueue", () => ({
   enqueueBadgeGeneration: async () => {},
@@ -131,6 +144,51 @@ assert.equal(ranked.total, 12);
 assert.deepEqual(
   ranked.candidates.map((person) => person.participantId),
   [1, 3, 12, 11, 10, 9, 8, 7, 6, 5].map(id),
+);
+
+const rankingView = await listCandidates(
+  parseCandidateFilters({
+    view: "ranking",
+    ranking: "black-box",
+    country: "PE",
+  }),
+);
+assert.equal(rankingView.total, 2);
+assert.equal(rankingView.counts.all, 2);
+assert.equal(rankingView.counts.approved, 1);
+assert.equal(rankingView.ranking?.competitorCount, 3);
+assert.deepEqual(
+  rankingView.candidates.map((candidate) => [
+    candidate.participantId,
+    candidate.rankingResult?.rank,
+  ]),
+  [
+    [id(1), 2],
+    [id(3), 3],
+  ],
+);
+assert.equal(rankingView.candidates[0]?.rankingResult?.score.accuracy, 0.8);
+const filteredRanking = await listCandidates(
+  parseCandidateFilters({
+    view: "ranking",
+    ranking: "black-box",
+    status: "approved",
+  }),
+);
+assert.equal(filteredRanking.total, 1);
+assert.equal(filteredRanking.counts.all, 3);
+assert.equal(filteredRanking.candidates[0]?.rankingResult?.rank, 2);
+const emptyRanking = await listCandidates(
+  parseCandidateFilters({
+    view: "ranking",
+    ranking: "black-box",
+    q: "does not exist",
+    page: "4",
+  }),
+);
+assert.deepEqual(
+  [emptyRanking.total, emptyRanking.page, emptyRanking.totalPages],
+  [0, 1, 1],
 );
 
 const { currentChallengeVersionFor } = await import("../../challenges/engine");

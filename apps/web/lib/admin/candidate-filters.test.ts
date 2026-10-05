@@ -20,6 +20,7 @@ test("restores all filters from a shared link and serializes them for API reques
     country: { kind: "country", code: "PE" },
     ranking: "broken-agent",
     challenge: "black-box",
+    view: undefined,
   });
   expect(candidateFilterQuery(filters)).toBe(
     "page=3&q=Ada&status=approved&ranking=broken-agent&challenge=black-box&country=PE",
@@ -34,6 +35,7 @@ test("normalizes repeated and invalid URL values identically for server and API"
     ranking: undefined,
     challenge: undefined,
     country: { kind: "unknown" },
+    view: undefined,
   } satisfies CandidateFilters;
   expect(
     parseCandidateFilters({
@@ -79,4 +81,35 @@ test("preserves outside-Peru scope through API and history serialization", () =>
   expect(candidateFilterQuery(filters)).toBe(
     "page=2&q=Ana&country=outside_peru",
   );
+});
+
+test("restores a ranking view with a valid default challenge", () => {
+  const filters = parseCandidateFilters({
+    view: "ranking",
+    ranking: "invalid",
+  });
+  expect(filters.view).toBe("ranking");
+  expect(filters.ranking).toBe("black-box");
+  expect(candidateFilterQuery(filters)).toBe("view=ranking&ranking=black-box");
+  expect(candidateKeys.list(filters)).not.toEqual(
+    candidateKeys.list(parseCandidateFilters({ ranking: "black-box" })),
+  );
+});
+
+test("keeps ranking scope and selection filters in shared links", () => {
+  const filters = parseCandidateFilters({
+    view: "ranking",
+    ranking: "broken-agent",
+    country: "PE",
+    status: "approved",
+    q: "Ana",
+    page: "2",
+  });
+  expect(candidateFilterQuery(filters)).toBe(
+    "page=2&q=Ana&status=approved&view=ranking&ranking=broken-agent&country=PE",
+  );
+  expect(
+    parseCandidateFilters(new URLSearchParams(candidateFilterQuery(filters))),
+  ).toEqual(filters);
+  expect(parseCandidateFilters({ view: "invalid" }).view).toBeUndefined();
 });
