@@ -3,6 +3,7 @@ import { countries, countryName } from "@chofex/registration-contract";
 import {
   type CandidateFilter,
   type CandidateRankingSort,
+  candidateRankingSorts,
   parseCandidateFilter,
   parseCandidateRankingSort,
 } from "./types";
@@ -17,6 +18,7 @@ export interface CandidateFilters {
   readonly query: string;
   readonly status?: CandidateFilter;
   readonly ranking?: CandidateRankingSort;
+  readonly view?: "ranking";
   readonly challenge?: CandidateRankingSort;
   readonly country?: CandidateCountryFilter;
 }
@@ -77,11 +79,16 @@ export const parseCandidateFilters = (
   };
   const parsedPage = Number.parseInt(get("page") ?? "1", 10);
   const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+  let view: CandidateFilters["view"];
+  if (get("view") === "ranking") view = "ranking";
+  let ranking = parseCandidateRankingSort(get("ranking"));
+  if (view === "ranking" && !ranking) ranking = candidateRankingSorts[0];
   return {
     page,
     query: get("q")?.trim().slice(0, 200) ?? "",
     status: parseCandidateFilter(get("status")),
-    ranking: parseCandidateRankingSort(get("ranking")),
+    ranking,
+    view,
     challenge: parseCandidateRankingSort(get("challenge")),
     country: parseCountryFilter(get("country")),
   };
@@ -92,6 +99,7 @@ export const candidateFilterQuery = (filters: CandidateFilters): string => {
   if (filters.page > 1) parameters.set("page", String(filters.page));
   if (filters.query) parameters.set("q", filters.query);
   if (filters.status) parameters.set("status", filters.status);
+  if (filters.view) parameters.set("view", filters.view);
   if (filters.ranking) parameters.set("ranking", filters.ranking);
   if (filters.challenge) parameters.set("challenge", filters.challenge);
   const country = countryFilterValue(filters.country);

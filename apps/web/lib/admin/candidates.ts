@@ -28,6 +28,10 @@ import {
   startedChallengeParticipantCondition,
 } from "../challenges/metrics";
 import { rankedEvaluationsFor } from "../challenges/ranking";
+import {
+  compareRankedChallengeEvaluations,
+  competitionRanksForEvaluations,
+} from "../challenges/ranking-policy";
 import { challengeActivityForParticipants } from "../challenges/service";
 import { participantHasLatestRankedChallengeResult } from "./admission-policy";
 import { candidateAvatarUrl, candidateBadgePictureUrl } from "./avatars";
@@ -45,6 +49,7 @@ import {
   type CandidateDecisionResult,
   type CandidatePage,
   candidateFunnelStatuses,
+  candidateRankingSorts,
   reviewableCandidateStatuses,
 } from "./types";
 
@@ -397,6 +402,30 @@ export const listCandidates = async (
 ): Promise<CandidatePage> => {
   const requestedPage = Math.max(1, Math.floor(input.page ?? 1));
   const search = input.query?.trim();
+  let rankingSlug = input.ranking;
+  if (input.view === "ranking" && !rankingSlug) {
+    rankingSlug = candidateRankingSorts[0];
+  }
+  const ranked = rankingSlug ? await rankedEvaluationsFor(rankingSlug) : [];
+  ranked.sort((left, right) => {
+    const order = compareRankedChallengeEvaluations(left, right);
+    if (order !== 0) return order;
+    return left.participantId.localeCompare(right.participantId);
+  });
+  const ranks = competitionRanksForEvaluations(ranked);
+  const rankingByParticipant = new Map(
+    ranked.map((entry, index) => [
+      entry.participantId,
+      { ...entry, rank: ranks[index] ?? 1 },
+    ]),
+  );
+  let rankingCondition: SQL | undefined;
+  if (input.view === "ranking") {
+    rankingCondition = inArray(
+      applications.participantId,
+      ranked.map((entry) => entry.participantId),
+    );
+  }
   let searchCondition: SQL | undefined;
   if (search) {
     searchCondition = or(
@@ -459,6 +488,7 @@ export const listCandidates = async (
         searchCondition,
         countryCondition,
         challengeCondition,
+        rankingCondition,
       ),
     )
     .as("funnel_summary");
@@ -468,6 +498,7 @@ export const listCandidates = async (
     countryCondition,
     challengeCondition,
     statusCondition,
+    rankingCondition,
   );
 
   const [totalResult, statusResults] = await Promise.all([
@@ -521,27 +552,18 @@ export const listCandidates = async (
   let records: ReadonlyArray<
     Awaited<ReturnType<typeof candidateRecordsQuery>>[number]
   >;
-  if (input.ranking) {
-    const [candidateReferences, ranked] = await Promise.all([
-      db
-        .select({
-          id: applications.id,
-          participantId: applications.participantId,
-          createdAt: applications.createdAt,
-        })
-        .from(applications)
-        .innerJoin(
-          latestApplications,
-          eq(latestApplications.id, applications.id),
-        )
-        .innerJoin(
-          participants,
-          eq(participants.id, applications.participantId),
-        )
-        .where(whereCondition)
-        .orderBy(desc(applications.createdAt)),
-      rankedEvaluationsFor(input.ranking),
-    ]);
+  if (rankingSlug) {
+    const candidateReferences = await db
+      .select({
+        id: applications.id,
+        participantId: applications.participantId,
+        createdAt: applications.createdAt,
+      })
+      .from(applications)
+      .innerJoin(latestApplications, eq(latestApplications.id, applications.id))
+      .innerJoin(participants, eq(participants.id, applications.participantId))
+      .where(whereCondition)
+      .orderBy(desc(applications.createdAt));
     const pageReferences = sortCandidatesByChallengeRanking(
       candidateReferences,
       ranked.map((entry) => entry.participantId),
@@ -575,7 +597,29 @@ export const listCandidates = async (
     funnel.challengeCompleted += result.completed;
   }
 
-  const candidates = await toCandidates(await addAttemptHistory(records));
+  const candidates = (await toCandidates(await addAttemptHistory(records))).map(
+    (candidate) => {
+      const result = rankingByParticipant.get(candidate.participantId);
+      if (!result || !rankingSlug) return candidate;
+      return {
+        ...candidate,
+        rankingResult: {
+          slug: rankingSlug,
+          rank: result.rank,
+          score: result.score,
+          evaluatedAt: result.evaluatedAt.toISOString(),
+        },
+      };
+    },
+  );
+  let ranking: CandidatePage["ranking"];
+  if (input.view === "ranking" && rankingSlug) {
+    ranking = {
+      slug: rankingSlug,
+      competitorCount: ranked.length,
+      updatedAt: new Date().toISOString(),
+    };
+  }
 
   return {
     candidates,
@@ -585,6 +629,7 @@ export const listCandidates = async (
     pageSize,
     total,
     totalPages,
+    ranking,
   };
 };
 

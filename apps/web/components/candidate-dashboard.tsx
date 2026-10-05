@@ -51,6 +51,7 @@ import {
   ExternalLinkIcon,
   ImageIcon,
   MailIcon,
+  RefreshCwIcon,
   SearchIcon,
   ShieldAlertIcon,
   SparklesIcon,
@@ -62,6 +63,7 @@ import Image from "next/image";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { CandidateFunnel } from "@/components/candidate-funnel";
+import { CandidateRankingRows } from "@/components/candidate-ranking-rows";
 import { CountryFilter } from "@/components/country-filter";
 import { brandName } from "@/components/landing/content";
 import { ParticipantCountry } from "@/components/participant-country";
@@ -96,6 +98,7 @@ import type {
 } from "@/lib/admin/types";
 import {
   candidateFunnelStatuses,
+  candidateRankingSorts,
   parseCandidateFilter,
   parseCandidateRankingSort,
   reviewableCandidateStatuses,
@@ -288,7 +291,7 @@ const CandidateAvatar = ({
 };
 
 const formatDateTime = (value: string): string =>
-  new Intl.DateTimeFormat("en-US", {
+  new Intl.DateTimeFormat("es-PE", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -539,6 +542,7 @@ const CandidateActivityTimeline = ({
 
 const CandidateDrawer = ({
   candidate,
+  initialDecision,
   adminFirstName,
   open,
   onOpenChange,
@@ -549,6 +553,7 @@ const CandidateDrawer = ({
   hasNext,
 }: {
   readonly candidate?: Candidate;
+  readonly initialDecision?: "accepted" | "rejected";
   readonly adminFirstName?: string;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -562,6 +567,7 @@ const CandidateDrawer = ({
   readonly hasNext: boolean;
 }) => {
   const [message, setMessage] = useState("");
+  const [stagedDecision, setStagedDecision] = useState(initialDecision);
   const [notify, setNotify] = useState(true);
   const [countryDialogOpen, setCountryDialogOpen] = useState(false);
   const decisionMutation = useMutation({
@@ -640,14 +646,27 @@ const CandidateDrawer = ({
       feedback = "Decisión guardada y correo enviado.";
     }
   } else if (decisionMutation.data?.emailStatus === "not_requested") {
-    feedback = "Decision saved.";
+    feedback = "Decisión guardada sin enviar un correo.";
   }
   const isReviewable = reviewableStatuses.has(candidate.status);
-  const showDecisionPanel = isReviewable || Boolean(failedDecision);
-  let decisionPanelMessage = "This application is ready for your decision.";
+  const canAccept =
+    Boolean(candidate.rankingResult) ||
+    candidate.challenges.some(
+      (challenge) => challenge.playable && challenge.bestAccuracy !== undefined,
+    );
+  const showDecisionPanel = isReviewable || Boolean(decisionMutation.data);
+  let decisionPanelMessage = "Revisa la postulación y confirma tu decisión.";
   if (!isReviewable) {
-    decisionPanelMessage =
-      "The decision was saved, but the email needs attention.";
+    decisionPanelMessage = "Decisión guardada.";
+    if (failedDecision) decisionPanelMessage = "La entrega necesita atención.";
+  }
+  let decisionSummary = `Vas a rechazar a ${displayName(candidate)}.`;
+  let confirmationLabel = "Confirmar rechazo";
+  let confirmationVariant: "default" | "destructive" = "destructive";
+  if (stagedDecision === "accepted") {
+    decisionSummary = `Vas a aprobar a ${displayName(candidate)}.`;
+    confirmationLabel = "Confirmar aprobación";
+    confirmationVariant = "default";
   }
   const participation =
     candidate.participationMode && titleCase(candidate.participationMode);
@@ -679,16 +698,16 @@ const CandidateDrawer = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="Close candidate details"
+                    aria-label="Cerrar detalles del participante"
                   />
                 }
               >
                 <XIcon className="size-4" />
               </DrawerClose>
               <div>
-                <DrawerTitle>Candidate details</DrawerTitle>
+                <DrawerTitle>Detalles del participante</DrawerTitle>
                 <DrawerDescription className="text-xs">
-                  Review application and make a decision
+                  Revisa la postulación y decide
                 </DrawerDescription>
               </div>
             </div>
@@ -763,6 +782,14 @@ const CandidateDrawer = ({
                   Attempt {candidate.attemptNumber}
                   {challengeSummary && ` · ${challengeSummary}`}
                 </p>
+                {candidate.rankingResult && (
+                  <p className="mt-2 text-sm font-medium text-primary">
+                    Posición global #{candidate.rankingResult.rank} · Puntaje{" "}
+                    {formatChallengeScore(
+                      candidate.rankingResult.score.accuracy,
+                    )}
+                  </p>
+                )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <CandidateLink
                     href={candidate.githubUrl}
@@ -796,63 +823,99 @@ const CandidateDrawer = ({
                   {decisionPanelMessage}
                 </CardHeader>
                 <CardContent className="space-y-3 py-4">
-                  <label
-                    htmlFor="notify-candidate"
-                    className="flex cursor-pointer items-center gap-2 text-sm font-medium"
-                  >
-                    <Checkbox
-                      id="notify-candidate"
-                      checked={notify}
-                      onCheckedChange={setNotify}
-                      disabled={Boolean(failedDecision)}
-                    />
-                    Notify candidate by email
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    La aceptación siempre envía las instrucciones de
-                    confirmación. Esta opción controla los avisos de rechazo.
-                  </p>
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="candidate-message"
-                      className="text-xs font-medium"
-                    >
-                      Optional message
-                    </label>
-                    <Textarea
-                      id="candidate-message"
-                      value={message}
-                      onChange={(event) => setMessage(event.target.value)}
-                      disabled={!notify}
-                      maxLength={2000}
-                      rows={4}
-                      placeholder="Add a personal note to the decision email…"
-                      resize="none"
-                    />
-                    <div className="flex justify-between text-[11px] text-muted-foreground">
-                      <span>
-                        The standard decision copy is always included.
-                      </span>
-                      <span>{message.length}/2,000</span>
+                  {(isReviewable || failedDecision) && (
+                    <div className="space-y-3">
+                      <label
+                        htmlFor="notify-candidate"
+                        className="flex cursor-pointer items-center gap-2 text-sm font-medium"
+                      >
+                        <Checkbox
+                          id="notify-candidate"
+                          checked={notify}
+                          onCheckedChange={setNotify}
+                          disabled={Boolean(failedDecision)}
+                        />
+                        Notificar el rechazo por correo
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        La aceptación siempre envía las instrucciones de
+                        confirmación. Esta opción controla los avisos de
+                        rechazo.
+                      </p>
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor="candidate-message"
+                          className="text-xs font-medium"
+                        >
+                          Mensaje opcional
+                        </label>
+                        <Textarea
+                          id="candidate-message"
+                          value={message}
+                          onChange={(event) => setMessage(event.target.value)}
+                          disabled={!notify && stagedDecision !== "accepted"}
+                          maxLength={2000}
+                          rows={4}
+                          placeholder="Agrega un mensaje al correo de decisión"
+                          resize="none"
+                        />
+                        <div className="flex justify-between text-[11px] text-muted-foreground">
+                          <span>
+                            El correo siempre incluye las instrucciones de la
+                            decisión.
+                          </span>
+                          <span>{message.length}/2,000</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  {isReviewable && (
+                  )}
+                  {isReviewable && !stagedDecision && (
                     <div className="grid grid-cols-2 gap-2">
                       <Button
-                        onClick={() => submitDecision("accepted")}
-                        disabled={decisionMutation.isPending}
+                        onClick={() => setStagedDecision("accepted")}
+                        disabled={decisionMutation.isPending || !canAccept}
                       >
                         <CheckIcon />
-                        Admit
+                        Aprobar
                       </Button>
                       <Button
                         variant="destructive"
-                        onClick={() => submitDecision("rejected")}
+                        onClick={() => setStagedDecision("rejected")}
                         disabled={decisionMutation.isPending}
                       >
                         <XIcon />
-                        Decline
+                        Rechazar
                       </Button>
+                    </div>
+                  )}
+                  {isReviewable && !canAccept && (
+                    <p className="text-xs text-muted-foreground">
+                      Para aprobar necesita un resultado evaluado de la versión
+                      actual de un reto.
+                    </p>
+                  )}
+                  {isReviewable && stagedDecision && (
+                    <div className="space-y-3">
+                      <p className="text-sm">{decisionSummary}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant={confirmationVariant}
+                          onClick={() => submitDecision(stagedDecision)}
+                          disabled={
+                            decisionMutation.isPending ||
+                            (stagedDecision === "accepted" && !canAccept)
+                          }
+                        >
+                          {confirmationLabel}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          disabled={decisionMutation.isPending}
+                          onClick={() => setStagedDecision(undefined)}
+                        >
+                          Cambiar decisión
+                        </Button>
+                      </div>
                     </div>
                   )}
                   {failedDecision && (
@@ -866,7 +929,10 @@ const CandidateDrawer = ({
                     </Button>
                   )}
                   {feedback && (
-                    <p className="border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
+                    <p
+                      role="status"
+                      className="border border-border bg-muted px-3 py-2 text-xs text-muted-foreground"
+                    >
                       {feedback}
                     </p>
                   )}
@@ -926,17 +992,25 @@ const CandidateDrawer = ({
             <div className="border-t pt-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold">
-                    Technical challenges
-                  </h3>
+                  <h3 className="text-sm font-semibold">Retos técnicos</h3>
                   <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
-                    Use the rankings to identify direct-pass winners. Other
-                    scores can inform regular review; decisions are still
-                    recorded manually.
+                    Compara los resultados actuales en Rankings. La aprobación
+                    es manual y requiere un resultado de la versión actual de un
+                    reto.
                   </p>
                 </div>
-                <ButtonLink variant="outline" size="sm" href="/challenges">
-                  Public rankings
+                <ButtonLink
+                  variant="outline"
+                  size="sm"
+                  href={pageHref({
+                    page: 1,
+                    query: "",
+                    view: "ranking",
+                    ranking:
+                      candidate.rankingResult?.slug ?? candidateRankingSorts[0],
+                  })}
+                >
+                  Rankings de selección
                   <ExternalLinkIcon />
                 </ButtonLink>
               </div>
@@ -978,7 +1052,11 @@ const CandidateDrawer = ({
                         {challenge.bestExactCount?.toString()}
                       </Detail>
                       <Detail label="Posición">
-                        {challenge.rank !== undefined && `#${challenge.rank}`}
+                        {candidate.rankingResult?.slug === challenge.slug &&
+                          `#${candidate.rankingResult.rank}`}
+                        {candidate.rankingResult?.slug !== challenge.slug &&
+                          challenge.rank !== undefined &&
+                          `#${challenge.rank}`}
                       </Detail>
                     </dl>
                   </div>
@@ -1112,6 +1190,16 @@ export function CandidateDashboard({
   const [selectedId, setSelectedId] = useState<string | undefined>(
     initiallySelectedId,
   );
+  const [reviewDecision, setReviewDecision] = useState<
+    "accepted" | "rejected"
+  >();
+  const openReview = (
+    candidateId: string,
+    decision?: "accepted" | "rejected",
+  ) => {
+    setReviewDecision(decision);
+    setSelectedId(candidateId);
+  };
   const [pendingPageSelection, setPendingPageSelection] = useState<
     "first" | "last"
   >();
@@ -1124,6 +1212,7 @@ export function CandidateDashboard({
     placeholderData: keepPreviousData,
   });
   const currentData = candidateQuery.data ?? data;
+  const isRankingView = filters.view === "ranking";
   const selectedIndex = currentData.candidates.findIndex(
     (candidate) => candidate.id === selectedId,
   );
@@ -1156,6 +1245,7 @@ export function CandidateDashboard({
       setFilters(nextFilters);
       setQuery(nextFilters.query);
       setSelectedId(undefined);
+      setReviewDecision(undefined);
       setPendingPageSelection(undefined);
     };
     window.addEventListener("popstate", handlePopState);
@@ -1198,6 +1288,7 @@ export function CandidateDashboard({
       return;
     window.history.pushState(null, "", pageHref(nextFilters));
     setFilters(nextFilters);
+    setReviewDecision(undefined);
     setPendingPageSelection(selection);
     if (!selection) setSelectedId(undefined);
   };
@@ -1221,7 +1312,7 @@ export function CandidateDashboard({
 
   const goToCandidate = (index: number) => {
     const candidate = currentData.candidates[index];
-    if (candidate) setSelectedId(candidate.id);
+    if (candidate) openReview(candidate.id);
   };
 
   const goToPreviousCandidate = () => {
@@ -1271,7 +1362,12 @@ export function CandidateDashboard({
           };
         }
         const candidates = cachedPage.candidates.map((candidate) => {
-          if (candidate.id === updatedCandidate.id) return updatedCandidate;
+          if (candidate.id === updatedCandidate.id) {
+            return {
+              ...updatedCandidate,
+              rankingResult: candidate.rankingResult,
+            };
+          }
           return candidate;
         });
         return { ...cachedPage, candidates, counts };
@@ -1330,10 +1426,11 @@ export function CandidateDashboard({
                 Revisión de postulaciones
               </BrandKicker>
               <BrandTitle as="h1" className="text-3xl sm:text-6xl">
-                Participantes
+                {isRankingView ? "Rankings" : "Participantes"}
               </BrandTitle>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                Busca participantes y revisa sus postulaciones.
+                Revisa postulaciones y compara resultados para seleccionar
+                participantes.
               </p>
             </div>
             <ButtonLink
@@ -1344,10 +1441,88 @@ export function CandidateDashboard({
             </ButtonLink>
           </section>
 
-          <CandidateFunnel
-            data={currentData}
-            unavailable={resultsUnavailable}
-          />
+          <nav aria-label="Vistas de selección" className="mt-6 flex gap-2">
+            <ButtonLink
+              variant={isRankingView ? "outline" : "default"}
+              href={pageHref({
+                ...filters,
+                page: 1,
+                view: undefined,
+                ranking: undefined,
+              })}
+              aria-current={!isRankingView ? "page" : undefined}
+              onClick={(event) =>
+                navigateFromClick(event, {
+                  ...filters,
+                  page: 1,
+                  view: undefined,
+                  ranking: undefined,
+                })
+              }
+            >
+              Participantes
+            </ButtonLink>
+            <ButtonLink
+              variant={isRankingView ? "default" : "outline"}
+              href={pageHref({
+                ...filters,
+                page: 1,
+                view: "ranking",
+                ranking: filters.ranking ?? candidateRankingSorts[0],
+              })}
+              aria-current={isRankingView ? "page" : undefined}
+              onClick={(event) =>
+                navigateFromClick(event, {
+                  ...filters,
+                  page: 1,
+                  view: "ranking",
+                  ranking: filters.ranking ?? candidateRankingSorts[0],
+                })
+              }
+            >
+              Rankings
+            </ButtonLink>
+          </nav>
+
+          {isRankingView && (
+            <section className="mt-5 border bg-card p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    Rankings de selección
+                  </h2>
+                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                    Todos los resultados de la versión actual, disponibles para
+                    el equipo organizador en cualquier momento. Los filtros no
+                    cambian la posición global.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  disabled={candidateQuery.isFetching}
+                  onClick={() => void candidateQuery.refetch()}
+                >
+                  <RefreshCwIcon />
+                  Actualizar
+                </Button>
+              </div>
+              {currentData.ranking && !resultsUnavailable && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {currentData.ranking.competitorCount} participantes en el
+                  ranking global · Actualizado{" "}
+                  {formatDateTime(currentData.ranking.updatedAt)} · Se actualiza
+                  cada minuto
+                </p>
+              )}
+            </section>
+          )}
+
+          {!isRankingView && (
+            <CandidateFunnel
+              data={currentData}
+              unavailable={resultsUnavailable}
+            />
+          )}
 
           <section className="mt-8">
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(16rem,1.5fr)_minmax(12rem,1fr)_minmax(12rem,1fr)]">
@@ -1428,6 +1603,7 @@ export function CandidateDashboard({
                         page: 1,
                         query: "",
                         ranking: filters.ranking,
+                        view: filters.view,
                       });
                     }}
                   >
@@ -1453,7 +1629,7 @@ export function CandidateDashboard({
                 )}
               </div>
               <label className="flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground">
-                Ordenar por
+                {isRankingView ? "Ranking del reto" : "Ordenar por"}
                 <select
                   className="h-11 min-w-0 flex-1 border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
                   value={filters.ranking ?? ""}
@@ -1465,7 +1641,7 @@ export function CandidateDashboard({
                     navigateTo({ ...filters, page: 1, ranking });
                   }}
                 >
-                  <option value="">Más recientes</option>
+                  {!isRankingView && <option value="">Más recientes</option>}
                   {playableChallenges.map((challenge) => (
                     <option key={challenge.slug} value={challenge.slug}>
                       Reto {challenge.code}: {challenge.theme}
@@ -1488,22 +1664,44 @@ export function CandidateDashboard({
               aria-busy={candidateQuery.isFetching}
               inert={resultsUnavailable}
             >
-              <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(8rem,.8fr)_minmax(9rem,1fr)_11rem_9rem] gap-4 border-b bg-muted/35 px-5 py-3 text-[11px] font-medium tracking-wide text-muted-foreground uppercase sm:grid">
-                <span>Participante</span>
-                <span>Perfil</span>
-                <span>Ranking de retos</span>
-                <span>Estado</span>
-                <span className="text-right">Última actualización</span>
-              </div>
-              {currentData.candidates.length === 0 && <EmptyCandidates />}
-              {currentData.candidates.length > 0 && (
-                <CandidateRows
-                  candidates={currentData.candidates}
-                  adminFirstName={adminFirstName}
-                  ranking={filters.ranking}
-                  onSelect={setSelectedId}
-                />
+              {!isRankingView && (
+                <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(8rem,.8fr)_minmax(9rem,1fr)_11rem_9rem] gap-4 border-b bg-muted/35 px-5 py-3 text-[11px] font-medium tracking-wide text-muted-foreground uppercase sm:grid">
+                  <span>Participante</span>
+                  <span>Perfil</span>
+                  <span>Ranking de retos</span>
+                  <span>Estado</span>
+                  <span className="text-right">Última actualización</span>
+                </div>
               )}
+              {candidateQuery.isPlaceholderData && (
+                <p
+                  role="status"
+                  className="grid min-h-64 place-items-center text-sm text-muted-foreground"
+                >
+                  Actualizando resultados…
+                </p>
+              )}
+              {!resultsUnavailable && currentData.candidates.length === 0 && (
+                <EmptyCandidates />
+              )}
+              {!resultsUnavailable &&
+                isRankingView &&
+                currentData.candidates.length > 0 && (
+                  <CandidateRankingRows
+                    candidates={currentData.candidates}
+                    onReview={openReview}
+                  />
+                )}
+              {!resultsUnavailable &&
+                !isRankingView &&
+                currentData.candidates.length > 0 && (
+                  <CandidateRows
+                    candidates={currentData.candidates}
+                    adminFirstName={adminFirstName}
+                    ranking={filters.ranking}
+                    onSelect={openReview}
+                  />
+                )}
             </div>
 
             <div className="mt-4 flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
@@ -1577,8 +1775,9 @@ export function CandidateDashboard({
       </main>
 
       <CandidateDrawer
-        key={selectedCandidate?.id}
+        key={`${selectedCandidate?.id}:${reviewDecision ?? "details"}`}
         candidate={selectedCandidate}
+        initialDecision={reviewDecision}
         adminFirstName={adminFirstName}
         open={Boolean(selectedCandidate)}
         onOpenChange={(isOpen) => {
@@ -1621,7 +1820,7 @@ const EmptyCandidates = () => (
         No hay participantes con estos filtros
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Try a different search or status filter.
+        Prueba otra búsqueda, estado o país.
       </p>
     </div>
   </div>
