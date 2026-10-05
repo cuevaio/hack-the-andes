@@ -1213,6 +1213,8 @@ export function CandidateDashboard({
   });
   const currentData = candidateQuery.data ?? data;
   const isRankingView = filters.view === "ranking";
+  let searchLabel = "Buscar participantes";
+  if (isRankingView) searchLabel = "Buscar en este ranking";
   const selectedIndex = currentData.candidates.findIndex(
     (candidate) => candidate.id === selectedId,
   );
@@ -1537,7 +1539,7 @@ export function CandidateDashboard({
                   htmlFor="candidate-search"
                   className="mb-1.5 block text-xs font-medium text-muted-foreground"
                 >
-                  Buscar participantes
+                  {searchLabel}
                 </label>
                 <InputGroup>
                   <InputGroupAddon>
@@ -1549,7 +1551,7 @@ export function CandidateDashboard({
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Nombre, correo u organización"
+                    placeholder="Nombre, correo, perfil, ID o código"
                     maxLength={200}
                   />
                 </InputGroup>
@@ -1685,7 +1687,10 @@ export function CandidateDashboard({
                 </p>
               )}
               {!resultsUnavailable && currentData.candidates.length === 0 && (
-                <EmptyCandidates />
+                <EmptyCandidates
+                  isRankingView={isRankingView}
+                  participantsHref={pageHref({ page: 1, query: filters.query })}
+                />
               )}
               {!resultsUnavailable &&
                 isRankingView &&
@@ -1813,7 +1818,13 @@ export function CandidateDashboard({
   );
 }
 
-const EmptyCandidates = () => (
+const EmptyCandidates = ({
+  isRankingView,
+  participantsHref,
+}: {
+  readonly isRankingView: boolean;
+  readonly participantsHref: string;
+}) => (
   <div className="grid min-h-64 place-items-center px-6 text-center">
     <div>
       <div className="mx-auto grid size-11 place-items-center border border-border bg-muted">
@@ -1825,6 +1836,17 @@ const EmptyCandidates = () => (
       <p className="mt-1 text-xs text-muted-foreground">
         Prueba otra búsqueda, estado o país.
       </p>
+      {isRankingView && (
+        <div className="mt-4">
+          <p className="mb-3 max-w-sm text-xs leading-5 text-muted-foreground">
+            Esta búsqueda solo incluye participantes del ranking. Busca en
+            participantes para encontrar también a quienes no aparecen aquí.
+          </p>
+          <ButtonLink variant="outline" href={participantsHref}>
+            Buscar en participantes
+          </ButtonLink>
+        </div>
+      )}
     </div>
   </div>
 );

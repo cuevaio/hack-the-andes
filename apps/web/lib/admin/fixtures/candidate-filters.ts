@@ -193,6 +193,44 @@ assert.deepEqual(
 
 const { currentChallengeVersionFor } = await import("../../challenges/engine");
 await client.query(
+  `update applications set first_name='Joseph Carlos', last_name='Robles',
+   email='joseph@example.invalid', github_url='https://github.com/JosephFixture23',
+   linkedin_url='https://linkedin.com/in/joseph-fixture-robles',
+   organization='100% Labs' where id=$1`,
+  [id(15)],
+);
+await client.query(
+  "update participants set name='Joseph C. Robles' where id=$1",
+  [id(15)],
+);
+await client.query(
+  "insert into challenge_attempts (participant_id, challenge_slug, challenge_version, share_code, queries_limit, evaluations_limit) values ($1, 'make-it-fast', $2, 'FBA7', 0, 5)",
+  [id(15), currentChallengeVersionFor("make-it-fast")],
+);
+for (const query of [
+  "Joseph Carlos Robles",
+  "  ROBLES   joseph  ",
+  "Joseph example.invalid",
+  "JosephFixture23",
+  "joseph-fixture-robles",
+  id(15),
+  "fba7",
+  "100%",
+]) {
+  const matches = await listCandidates(parseCandidateFilters({ q: query }));
+  assert.deepEqual(
+    matches.candidates.map((candidate) => candidate.participantId),
+    [id(15)],
+    query,
+  );
+}
+const literalWildcard = await listCandidates(parseCandidateFilters({ q: "%" }));
+assert.equal(literalWildcard.total, 1);
+const unrankedSearch = await listCandidates(
+  parseCandidateFilters({ view: "ranking", ranking: "black-box", q: "Joseph" }),
+);
+assert.equal(unrankedSearch.total, 0);
+await client.query(
   "insert into challenge_attempts (participant_id, challenge_slug, challenge_version, share_code, queries_limit, evaluations_limit) values ($1, 'broken-agent', $2, 'fixture3', 10, 10)",
   [id(3), currentChallengeVersionFor("broken-agent")],
 );
