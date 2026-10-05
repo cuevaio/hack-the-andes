@@ -14,6 +14,7 @@ import {
 import {
   acceptanceDetails,
   applications,
+  challengeAttempts,
   participantBadges,
   participants,
 } from "@chofex/db/schema";
@@ -428,12 +429,26 @@ export const listCandidates = async (
   }
   let searchCondition: SQL | undefined;
   if (search) {
-    searchCondition = or(
-      ilike(applications.firstName, `%${search}%`),
-      ilike(applications.lastName, `%${search}%`),
-      ilike(participants.name, `%${search}%`),
-      ilike(applications.email, `%${search}%`),
-      ilike(applications.organization, `%${search}%`),
+    const terms = search.split(/\s+/);
+    searchCondition = and(
+      ...terms.map((term) => {
+        const pattern = `%${term.replace(/[\\%_]/g, "\\$&")}%`;
+        return or(
+          ilike(applications.firstName, pattern),
+          ilike(applications.lastName, pattern),
+          ilike(participants.name, pattern),
+          ilike(applications.email, pattern),
+          ilike(applications.organization, pattern),
+          ilike(applications.githubUrl, pattern),
+          ilike(applications.linkedInUrl, pattern),
+          ilike(sql`${applications.id}::text`, pattern),
+          sql`exists (
+            select 1 from ${challengeAttempts}
+            where ${challengeAttempts.participantId} = ${applications.participantId}
+              and ${ilike(challengeAttempts.shareCode, pattern)}
+          )`,
+        );
+      }),
     );
   }
   const funnelStatus = candidateFunnelStatusExpression();
