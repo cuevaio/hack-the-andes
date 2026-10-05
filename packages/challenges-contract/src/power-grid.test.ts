@@ -32,12 +32,12 @@ test("accepts zero and maximum readings and rejects malformed input", () => {
   }
 });
 
-test("challenge four preserves the black-box budgets and scheduled opening", () => {
+test("challenge four preserves the budgets while public participation remains disabled", () => {
   const challenge = challengeBySlug("power-grid");
   if (!challenge) throw new Error("Missing power-grid");
   expect(challenge).toMatchObject({
     number: 4,
-    playable: true,
+    playable: false,
     format: "accuracy",
     queryLimit: 25,
     evaluationLimit: 3,

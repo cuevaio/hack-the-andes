@@ -139,21 +139,17 @@ describe("participant insights", () => {
         { slug: "black-box", started: 3, completed: 2 },
         { slug: "broken-agent", started: 2, completed: 1 },
         { slug: "make-it-fast", started: 0, completed: 0 },
-        { slug: "power-grid", started: 0, completed: 0 },
       ],
       countryChallenges: [
         { countryCode: "CO", slug: "black-box", started: 0, completed: 0 },
         { countryCode: "CO", slug: "broken-agent", started: 0, completed: 0 },
         { countryCode: "CO", slug: "make-it-fast", started: 0, completed: 0 },
-        { countryCode: "CO", slug: "power-grid", started: 0, completed: 0 },
         { countryCode: "PE", slug: "black-box", started: 2, completed: 1 },
         { countryCode: "PE", slug: "broken-agent", started: 1, completed: 0 },
         { countryCode: "PE", slug: "make-it-fast", started: 0, completed: 0 },
-        { countryCode: "PE", slug: "power-grid", started: 0, completed: 0 },
         { countryCode: null, slug: "black-box", started: 1, completed: 1 },
         { countryCode: null, slug: "broken-agent", started: 1, completed: 1 },
         { countryCode: null, slug: "make-it-fast", started: 0, completed: 0 },
-        { countryCode: null, slug: "power-grid", started: 0, completed: 0 },
       ],
     });
   });
@@ -188,13 +184,11 @@ describe("participant insights", () => {
         { slug: "black-box", started: 2, completed: 1 },
         { slug: "broken-agent", started: 1, completed: 0 },
         { slug: "make-it-fast", started: 0, completed: 0 },
-        { slug: "power-grid", started: 0, completed: 0 },
       ],
       countryChallenges: [
         { countryCode: "PE", slug: "black-box", started: 2, completed: 1 },
         { countryCode: "PE", slug: "broken-agent", started: 1, completed: 0 },
         { countryCode: "PE", slug: "make-it-fast", started: 0, completed: 0 },
-        { countryCode: "PE", slug: "power-grid", started: 0, completed: 0 },
       ],
     });
     const unknown = await getAdminInsights(
@@ -273,7 +267,6 @@ describe("participant insights", () => {
       { slug: "black-box", started: 1, completed: 1 },
       { slug: "broken-agent", started: 1, completed: 0 },
       { slug: "make-it-fast", started: 0, completed: 0 },
-      { slug: "power-grid", started: 0, completed: 0 },
     ]);
   });
 
@@ -297,7 +290,6 @@ describe("participant insights", () => {
       { slug: "black-box", started: 3, completed: 2 },
       { slug: "broken-agent", started: 2, completed: 1 },
       { slug: "make-it-fast", started: 0, completed: 0 },
-      { slug: "power-grid", started: 0, completed: 0 },
     ]);
   });
 
@@ -318,13 +310,11 @@ describe("participant insights", () => {
       { slug: "black-box", started: 0, completed: 0 },
       { slug: "broken-agent", started: 0, completed: 0 },
       { slug: "make-it-fast", started: 0, completed: 0 },
-      { slug: "power-grid", started: 0, completed: 0 },
     ]);
     expect(report.countryChallenges).toEqual([
       { countryCode: "CO", slug: "black-box", started: 0, completed: 0 },
       { countryCode: "CO", slug: "broken-agent", started: 0, completed: 0 },
       { countryCode: "CO", slug: "make-it-fast", started: 0, completed: 0 },
-      { countryCode: "CO", slug: "power-grid", started: 0, completed: 0 },
     ]);
     expect(
       await getAdminInsights(
@@ -345,7 +335,6 @@ describe("participant insights", () => {
         { slug: "black-box", started: 0, completed: 0 },
         { slug: "broken-agent", started: 0, completed: 0 },
         { slug: "make-it-fast", started: 0, completed: 0 },
-        { slug: "power-grid", started: 0, completed: 0 },
       ],
       countryChallenges: [],
     });

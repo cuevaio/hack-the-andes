@@ -221,7 +221,11 @@ export function ChallengeRankingView({
     );
   }
   let challengeGuide = null;
-  if (challenge.slug === "power-grid" && !challenge.closed)
+  if (
+    challenge.slug === "power-grid" &&
+    challenge.playable &&
+    !challenge.closed
+  )
     challengeGuide = <PowerGridChallengeGuide />;
   if (challenge.slug === blackBoxChallengeSlug && !challenge.closed) {
     challengeGuide = <BlackBoxChallengeGuide />;

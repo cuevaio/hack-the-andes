@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy this exact branch image to production
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: production-image-${{ github.ref }}
@@ -64,7 +70,7 @@ jobs:
           bun-version: 1.3.14
 
       - name: Deploy the published image
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
         env:
           DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
           DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
@@ -72,6 +78,7 @@ jobs:
           DOKPLOY_URL: https://vps.cueva.io
           DOKPLOY_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           GH_TOKEN: ${{ github.token }}
+          POWER_GRID_ADMIN_PREVIEW_SECRET: ${{ secrets.POWER_GRID_ADMIN_PREVIEW_SECRET }}
         run: |
           if [[ -z "$DOKPLOY_API_KEY" || -z "$DOKPLOY_APPLICATION_ID" ]]; then
             echo "Dokploy deployment secrets are not configured yet; image publication is complete."
@@ -115,13 +122,16 @@ jobs:
             exit 1
           fi
           bun scripts/reconcile-service-environment.ts
-          curl --fail-with-body --silent --show-error \
+          if [[ "${{ inputs.deploy }}" == "true" ]]; then
+            bun scripts/configure-power-grid-preview.ts
+          fi
+          curl --fail --silent --show-error --output /dev/null \
             --request POST \
             --header "Content-Type: application/json" \
             --header "x-api-key: $DOKPLOY_API_KEY" \
             --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\",\"dockerImage\":\"$DOKPLOY_IMAGE\"}" \
             "$DOKPLOY_URL/api/application.update"
-          curl --fail-with-body --silent --show-error \
+          curl --fail --silent --show-error --output /dev/null \
             --request POST \
             --header "Content-Type: application/json" \
             --header "x-api-key: $DOKPLOY_API_KEY" \

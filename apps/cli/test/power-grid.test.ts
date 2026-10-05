@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { powerGridExample } from "@chofex/challenges-contract/power-grid";
@@ -15,31 +15,10 @@ import {
 } from "../src/challenge-output.js";
 import { createChallengeScaffold } from "../src/challenge-scaffold.js";
 
-test("scaffolds electricity files without overwriting participant work", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "power-grid-test-"));
-  const original = process.cwd();
-  try {
-    process.chdir(directory);
-    expect(
-      await Effect.runPromise(createChallengeScaffold("power-grid")),
-    ).toMatchObject({ path: "power-grid", status: "created" });
-    expect(JSON.parse(await readFile("power-grid/input.json", "utf8"))).toEqual(
-      powerGridExample,
-    );
-    expect(await readFile("power-grid/bill.js", "utf8")).toContain(
-      "function calculateBill(input)",
-    );
-    await writeFile("power-grid/bill.js", "participant work");
-    expect(
-      await Effect.runPromise(createChallengeScaffold("power-grid")),
-    ).toMatchObject({ status: "exists" });
-    expect(await readFile("power-grid/bill.js", "utf8")).toBe(
-      "participant work",
-    );
-  } finally {
-    process.chdir(original);
-    await rm(directory, { recursive: true, force: true });
-  }
+test("keeps the participant scaffold unavailable during admin-only preview", async () => {
+  await expect(
+    Effect.runPromise(createChallengeScaffold("power-grid")),
+  ).rejects.toThrow("not available");
 });
 
 test("reads an electricity query and accepts a solution without a review", async () => {
