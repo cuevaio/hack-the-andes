@@ -648,9 +648,15 @@ const queryCommand = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    "Consulta el servicio sin documentación. Power Grid usa --input input.json. Una consulta exitosa consume una solicitud. Requiere iniciar sesión.",
+    "Consulta el servicio sin documentación. Power Grid usa --input input.json. Cada entrada nueva exitosa consume una consulta; repetir una entrada no consume presupuesto. Requiere iniciar sesión.",
   ),
   Command.withExamples([
+    {
+      command:
+        "andes challenge query --challenge power-grid --input input.json",
+      description:
+        "Consulta una lectura eléctrica con los cinco campos del archivo JSON",
+    },
     {
       command:
         "andes challenge query --challenge black-box --distance 10 --weight 3 --hour 14 --fragile false --express false",
@@ -727,9 +733,14 @@ const testCommand = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    "Run the challenge's public tests. Safe to repeat; official evaluations are not consumed. Requires sign-in.",
+    "Prueba tu solución gratis. Power Grid y Black Box comparan solo las observaciones de tu cuaderno; los demás challenges tienen tests públicos. No consume evaluaciones oficiales. Requiere iniciar sesión.",
   ),
   Command.withExamples([
+    {
+      command: "andes challenge test --challenge power-grid --source ./bill.js",
+      description:
+        "Compara tu solución con el cuaderno; no predice el puntaje oculto",
+    },
     {
       command:
         "andes challenge test --challenge broken-agent --source ./scheduler.js",
@@ -779,9 +790,14 @@ const evaluateCommand = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    "Score a solution on hidden cases. Broken Agent and The Slow Service require participant browser approval before a limited evaluation is consumed.",
+    "Evalúa tu solución con casos ocultos y consume uno de tus intentos oficiales. Power Grid no requiere review.json. Broken Agent y The Slow Service requieren aprobación del participante en el navegador.",
   ),
   Command.withExamples([
+    {
+      command:
+        "andes challenge evaluate --challenge power-grid --source ./bill.js",
+      description: "Consume una evaluación oficial de Power Grid",
+    },
     {
       command:
         "andes challenge evaluate --challenge broken-agent --source ./scheduler.js --review ./review.json",

@@ -57,7 +57,10 @@ usar AI. Las consultas duplicadas o fallidas no consumen presupuesto.
 
 Usa input.json como punto de partida. Cambia una variable a la vez y prueba
 los extremos, horarios e interacciones entre campos. No asumas que este
-facturador aplica la fórmula del challenge de envíos.
+facturador aplica la fórmula del challenge de envíos. Si una variable no cambia
+el resultado, prueba otros contextos antes de concluir que no influye. Separa
+las reglas respaldadas por observaciones de las hipótesis pendientes y reserva
+consultas para comprobar estas últimas.
 
 andes challenge query --challenge power-grid --input input.json
 andes challenge notebook --challenge power-grid
@@ -68,7 +71,8 @@ andes challenge evaluate --challenge power-grid --source bill.js
 Los tests gratuitos comparan tu código con tu cuaderno. Coincidir con él no
 certifica el puntaje oculto. La evaluación oficial mide coincidencias exactas
 en 1000 lecturas ocultas con distintos consumos, demandas, horarios y contratos.
-El ranking conserva el mejor resultado. A igualdad de aciertos, favorece menos
+El puntaje y el error medio resumen muchas lecturas; por sí solos no identifican
+qué regla falta ni confirman una hipótesis. El ranking conserva el mejor resultado. A igualdad de aciertos, favorece menos
 consultas, menor tiempo de ejecución y luego la fecha del resultado.
 
 Define calculateBill como función global, module.exports.calculateBill o
