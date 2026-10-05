@@ -14,16 +14,24 @@ test("reminders target Broken Agent after Black Box has closed", () => {
 test("reminders target Slow Service without reopening the closed Scheduler", () => {
   expect(
     reminderChallenge({
-      now: new Date("2027-01-01T12:00:00Z"),
+      now: new Date("2026-10-03T12:00:00Z"),
       forceOpen: false,
     })?.slug,
   ).toBe("make-it-fast");
   expect(
     reminderChallenge({
       slug: "broken-agent",
-      now: new Date("2027-01-01T12:00:00Z"),
+      now: new Date("2026-10-03T12:00:00Z"),
       forceOpen: false,
     }),
+  ).toBeUndefined();
+});
+
+test("reminders stop when Slow Service closes", () => {
+  const now = new Date("2026-10-05T18:51:16.000Z");
+  expect(reminderChallenge({ now, forceOpen: false })).toBeUndefined();
+  expect(
+    reminderChallenge({ slug: "make-it-fast", now, forceOpen: false }),
   ).toBeUndefined();
 });
 

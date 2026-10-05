@@ -15,7 +15,11 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { Effect, Schema } from "effect";
 
-// The released catalog is active; do not modify it in this fixture.
+const now = new Date("2026-10-02T12:00:00Z");
+mock.module("../clock", () => ({
+  currentChallengeTime: () => now,
+  challengesForceOpen: () => false,
+}));
 const challenge = challengeBySlug("make-it-fast");
 if (!challenge) throw new Error("missing challenge");
 assert.equal(challenge.playable, true);
@@ -157,7 +161,6 @@ const approvalRequest = (token: string | undefined) =>
   );
 const directory = await mkdtemp("/tmp/opencode/slow-service-flow-");
 const previousDirectory = process.cwd();
-const now = new Date("2026-10-02T12:00:00Z");
 const solution = { kind: "javascript_source", source } as const;
 const hasCode = (code: string) => (error: unknown) =>
   error instanceof Error && "code" in error && error.code === code;
