@@ -337,6 +337,12 @@ export const participantPerksCopy = {
 
 export const participantPerks = [
   {
+    title: "n8n Cloud Pro",
+    body: "1 semana de n8n Cloud Pro para todos los participantes.",
+    href: null,
+    cta: null,
+  },
+  {
     title: "Comida y bebidas",
     body: "Comida y bebidas durante las 30 horas para que puedas seguir construyendo.",
     href: null,
