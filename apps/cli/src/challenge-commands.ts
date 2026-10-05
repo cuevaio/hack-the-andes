@@ -22,6 +22,7 @@ import {
   challengeEvaluationInput,
   defaultChallengeSlug,
   javascriptSourceFromPath,
+  powerReadingInput,
   shipmentInput,
 } from "./challenge-input.js";
 import {
@@ -233,7 +234,55 @@ const slowServiceQuickstart = {
   ],
   helpCommand: "andes challenge test --help",
 };
+const powerGridQuickstart = {
+  title: "POWER GRID / LA MÁQUINA DE FACTURACIÓN ELÉCTRICA",
+  story: [
+    "Una cooperativa perdió el código de su facturador. Solo conserva una máquina que recibe lecturas y devuelve céntimos.",
+  ],
+  mission: "Descubre las reglas y reemplázala con calculateBill(input).",
+  rules: [
+    "25 consultas, 3 evaluaciones y 1,000 lecturas ocultas.",
+    "Los tests del cuaderno son gratuitos. Puedes usar AI.",
+    "Cada lectura es independiente. Las tarifas son ficticias.",
+  ],
+  workflow: [
+    {
+      step: 1,
+      action: "Prepara tu carpeta",
+      command: "andes challenge init --challenge power-grid",
+      note: "Luego entra con cd power-grid y lee README.md.",
+    },
+    {
+      step: 2,
+      action: "Consulta la máquina",
+      command:
+        "andes challenge query --challenge power-grid --input input.json",
+      note: "Cambia una variable a la vez. Prueba cero, extremos e interacciones.",
+    },
+    {
+      step: 3,
+      action: "Consulta el cuaderno",
+      command: "andes challenge notebook --challenge power-grid",
+      note: "Los cinco campos son consumptionKwh, demandKw, hour, solar y business.",
+    },
+    {
+      step: 4,
+      action: "Prueba tu modelo",
+      command: "andes challenge test --challenge power-grid --source bill.js",
+      note: "Coincidir con el cuaderno no certifica el puntaje oculto.",
+    },
+    {
+      step: 5,
+      action: "Evalúa oficialmente",
+      command:
+        "andes challenge evaluate --challenge power-grid --source bill.js",
+      note: "Consume un intento. El ranking conserva tu mejor puntaje.",
+    },
+  ],
+  helpCommand: "andes challenge query --help",
+};
 type ChallengeQuickstart =
+  | typeof powerGridQuickstart
   | typeof challengeQuickstart
   | typeof slowServiceQuickstart;
 
@@ -325,6 +374,9 @@ const evaluationErrorText = (
     if (challenge === "make-it-fast")
       retryCommand =
         "andes challenge evaluate --challenge make-it-fast --source ./ledger.js";
+    if (challenge === "power-grid")
+      retryCommand =
+        "andes challenge evaluate --challenge power-grid --source ./bill.js";
     if (challenge === "black-box")
       retryCommand =
         "andes challenge evaluate --challenge black-box --source ./shipping.js";
@@ -557,6 +609,14 @@ const queryCommand = Command.make(
     const options = yield* root;
     const token = Option.getOrUndefined(options.token);
     const operation = Effect.gen(function* () {
+      if (challenge === "power-grid") {
+        const reading = yield* powerReadingInput(Option.getOrUndefined(input));
+        return yield* queryChallenge(
+          { apiUrl: options.apiUrl, token },
+          challenge,
+          reading,
+        );
+      }
       const shipment = yield* shipmentInput(Option.getOrUndefined(input), {
         distanceKm: numberFromOption(distance),
         weightKg: numberFromOption(weight),
@@ -574,7 +634,7 @@ const queryCommand = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    "Send one shipment to the undocumented oracle. A successful query consumes one limited request. Requires sign-in.",
+    "Consulta el servicio sin documentación. Power Grid usa --input input.json. Una consulta exitosa consume una solicitud. Requiere iniciar sesión.",
   ),
   Command.withExamples([
     {
@@ -601,13 +661,15 @@ const notebookCommand = Command.make(
       challenge,
     );
     yield* execute(options.output, operation, (attempt) => {
-      if (format === "csv") return notebookCsvText(attempt.observations);
+      if (format === "csv")
+        return notebookCsvText(attempt.observations, attempt.challenge.slug);
       if (format === "json") {
         return JSON.stringify(attempt.observations, null, 2);
       }
       return notebookTableText(
         attempt.observations,
         Boolean(attempt.challenge.closed),
+        attempt.challenge.slug,
       );
     });
   }),
@@ -645,7 +707,9 @@ const testCommand = Command.make(
         solution,
       );
     });
-    yield* execute(options.output, operation, challengeTestText);
+    yield* execute(options.output, operation, (result) =>
+      challengeTestText(result, challenge),
+    );
   }),
 ).pipe(
   Command.withDescription(
@@ -762,6 +826,12 @@ export const challengeCommand = Command.make(
           nextStep.challengeSlug === "make-it-fast"
         )
           guide = slowServiceQuickstart;
+        if (
+          (nextStep.kind === "challenge_start" ||
+            nextStep.kind === "challenge_continue") &&
+          nextStep.challengeSlug === "power-grid"
+        )
+          guide = powerGridQuickstart;
         return { ...response, data: { ...response.data, guide } };
       }),
     );

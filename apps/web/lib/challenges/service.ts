@@ -21,10 +21,13 @@ import {
   JavascriptSourceSolutionSchema,
   type ParticipantChallengeMilestone,
   type ParticipantChallengeProgress,
-  type Shipment,
   ShipmentSchema,
   SlowServiceEvaluationSolutionSchema,
 } from "@chofex/challenges-contract";
+import {
+  PowerReadingSchema,
+  powerGridChallengeSlug,
+} from "@chofex/challenges-contract/power-grid";
 import {
   isSlowServiceSourceWithinLimit,
   slowServiceChallengeSlug,
@@ -73,7 +76,7 @@ import {
   releaseChallengeReservation,
   reserveChallengeUse,
 } from "./reservations";
-import { runShippingSolution } from "./sandbox";
+import { runPowerGridSolution, runShippingSolution } from "./sandbox";
 import { participantVisibleScore, scoreFromStored } from "./score";
 import { attemptSeed, shareCodeFromSeed } from "./seed";
 import { runSlowServicePublicTests } from "./slow-service-public";
@@ -114,7 +117,7 @@ const duplicateQueryError = (): HttpError =>
   new HttpError(
     409,
     "DUPLICATE_QUERY",
-    "That exact shipment is already in your notebook. Change at least one input; repeated queries do not consume budget.",
+    "Esa lectura ya está en tu cuaderno. Cambia al menos un campo; las consultas repetidas no consumen presupuesto.",
     false,
   );
 
@@ -188,6 +191,7 @@ const requireImplementedChallenge = (
   const challenge = requirePlayableChallenge(slug, now);
   if (
     challenge.slug !== blackBoxChallengeSlug &&
+    challenge.slug !== powerGridChallengeSlug &&
     challenge.slug !== brokenAgentChallengeSlug &&
     challenge.slug !== slowServiceChallengeSlug
   ) {
@@ -701,6 +705,10 @@ export const getChallengeAttempt = async (
 
   let localTestHint =
     "Test against your notebook with `andes challenge test --challenge black-box --source ./shipping.js`. Official evaluation consumes one attempt.";
+  if (challenge.slug === powerGridChallengeSlug) {
+    localTestHint =
+      "Prueba gratis contra tu cuaderno con `andes challenge test --challenge power-grid --source ./bill.js`. Cada evaluación oficial consume uno de tus 3 intentos y usa 1,000 lecturas ocultas.";
+  }
   if (challenge.slug === brokenAgentChallengeSlug) {
     localTestHint =
       "Ejecuta `npm test` dentro de broken-agent y luego `andes challenge test --challenge broken-agent --source ./scheduler.js`. Los tests públicos son ilimitados. Antes de evaluar, el participante debe elegir una traza de falla y completar su review vinculado al source.";
@@ -725,6 +733,22 @@ export const getChallengeAttempt = async (
   };
 };
 
+const parsePowerReading = (input: unknown) =>
+  parseInput(PowerReadingSchema, input);
+const parseShipment = (input: unknown) => parseInput(ShipmentSchema, input);
+
+const prepareOracleQuery = (slug: string, rawInput: unknown) => {
+  if (slug === powerGridChallengeSlug) {
+    const input = parsePowerReading(rawInput);
+    return {
+      input,
+      run: (key: string) => challengeEngine().queryPowerGrid(key, input),
+    };
+  }
+  const input = parseShipment(rawInput);
+  return { input, run: (key: string) => challengeEngine().query(key, input) };
+};
+
 export const queryChallenge = async (
   clerkUserId: string,
   slug: string,
@@ -732,14 +756,18 @@ export const queryChallenge = async (
   now: Date = currentChallengeTime(),
 ): Promise<ChallengeQueryResult> => {
   const challenge = requireImplementedChallenge(slug, now);
-  if (challenge.slug !== blackBoxChallengeSlug) {
+  if (
+    challenge.slug !== blackBoxChallengeSlug &&
+    challenge.slug !== powerGridChallengeSlug
+  ) {
     throw new HttpError(
       404,
       "QUERY_NOT_AVAILABLE",
       `${challenge.title} does not use oracle queries`,
     );
   }
-  const input = parseInput(ShipmentSchema, rawInput) as Shipment;
+  const query = prepareOracleQuery(challenge.slug, rawInput);
+  const { input } = query;
   const participantId = await participantIdFor(clerkUserId);
   const attempt = await attemptFor(participantId, challenge);
 
@@ -752,13 +780,13 @@ export const queryChallenge = async (
     throw new HttpError(
       429,
       "QUERY_LIMIT_REACHED",
-      `No Black Box queries remaining (${attempt.queriesLimit}/${attempt.queriesLimit})`,
+      `No quedan consultas para ${challenge.title} (${attempt.queriesLimit}/${attempt.queriesLimit})`,
     );
   }
 
   let output: number;
   try {
-    output = await challengeEngine().query(attempt.id, input);
+    output = await query.run(attempt.id);
   } catch (error) {
     await releaseAfterFailure(reservation, "query");
     if (error instanceof ChallengeEngineError) {
@@ -810,14 +838,18 @@ export const testChallengeSolution = async (
     throw new HttpError(
       422,
       "NO_OBSERVATIONS",
-      "Query the Black Box before running local tests",
+      "Consulta la máquina antes de probar tu solución contra el cuaderno",
     );
   }
 
-  const shipments = observations.map((row) =>
-    parseInput(ShipmentSchema, row.input),
-  );
-  const actual = await runShippingSolution(solution.source, shipments);
+  let actual: number[];
+  if (challenge.slug === powerGridChallengeSlug) {
+    const readings = observations.map((row) => parsePowerReading(row.input));
+    actual = await runPowerGridSolution(solution.source, readings);
+  } else {
+    const shipments = observations.map((row) => parseShipment(row.input));
+    actual = await runShippingSolution(solution.source, shipments);
+  }
   const mismatches: Array<{
     sequence: number;
     expected: unknown;

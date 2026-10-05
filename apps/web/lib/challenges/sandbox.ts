@@ -1,6 +1,6 @@
 import * as childProcess from "node:child_process";
-
 import type { Shipment } from "@chofex/challenges-contract";
+import type { PowerReading } from "@chofex/challenges-contract/power-grid";
 
 import { HttpError } from "../registration/http";
 
@@ -30,29 +30,31 @@ const reply = (message) => process.stdout.write(JSON.stringify(message));
 try {
   const request = JSON.parse(requestText);
   const shipmentsJson = JSON.stringify(request.shipments);
+  const functionName = request.functionName;
+  if (!["calculateShipping", "calculateBill"].includes(functionName)) throw new Error("Invalid entry point");
   const scriptSource = [
     '"use strict";',
     "const __loadSolution = () => {",
     "  const module = { exports: {} };",
     "  const exports = module.exports;",
     request.source,
-    '  if (typeof calculateShipping === "function") return calculateShipping;',
+    '  if (typeof ' + functionName + ' === "function") return ' + functionName + ';',
     "  if (",
     "    module.exports &&",
     '    typeof module.exports === "object" &&',
-    '    typeof module.exports.calculateShipping === "function"',
+    '    typeof module.exports.' + functionName + ' === "function"',
     "  ) {",
-    "    return module.exports.calculateShipping;",
+    '    return module.exports.' + functionName + ';',
     "  }",
     '  if (typeof module.exports === "function") return module.exports;',
-    '  throw new Error("Define function calculateShipping(input)");',
+    '  throw new Error("Define function ' + functionName + '(input)");',
     "};",
     "const __calculateShipping = __loadSolution();",
     "const __shipments = JSON.parse(" + JSON.stringify(shipmentsJson) + ");",
     "const __results = __shipments.map((input) => {",
     "  const value = __calculateShipping(input);",
     '  if (typeof value !== "number" || !Number.isFinite(value)) {',
-    '    throw new Error("calculateShipping must return a finite number");',
+    '    throw new Error("Solution must return a finite number");',
     "  }",
     "  return value;",
     "});",
@@ -83,7 +85,7 @@ const executionError = (message: string): HttpError =>
   new HttpError(
     422,
     "SOLUTION_EXECUTION_FAILED",
-    `Could not run calculateShipping: ${message}`,
+    `Could not run solution: ${message}`,
     false,
   );
 
@@ -96,22 +98,23 @@ const parseWorkerResponse = (output: string): Array<number> => {
   }
   if (!response.ok) throw executionError(response.error);
   if (!Array.isArray(response.results)) {
-    throw executionError("calculateShipping did not produce a result list");
+    throw executionError("Solution did not produce a result list");
   }
 
   const results: Array<number> = [];
   for (const value of response.results) {
     if (typeof value !== "number" || !Number.isFinite(value)) {
-      throw executionError("calculateShipping must return a finite number");
+      throw executionError("Solution must return a finite number");
     }
     results.push(value);
   }
   return results;
 };
 
-export const runShippingSolution = (
+const runNumericSolution = (
   source: string,
-  shipments: ReadonlyArray<Shipment>,
+  shipments: ReadonlyArray<Shipment | PowerReading>,
+  functionName: "calculateShipping" | "calculateBill",
 ): Promise<Array<number>> => {
   if (activeWorkers >= maximumConcurrentWorkers) {
     return Promise.reject(
@@ -191,6 +194,16 @@ export const runShippingSolution = (
       });
     });
 
-    child.stdin.end(JSON.stringify({ source, shipments }));
+    child.stdin.end(JSON.stringify({ source, shipments, functionName }));
   });
 };
+
+export const runShippingSolution = (
+  source: string,
+  inputs: ReadonlyArray<Shipment>,
+) => runNumericSolution(source, inputs, "calculateShipping");
+
+export const runPowerGridSolution = (
+  source: string,
+  inputs: ReadonlyArray<PowerReading>,
+) => runNumericSolution(source, inputs, "calculateBill");

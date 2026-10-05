@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./power-grid": "./src/power-grid.ts",
     "./broken-agent": "./src/broken-agent.ts",
     "./slow-service": "./src/slow-service.ts",
     "./slow-service/contract": "./src/slow-service/contract.ts",

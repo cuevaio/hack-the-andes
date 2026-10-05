@@ -10,6 +10,7 @@ import {
   ShipmentSchema,
   SlowServiceCompanionReviewSchema,
 } from "@chofex/challenges-contract";
+import { PowerReadingSchema } from "@chofex/challenges-contract/power-grid";
 import { isSlowServiceSourceWithinLimit } from "@chofex/challenges-contract/slow-service";
 import { Effect, Schema } from "effect";
 import { Prompt } from "effect/unstable/cli";
@@ -54,6 +55,7 @@ export const javascriptSourceFromPath = (
     let expectedFunction = "calculateShipping(input)";
     if (challenge === "broken-agent")
       expectedFunction = "createScheduler(dependencies)";
+    if (challenge === "power-grid") expectedFunction = "calculateBill(input)";
     if (challenge === "make-it-fast") expectedFunction = "createLedger()";
     return Effect.fail(
       cliError(
@@ -328,4 +330,33 @@ export const shipmentInput = (
     );
   }
   return interactiveShipment();
+};
+
+export const powerReadingInput = (path: string | undefined) => {
+  if (!path)
+    return Effect.fail(
+      cliError(
+        "INPUT_REQUIRED",
+        "Usa --input input.json con consumptionKwh, demandKw, hour, solar y business.",
+      ),
+    );
+  return readTextFile(path).pipe(
+    Effect.flatMap((contents) =>
+      Effect.try({
+        try: (): unknown => JSON.parse(contents),
+        catch: () =>
+          cliError(
+            "INVALID_INPUT_FILE",
+            "El archivo debe contener JSON válido",
+          ),
+      }),
+    ),
+    Effect.flatMap((input) =>
+      Schema.decodeUnknownEffect(PowerReadingSchema, {
+        onExcessProperty: "error",
+      })(input).pipe(
+        Effect.mapError((error) => cliError("VALIDATION_ERROR", error.message)),
+      ),
+    ),
+  );
 };

@@ -7,6 +7,11 @@ import {
   type Shipment,
 } from "@chofex/challenges-contract";
 import {
+  type PowerReading,
+  powerGridChallengeSlug,
+  powerGridChallengeVersion,
+} from "@chofex/challenges-contract/power-grid";
+import {
   slowServiceChallengeSlug,
   slowServiceChallengeVersion,
 } from "@chofex/challenges-contract/slow-service";
@@ -14,6 +19,7 @@ import {
 export const currentChallengeVersion = "black-box-v2" as const;
 export const brokenAgentChallengeVersion = "broken-agent-v3" as const;
 export type CurrentChallengeVersion =
+  | typeof powerGridChallengeVersion
   | typeof currentChallengeVersion
   | typeof brokenAgentChallengeVersion
   | typeof slowServiceChallengeVersion;
@@ -25,6 +31,7 @@ export const slowServiceEngineEvaluateTimeoutMs = 330_000;
 export const currentChallengeVersionFor = (
   slug: ChallengeSlug | string,
 ): CurrentChallengeVersion | undefined => {
+  if (slug === powerGridChallengeSlug) return powerGridChallengeVersion;
   if (slug === blackBoxChallengeSlug) return currentChallengeVersion;
   if (slug === brokenAgentChallengeSlug) return brokenAgentChallengeVersion;
   if (slug === slowServiceChallengeSlug) return slowServiceChallengeVersion;
@@ -199,30 +206,48 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
     return result;
   };
 
-  return {
-    query: async (participantKey: string, input: Shipment): Promise<number> => {
-      const result = record(
-        await post(
-          "/api/v1/query",
-          {
-            version: 1,
-            challengeVersion: currentChallengeVersion,
-            participantKey,
-            input,
-          },
-          challengeEngineQueryTimeoutMs,
-        ),
+  const queryOracle = async (
+    payload:
+      | {
+          challengeVersion: typeof currentChallengeVersion;
+          participantKey: string;
+          input: Shipment;
+        }
+      | {
+          challengeVersion: typeof powerGridChallengeVersion;
+          participantKey: string;
+          input: PowerReading;
+        },
+  ): Promise<number> => {
+    const result = record(
+      await post(
+        "/api/v1/query",
+        { version: 1, ...payload },
+        challengeEngineQueryTimeoutMs,
+      ),
+    );
+    const output = finiteNumber(result?.output);
+    if (result?.version !== 1 || output === undefined)
+      throw new ChallengeEngineError(
+        502,
+        "CHALLENGE_ENGINE_ERROR",
+        "The challenge engine returned an invalid query response",
       );
-      const output = finiteNumber(result?.output);
-      if (result?.version !== 1 || output === undefined) {
-        throw new ChallengeEngineError(
-          502,
-          "CHALLENGE_ENGINE_ERROR",
-          "The challenge engine returned an invalid query response",
-        );
-      }
-      return output;
-    },
+    return output;
+  };
+  return {
+    query: (participantKey: string, input: Shipment) =>
+      queryOracle({
+        participantKey,
+        input,
+        challengeVersion: currentChallengeVersion,
+      }),
+    queryPowerGrid: (participantKey: string, input: PowerReading) =>
+      queryOracle({
+        participantKey,
+        input,
+        challengeVersion: powerGridChallengeVersion,
+      }),
     evaluate: async (
       challengeVersion: CurrentChallengeVersion,
       participantKey: string,

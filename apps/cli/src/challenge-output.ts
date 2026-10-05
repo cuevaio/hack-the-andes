@@ -14,8 +14,10 @@ import {
   formatChallengeOpeningInPeru,
   isChallengeRankingVisibleAt,
 } from "@chofex/challenges-contract";
+import { PowerReadingSchema } from "@chofex/challenges-contract/power-grid";
 import { slowServiceChallengeVersion } from "@chofex/challenges-contract/slow-service";
 import type { RegistrationResult } from "@chofex/registration-contract";
+import { Schema } from "effect";
 
 import { eventName } from "./brand.js";
 
@@ -97,6 +99,34 @@ export const challengeListText = (
 
 export const challengeShowText = (attempt: ChallengeAttemptView): string => {
   const { challenge, progress } = attempt;
+  if (challenge.slug === "power-grid") {
+    const lines = [
+      challenge.title,
+      challenge.summary,
+      `Consultas restantes: ${progress.queriesLimit - progress.queriesUsed} / ${progress.queriesLimit}`,
+      `Evaluaciones restantes: ${progress.evaluationsLimit - progress.evaluationsUsed} / ${progress.evaluationsLimit}`,
+      "Cada lectura es independiente. Devuelve el importe en céntimos enteros.",
+      "Las reglas están personalizadas para tu intento. Puedes usar AI.",
+    ];
+    if (!challenge.open)
+      lines.push(
+        challengeParticipationNotice(
+          challenge.title,
+          challenge.opensAt,
+          challenge.closesAt,
+        ) ?? "Los envíos están deshabilitados.",
+      );
+    else
+      lines.push(
+        "andes challenge init --challenge power-grid",
+        "cd power-grid",
+        "andes challenge query --challenge power-grid --input input.json",
+        attempt.localTestHint,
+      );
+    if (progress.bestAccuracy !== undefined)
+      lines.push(`Mejor puntaje: ${percent(progress.bestAccuracy)}`);
+    return lines.join("\n");
+  }
   const queriesRemaining = progress.queriesLimit - progress.queriesUsed;
   const evaluationsRemaining =
     progress.evaluationsLimit - progress.evaluationsUsed;
@@ -269,6 +299,37 @@ export const challengeQueryText = (result: ChallengeQueryResult): string => {
   return lines.join("\n");
 };
 
+const powerNotebookText = (
+  observations: ReadonlyArray<ChallengeObservation>,
+  csv: boolean,
+  challengeClosed = false,
+): string => {
+  const rows = observations.map((observation) => {
+    const input = Schema.decodeUnknownSync(PowerReadingSchema)(
+      observation.input,
+    );
+    return [
+      observation.sequence,
+      input.consumptionKwh,
+      input.demandKw,
+      input.hour,
+      input.solar,
+      input.business,
+      observation.output,
+    ].join(",");
+  });
+  const header = "sequence,consumptionKwh,demandKw,hour,solar,business,output";
+  if (csv) return [header, ...rows].join("\n");
+  return [
+    "Cuaderno de facturación eléctrica",
+    header,
+    ...rows,
+    challengeClosed
+      ? "El challenge está cerrado. Consulta el ranking con andes challenge ranking --challenge power-grid"
+      : "Prueba gratis: andes challenge test --challenge power-grid --source ./bill.js",
+  ].join("\n");
+};
+
 const shipmentCells = (
   observation: ChallengeObservation,
 ): {
@@ -301,7 +362,10 @@ const shipmentCells = (
 export const notebookTableText = (
   observations: ReadonlyArray<ChallengeObservation>,
   challengeClosed = false,
+  slug = "black-box",
 ): string => {
+  if (slug === "power-grid")
+    return powerNotebookText(observations, false, challengeClosed);
   if (observations.length === 0) {
     if (challengeClosed) {
       return [
@@ -374,7 +438,9 @@ export const notebookTableText = (
 
 export const notebookCsvText = (
   observations: ReadonlyArray<ChallengeObservation>,
+  slug = "black-box",
 ): string => {
+  if (slug === "power-grid") return powerNotebookText(observations, true);
   const header = "sequence,distanceKm,weightKg,hour,fragile,express,output";
   const rows = observations.map((observation) => {
     const cells = shipmentCells(observation);
@@ -391,7 +457,23 @@ export const notebookCsvText = (
   return [header, ...rows].join("\n");
 };
 
-export const challengeTestText = (result: ChallengeLocalTestResult): string => {
+export const challengeTestText = (
+  result: ChallengeLocalTestResult,
+  slug = "black-box",
+): string => {
+  if (slug === "power-grid") {
+    return [
+      `Cuaderno: ${result.matchedObservations} / ${result.observationCount} coincidencias exactas`,
+      `Error medio: ${result.meanError.toFixed(2)} céntimos`,
+      ...result.mismatches.map(
+        (item) =>
+          `#${item.sequence}: esperado ${JSON.stringify(item.expected)}, recibido ${JSON.stringify(item.actual)}`,
+      ),
+      "Estos tests solo usan tus observaciones. No certifican las lecturas ocultas.",
+      "Prueba gratis: andes challenge test --challenge power-grid --source ./bill.js",
+      "Evalúa: andes challenge evaluate --challenge power-grid --source ./bill.js",
+    ].join("\n");
+  }
   if (result.kind === "slow_service") {
     const lines = [
       "TESTS PÚBLICOS / THE SLOW SERVICE",
@@ -525,7 +607,9 @@ export const challengeEvaluateText = (
   }
 
   const lines = [
-    "OFFICIAL VERDICT — BLACK BOX REPLICATION",
+    result.rankingPath.endsWith("/power-grid")
+      ? "Veredicto oficial de facturación eléctrica"
+      : "OFFICIAL VERDICT — BLACK BOX REPLICATION",
     `Accuracy            ${percent(result.accuracy)}`,
     `Exact predictions   ${result.exactCount} / ${result.sampleSize}`,
     `Mean error          ${result.meanError.toFixed(2)}`,
@@ -545,7 +629,9 @@ export const challengeEvaluateText = (
     lines.push(
       "",
       "Before spending another evaluation, improve and retest your model against the notebook.",
-      "  andes challenge test --source ./shipping.js",
+      result.rankingPath.endsWith("/power-grid")
+        ? "  andes challenge test --challenge power-grid --source ./bill.js"
+        : "  andes challenge test --source ./shipping.js",
     );
   }
   return lines.join("\n");

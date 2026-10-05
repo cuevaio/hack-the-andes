@@ -42,7 +42,7 @@ test("advertises only the current playable challenge version", () => {
 });
 
 test("future dates and force-open cannot activate unimplemented challenges", () => {
-  for (const slug of ["power-grid", "agent-arena"]) {
+  for (const slug of ["agent-arena"]) {
     const challenge = challengeBySlug(slug);
     if (!challenge) throw new Error(`missing ${slug}`);
     for (const forceOpen of [false, true]) {
@@ -55,4 +55,21 @@ test("future dates and force-open cannot activate unimplemented challenges", () 
       expect(item.open).toBe(false);
     }
   }
+});
+
+test("advertises Power Grid v1 while keeping participation closed until October 9", () => {
+  const challenge = challengeBySlug("power-grid");
+  if (!challenge) throw new Error("missing power-grid");
+  const item = catalogItemFor(
+    challenge,
+    new Date("2026-10-05T17:00:00Z"),
+    false,
+  );
+  expect(item).toMatchObject({
+    playable: true,
+    open: false,
+    challengeVersion: "power-grid-v1",
+    queryLimit: 25,
+    evaluationLimit: 3,
+  });
 });

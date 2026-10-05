@@ -9,6 +9,12 @@ import {
   brokenAgentStarterSource,
 } from "@chofex/challenges-contract/broken-agent";
 import {
+  powerGridChallengeSlug,
+  powerGridExample,
+  powerGridReadme,
+  powerGridStarterSource,
+} from "@chofex/challenges-contract/power-grid";
+import {
   slowServiceChallengeSlug,
   slowServiceChallengeVersion,
   slowServiceScaffoldDirectory,
@@ -58,6 +64,37 @@ export const createChallengeScaffold = Effect.fn("createChallengeScaffold")(
           `Challenge ${challengeSlug} is not available`,
         ),
       );
+    }
+
+    if (challengeSlug === powerGridChallengeSlug) {
+      const directory = "power-grid";
+      const status = yield* Effect.tryPromise({
+        try: async () => {
+          await mkdir(directory);
+          await Promise.all([
+            writeFile(`${directory}/bill.js`, powerGridStarterSource),
+            writeFile(
+              `${directory}/input.json`,
+              `${JSON.stringify(powerGridExample, null, 2)}\n`,
+            ),
+            writeFile(`${directory}/README.md`, powerGridReadme),
+          ]);
+          return "created" as const;
+        },
+        catch: (error) => error,
+      }).pipe(
+        Effect.catch((error) => {
+          if (Predicate.hasProperty(error, "code") && error.code === "EEXIST")
+            return Effect.succeed("exists" as const);
+          return Effect.fail(
+            cliError(
+              "SCAFFOLD_FAILED",
+              `No se pudo crear ${directory}: ${String(error)}`,
+            ),
+          );
+        }),
+      );
+      return { challenge: challengeSlug, path: directory, status };
     }
 
     if (challengeSlug === slowServiceChallengeSlug) {

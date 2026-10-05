@@ -16,6 +16,7 @@ import Link from "next/link";
 import { formatChallengeScore } from "@/lib/challenges/score";
 import { BrokenAgentChallengeGuide } from "./broken-agent-guide";
 import { BlackBoxChallengeGuide } from "./challenge-guide";
+import { PowerGridChallengeGuide } from "./power-grid-guide";
 import { RankingCountdown } from "./ranking-countdown-view";
 import { SlowServiceChallengeGuide } from "./slow-service-guide";
 
@@ -220,6 +221,8 @@ export function ChallengeRankingView({
     );
   }
   let challengeGuide = null;
+  if (challenge.slug === "power-grid" && !challenge.closed)
+    challengeGuide = <PowerGridChallengeGuide />;
   if (challenge.slug === blackBoxChallengeSlug && !challenge.closed) {
     challengeGuide = <BlackBoxChallengeGuide />;
   }
