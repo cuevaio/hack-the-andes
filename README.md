@@ -180,7 +180,11 @@ npx skills add https://github.com/crafter-station/hack-the-andes --skill chofex-
 
 The skill guides an agent through application and post-acceptance flows while
 keeping authentication, personal answers, consent, and final submission
-approval with the participant. Its source is
+approval with the participant. During challenges, the participant directs small
+experiment or implementation rounds. The agent pauses for fresh direction after
+each round and asks before every official evaluation. Power Grid starters also
+include AGENTS.md so this guidance travels with the challenge files. These are
+agent instructions, not a server guarantee of human involvement. Its source is
 [`skills/chofex-hackathon/SKILL.md`](skills/chofex-hackathon/SKILL.md).
 
 ## Local development

@@ -34,11 +34,17 @@ test("creates the Power Grid starter without overwriting an existing directory",
     expect(
       await Bun.file(join(directory, "power-grid/input.json")).json(),
     ).toEqual(powerGridExample);
+    const agentInstructions = join(directory, "power-grid/AGENTS.md");
+    expect(await Bun.file(agentInstructions).exists()).toBe(true);
+    await writeFile(agentInstructions, "participant instructions");
     await writeFile(file, "my solution");
     expect(
       (await Effect.runPromise(createChallengeScaffold("power-grid"))).status,
     ).toBe("exists");
     expect(await Bun.file(file).text()).toBe("my solution");
+    expect(await Bun.file(agentInstructions).text()).toBe(
+      "participant instructions",
+    );
   } finally {
     process.chdir(previousDirectory);
     await rm(directory, { recursive: true, force: true });

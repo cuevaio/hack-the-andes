@@ -242,7 +242,7 @@ const powerGridQuickstart = {
   mission: "Descubre las reglas y reemplázala con calculateBill(input).",
   rules: [
     "25 consultas, 3 evaluaciones y 1,000 lecturas ocultas.",
-    "Los tests del cuaderno son gratuitos. Puedes usar AI.",
+    "Los tests del cuaderno son gratuitos. Trabaja con tu agente por rondas y decide cuándo continuar.",
     "Cada lectura es independiente. Las tarifas son ficticias.",
   ],
   workflow: [
@@ -250,14 +250,14 @@ const powerGridQuickstart = {
       step: 1,
       action: "Prepara tu carpeta",
       command: "andes challenge init --challenge power-grid",
-      note: "Luego entra con cd power-grid y lee README.md.",
+      note: "Luego entra con cd power-grid y lee README.md y AGENTS.md.",
     },
     {
       step: 2,
       action: "Consulta la máquina",
       command:
         "andes challenge query --challenge power-grid --input input.json",
-      note: "Cambia una variable a la vez. Prueba cero, extremos e interacciones.",
+      note: "Elige la hipótesis con tu agente. Usen hasta 3 consultas nuevas y revisen los resultados antes de continuar.",
     },
     {
       step: 3,

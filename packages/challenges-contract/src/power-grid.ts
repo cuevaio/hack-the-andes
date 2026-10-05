@@ -38,6 +38,38 @@ function calculateBill(input) {
 }
 `;
 
+export const powerGridAgentInstructions = `# Colaboración con el participante
+
+Este challenge se resuelve junto con el participante. Puedes preparar archivos,
+leer el contrato y consultar el estado o cuaderno sin interrumpir. Antes de
+hacer consultas nuevas o implementar una solución, explica la hipótesis o cambio
+que propones y pregunta al participante qué dirección quiere tomar. Espera su
+respuesta antes de continuar.
+
+Cada ronda autorizada trata una hipótesis y usa como máximo tres consultas
+nuevas, o implementa un cambio acordado y ejecuta sus tests gratuitos. No agotes
+el presupuesto en un barrido automático ni encadenes rondas. No sigas resolviendo
+en segundo plano mientras esperas al participante.
+
+Después de cada ronda, muestra los resultados, qué respaldan, qué sigue siendo
+incierto y los presupuestos restantes. Pregunta qué quiere investigar después,
+si quiere cambiar el plan o si prefiere detenerse. Puede elegir una propuesta o
+decir "continúa" después de ver el plan concreto de la siguiente ronda. Esa
+respuesta autoriza solo esa ronda. "Resuélvelo por mí", una autorización general,
+el silencio o una respuesta anterior no sustituyen los siguientes puntos de
+consulta. No inventes decisiones ni respuestas del participante.
+
+Antes de cada evaluación oficial, presenta los cambios, los resultados del
+cuaderno, las hipótesis sin verificar y cuántos intentos quedan. Pregunta si
+quiere gastar un intento en esa solución exacta y espera una respuesta explícita.
+Tras el resultado, explícalo y vuelve a preguntar antes de modificar código,
+consultar o evaluar otra vez. Acertar el cuaderno no demuestra que las reglas
+estén completas; el puntaje agregado no identifica una regla que falta.
+
+Estas instrucciones guían la conversación. El servidor no verifica por sí solo
+que el participante haya dirigido cada ronda.
+`;
+
 export const powerGridReadme = `# La máquina de facturación eléctrica
 
 Una cooperativa perdió el código de su facturador. Solo conserva un servicio
@@ -54,6 +86,13 @@ estado ni acumulación entre consultas. Cero es un valor válido.
 Tienes 25 consultas exitosas y 3 evaluaciones oficiales. Las reglas permanecen
 fijas para tu intento, pero los parámetros varían entre participantes. Puedes
 usar AI. Las consultas duplicadas o fallidas no consumen presupuesto.
+
+Trabaja con tu agente por rondas. Antes de cada ronda, elige qué hipótesis
+investigar o qué cambio implementar. El agente puede proponer opciones; espera
+tu respuesta antes de continuar y usa como máximo tres consultas nuevas por
+ronda. Revisen los resultados juntos y decide el siguiente paso. Antes de cada
+evaluación oficial, decide si gastar un intento en la solución presentada.
+Las instrucciones para el agente están en AGENTS.md.
 
 Usa input.json como punto de partida. Cambia una variable a la vez y prueba
 los extremos, horarios e interacciones entre campos. No asumas que este
@@ -72,8 +111,8 @@ Los tests gratuitos comparan tu código con tu cuaderno. Coincidir con él no
 certifica el puntaje oculto. La evaluación oficial mide coincidencias exactas
 en 1000 lecturas ocultas con distintos consumos, demandas, horarios y contratos.
 El puntaje y el error medio resumen muchas lecturas; por sí solos no identifican
-qué regla falta ni confirman una hipótesis. El ranking conserva el mejor resultado. A igualdad de aciertos, favorece menos
-consultas, menor tiempo de ejecución y luego la fecha del resultado.
+qué regla falta ni confirman una hipótesis. El ranking conserva el mejor resultado.
+A igualdad de aciertos, favorece menos consultas, menor tiempo de ejecución y luego la fecha del resultado.
 
 Define calculateBill como función global, module.exports.calculateBill o
 module.exports. Devuelve un número finito en céntimos enteros. No se permiten

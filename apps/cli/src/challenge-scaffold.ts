@@ -9,6 +9,7 @@ import {
   brokenAgentStarterSource,
 } from "@chofex/challenges-contract/broken-agent";
 import {
+  powerGridAgentInstructions,
   powerGridChallengeSlug,
   powerGridExample,
   powerGridReadme,
@@ -81,6 +82,7 @@ export const createChallengeScaffold = Effect.fn("createChallengeScaffold")(
               `${JSON.stringify(powerGridExample, null, 2)}\n`,
             ),
             writeFile(`${directory}/README.md`, powerGridReadme),
+            writeFile(`${directory}/AGENTS.md`, powerGridAgentInstructions),
           ]);
           return "created" as const;
         },

@@ -6,7 +6,7 @@ description: Apply to Hack the Andes for a human with the andes CLI, work throug
 # Hack the Andes
 
 Use the andes CLI to act on the participant's behalf while keeping identity,
-consent, and final submission decisions with the participant.
+consent, challenge direction, and final submission decisions with the participant.
 
 ## Pace
 
@@ -18,7 +18,8 @@ Batch participant questions into the fewest practical turns. Pause only for:
 - confirmation that the authenticated email belongs to the participant;
 - application answers that are missing or genuinely ambiguous;
 - the participant's own consent decisions;
-- challenge risk selection, evidence review, and release judgment;
+- challenge experiment selection, continuation checkpoints, evidence review,
+  and release judgment;
 - final submission approval; and
 - private accepted-participant details.
 
@@ -184,6 +185,39 @@ A successful submission returns `status: "submitted"`. Keep the mode-600
 temporary file through correctable validation failures so a retry does not
 require rebuilding it.
 
+## Work through challenges together
+
+Challenge solving is a participant-directed conversation. Routine setup,
+reading the contract, and checking existing status or observations may proceed
+without interruption. Before spending queries or implementing a solution,
+explain the next hypothesis or change in plain language and ask the participant
+which direction to take. Wait for their reply before proceeding.
+
+Keep each approved round small: one hypothesis, at most three new oracle
+queries, or one agreed implementation change with its free local tests. Explain
+what the inputs distinguish before querying. Do not launch a script that spends
+the whole query budget, chain multiple rounds, or continue solving in the
+background while waiting for the participant.
+
+After each round, show the evidence, what it supports, what remains uncertain,
+and the remaining budgets. Ask the participant to choose the next hypothesis,
+change the plan, or stop. They may select a proposed option or say "continue"
+after a concrete next round has been described. Their reply authorizes only
+that round. A general "solve it for me", "keep going until finished", silence,
+or an earlier approval does not replace later checkpoints in this challenge
+workflow. Do not invent the participant's direction or answers.
+
+Before every official evaluation, show the solution changes, free-test results,
+unverified assumptions, and remaining evaluation count. Ask whether to spend
+one evaluation on that exact solution and wait for an explicit reply. After the
+result, explain its limits and pause again before edits, more queries, or another
+evaluation. A notebook-perfect result does not prove hidden correctness; an
+aggregate score does not identify a missing rule.
+
+These conversational checkpoints supplement the source-bound participant
+reviews required by Broken Agent and Slow Service. They do not replace those
+reviews or claim that the server verifies human involvement.
+
 ## Black Box challenge
 
 **The Shipping Machine** is one of the technical admission challenges. It does
@@ -202,7 +236,8 @@ andes --output json challenge show --challenge black-box
 AI tools are allowed. The oracle is personalized, so a leaked solution will not
 match this participant's function. Design experiments: change one variable at a
 time, look for thresholds, then test combinations such as fragile and express
-together. Each `query` consumes one of 25 requests.
+together. Each successful new input consumes one of 25 queries; duplicate or
+failed queries are free. Follow the participant-directed rounds above.
 
 ```sh
 andes --output json challenge query --distance 1 --weight 1 --hour 12 --fragile false --express false
@@ -250,6 +285,13 @@ invent evidence or the participant's decision. The approval records responsibili
 not proof of understanding or independent authorship.
 Check `challenge list` before starting; a closed challenge retains its ranking
 and historical results but does not accept new submissions.
+
+## Power Grid challenge
+
+When the participant asks to solve challenge 4 or `power-grid`, or the server
+advertises it as available to their account, read
+[`references/power-grid.md`](references/power-grid.md). Apply the conversation
+checkpoints above throughout discovery, implementation, and evaluation.
 
 ## Next steps
 
