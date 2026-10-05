@@ -79,3 +79,46 @@ test("Scheduler page renders all qualifying participants, including ranks after 
   expect(html).not.toContain("Participant 24");
   expect(html).toContain("sin límite de participantes");
 });
+
+test("closed Slow Service publishes every result with its achievement time and CPU", () => {
+  const challenge = challengeBySlug("make-it-fast");
+  if (!challenge) throw new Error("missing make-it-fast");
+  const now = new Date("2026-10-05T18:51:16.000Z");
+  const ranked = Array.from(
+    { length: 34 },
+    (_, index): ChallengeRankingEntry => ({
+      rank: index + 1,
+      displayName: `Participant ${index + 1}`,
+      shareCode: `CODE${index + 1}`,
+      accuracy: 1,
+      exactCount: 100,
+      sampleSize: 100,
+      meanError: 0,
+      queriesUsed: 0,
+      runtimeMs: 70_322,
+      evaluatedAt: "2026-10-03T12:00:00.000Z",
+    }),
+  );
+  const entries = publicRankingEntries({ slug: challenge.slug, ranked });
+  const html = renderToStaticMarkup(
+    <ChallengeRankingView
+      now={now.toISOString()}
+      ranking={{
+        challenge: catalogItemFor(challenge, now, false),
+        entries,
+        competitorCount: entries.length,
+      }}
+    />,
+  );
+  expect(html.match(/<tr\b/g)).toHaveLength(35);
+  expect(html).toContain("Participant 34");
+  expect(html).toContain("Mejor resultado (Lima)");
+  expect(html).toMatch(/datetime="2026-10-03T12:00:00.000Z"/i);
+  expect(html).toContain("07:00:00");
+  expect(html).toContain("CPU registrada");
+  expect(html).toContain("70.32 s");
+  expect(html).toContain("tiene prioridad quien lo alcanzó primero");
+  expect(html).toContain("sin límite de participantes");
+  expect(html).toContain("Cerrado");
+  expect(html).not.toContain("andes challenge init --challenge make-it-fast");
+});

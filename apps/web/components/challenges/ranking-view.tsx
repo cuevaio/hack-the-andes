@@ -23,6 +23,17 @@ const executionMetricText = (
   entry: ChallengeRanking["entries"][number],
 ): string => `${entry.runtimeMs} ms`;
 
+const resultTimeFormatter = new Intl.DateTimeFormat("es-PE", {
+  timeZone: "America/Lima",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
 const GitHubIcon = () => (
   <svg
     aria-hidden="true"
@@ -87,6 +98,10 @@ const RankingResults = ({
             {!brokenAgent && !slowService && (
               <th className="px-4 py-3">Runtime</th>
             )}
+            {slowService && (
+              <th className="px-4 py-3">Mejor resultado (Lima)</th>
+            )}
+            {slowService && <th className="px-4 py-3">CPU registrada</th>}
           </tr>
         </thead>
         <tbody>
@@ -141,6 +156,18 @@ const RankingResults = ({
               {!brokenAgent && !slowService && (
                 <td className="px-4 py-3 font-mono">
                   {executionMetricText(entry)}
+                </td>
+              )}
+              {slowService && (
+                <td className="whitespace-nowrap px-4 py-3 font-mono">
+                  <time dateTime={entry.evaluatedAt}>
+                    {resultTimeFormatter.format(new Date(entry.evaluatedAt))}
+                  </time>
+                </td>
+              )}
+              {slowService && (
+                <td className="whitespace-nowrap px-4 py-3 font-mono">
+                  {(entry.runtimeMs / 1_000).toFixed(2)} s
                 </td>
               )}
             </tr>
@@ -213,7 +240,7 @@ export function ChallengeRankingView({
   }
   if (slowService)
     rankingDescription =
-      "Ranking público de solo lectura para personas con una postulación enviada. Ordena por puntaje sobre 100, menos evaluaciones oficiales y la hora del mejor envío. Los milisegundos de CPU son un diagnóstico, no un desempate. Los casos ocultos y las implementaciones no se publican.";
+      "Ranking público completo para personas con una postulación enviada, sin límite de participantes. Ordena por puntaje sobre 100; a igual puntaje, tiene prioridad quien lo alcanzó primero y después quien usó menos evaluaciones oficiales. La CPU registrada es un diagnóstico: las cargas de evaluación varían y no se usa como desempate. Los casos ocultos y las implementaciones no se publican.";
 
   return (
     <section

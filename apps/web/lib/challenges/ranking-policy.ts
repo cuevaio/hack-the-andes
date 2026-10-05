@@ -19,6 +19,7 @@ export const publicRankingEntries = <
   if (slug === brokenAgentChallengeSlug) {
     return ranked.filter((entry) => entry.accuracy >= 0.95);
   }
+  if (slug === slowServiceChallengeSlug) return [...ranked];
   return ranked.slice(0, publicRankingEntryLimit);
 };
 
@@ -56,13 +57,20 @@ export const compareRankedChallengeEvaluations = (
   left: EvaluatedChallengeScore,
   right: EvaluatedChallengeScore,
 ): number => {
+  if (
+    left.score.challengeSlug === slowServiceChallengeSlug &&
+    right.score.challengeSlug === slowServiceChallengeSlug
+  ) {
+    const pointsOrder = right.score.accuracy - left.score.accuracy;
+    if (pointsOrder !== 0) return pointsOrder;
+    const submissionOrder =
+      left.evaluatedAt.getTime() - right.evaluatedAt.getTime();
+    if (submissionOrder !== 0) return submissionOrder;
+    return compareChallengeScores(left.score, right.score);
+  }
   const scoreOrder = compareChallengeScores(left.score, right.score);
   if (scoreOrder !== 0) return scoreOrder;
-  if (
-    (left.score.breakdown && right.score.breakdown) ||
-    (left.score.challengeSlug === slowServiceChallengeSlug &&
-      right.score.challengeSlug === slowServiceChallengeSlug)
-  ) {
+  if (left.score.breakdown && right.score.breakdown) {
     return left.evaluatedAt.getTime() - right.evaluatedAt.getTime();
   }
   return 0;

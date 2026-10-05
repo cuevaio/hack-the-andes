@@ -18,7 +18,7 @@ const score = (overrides: Partial<ChallengeScore> = {}): ChallengeScore => ({
 });
 
 describe("challenge ranking policy", () => {
-  test("Slow Service ranks points, fewer official evaluations and earliest best, not raw CPU", () => {
+  test("Slow Service ranks points, earliest best result and then fewer evaluations", () => {
     const left = {
       score: score({
         challengeSlug: "make-it-fast",
@@ -37,7 +37,7 @@ describe("challenge ranking policy", () => {
       }),
       evaluatedAt: new Date("2026-10-02T11:00:00Z"),
     };
-    expect(compareRankedChallengeEvaluations(left, right)).toBeLessThan(0);
+    expect(compareRankedChallengeEvaluations(left, right)).toBeGreaterThan(0);
     expect(
       compareRankedChallengeEvaluations(left, {
         ...right,
@@ -50,6 +50,19 @@ describe("challenge ranking policy", () => {
         score: { ...right.score, accuracy: 0.8 },
       }),
     ).toBeLessThan(0);
+    expect(
+      compareRankedChallengeEvaluations(left, {
+        ...right,
+        evaluatedAt: left.evaluatedAt,
+      }),
+    ).toBeLessThan(0);
+    expect(
+      compareRankedChallengeEvaluations(left, {
+        ...right,
+        score: { ...right.score, evaluationsUsed: 2 },
+        evaluatedAt: left.evaluatedAt,
+      }),
+    ).toBe(0);
   });
   test("breaks otherwise identical scores by their numeric execution cost", () => {
     expect(
@@ -67,11 +80,21 @@ describe("challenge ranking policy", () => {
       accuracy: 0.9,
     }));
 
-    for (const slug of ["black-box", "slow-service"]) {
+    for (const slug of ["black-box", "power-grid"]) {
       expect(publicRankingEntries({ slug, ranked })).toEqual(
         ranked.slice(0, 17),
       );
     }
+  });
+
+  test("publishes every Slow Service result beyond position 17", () => {
+    const ranked = Array.from({ length: 34 }, (_, index) => ({
+      position: index + 1,
+      accuracy: index < 24 ? 1 : 0.6,
+    }));
+    expect(publicRankingEntries({ slug: "make-it-fast", ranked })).toEqual(
+      ranked,
+    );
   });
 
   test("shows every Broken Agent score of at least 95%, beyond position 17", () => {
