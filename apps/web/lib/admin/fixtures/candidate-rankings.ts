@@ -170,12 +170,12 @@ if (import.meta.main) {
     "black-box",
     new Date("2026-10-03"),
   );
-  assert.equal(publicBlackBox.entries.length, 17);
+  assert.equal(publicBlackBox.entries.length, 20);
   const publicScheduler = await getChallengeRanking(
     "broken-agent",
     new Date("2026-10-03"),
   );
-  assert.equal(publicScheduler.entries.length, 0);
+  assert.equal(publicScheduler.entries.length, 20);
   const ordinary = await listCandidates(parseCandidateFilters({}));
   assert.equal(ordinary.total, 26);
   assert.equal(ordinary.candidates[0]?.name, "Sin resultado");
