@@ -1,25 +1,19 @@
 import {
-  brokenAgentChallengeSlug,
   type ChallengeScore,
   compareChallengeScores,
 } from "@chofex/challenges-contract";
 import { slowServiceChallengeSlug } from "@chofex/challenges-contract/slow-service";
 
-const publicRankingEntryLimit = 17;
+const publicRankingEntryLimit = 20;
 
 export const publicRankingEntries = <
   Entry extends Pick<ChallengeScore, "accuracy">,
 >({
-  slug,
   ranked,
 }: {
   readonly slug: string;
   readonly ranked: ReadonlyArray<Entry>;
 }): Array<Entry> => {
-  if (slug === brokenAgentChallengeSlug) {
-    return ranked.filter((entry) => entry.accuracy >= 0.95);
-  }
-  if (slug === slowServiceChallengeSlug) return [...ranked];
   return ranked.slice(0, publicRankingEntryLimit);
 };
 

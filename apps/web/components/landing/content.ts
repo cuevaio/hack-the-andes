@@ -170,12 +170,12 @@ export const qualifierChallengesCopy = {
   tracksBody: `Son ${trackCount} temas para construir en equipo durante 30 horas. Los eliges presencialmente en Lima.`,
   challengesLabel: "Challenges / antes del evento",
   challengesBody: `Resuelve una de las ${qualifierChallengeCount} pruebas, sube al ranking y compite por un pase directo al evento.`,
-  liveKicker: "Challenge 2 / en vivo",
-  liveTitle: "The Scheduler",
+  liveKicker: "Challenge 3 / ranking final",
+  liveTitle: "The Slow Service",
   liveBody:
-    "Un agente dice que terminó un job scheduler. Todos los tests pasan. Haz que realmente esté listo para producción.",
-  liveMeta: "7 tests verdes · 5 evaluaciones oficiales · AI permitida",
-  liveCta: "Competir por un pase →",
+    "El challenge de rendimiento ya cerró. Conoce las mejores soluciones del diario contable y quiénes alcanzaron primero sus puntajes.",
+  liveMeta: "Top 20 · resultados oficiales",
+  liveCta: "Ver ranking →",
 } as const;
 
 export const peopleCopy = {

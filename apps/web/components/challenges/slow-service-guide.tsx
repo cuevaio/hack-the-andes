@@ -56,7 +56,7 @@ const workflow = [
   {
     title: "Consulta tu resultado",
     command: "andes challenge ranking --challenge make-it-fast",
-    body: "El ranking muestra a todas las personas con una postulación enviada. Ordena por puntaje; en empates, primero quien alcanzó ese puntaje antes y después quien usó menos evaluaciones oficiales. La CPU registrada es un diagnóstico y no se usa como desempate. El ranking no reserva un cupo.",
+    body: "El ranking muestra el top 20 de personas con una postulación enviada. Ordena por puntaje; en empates, primero quien alcanzó ese puntaje antes y después quien usó menos evaluaciones oficiales. La CPU registrada es un diagnóstico y no se usa como desempate. El ranking no reserva un cupo.",
   },
 ];
 

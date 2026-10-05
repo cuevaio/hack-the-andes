@@ -66,12 +66,8 @@ const RankingResults = ({
   readonly entries: ChallengeRanking["entries"];
 }) => {
   if (entries.length === 0) {
-    let emptyMessage =
+    const emptyMessage =
       "Nadie ha enviado una evaluación oficial todavía. Las soluciones se envían por la CLI; esta página solo muestra el ranking.";
-    if (brokenAgent) {
-      emptyMessage =
-        "Todavía no hay participantes con un puntaje de 95% o más en el ranking.";
-    }
     return (
       <div className={`p-6 ${brandFrameClassName}`}>
         <p className="text-sm text-[var(--hud-muted)]">{emptyMessage}</p>
@@ -233,14 +229,14 @@ export function ChallengeRankingView({
   if (slowService && !challenge.closed)
     challengeGuide = <SlowServiceChallengeGuide />;
   let rankingDescription =
-    "Ranking público de solo lectura: accuracy, empates por predicciones exactas y menos queries. Las implementaciones no se publican.";
+    "Top 20 público de solo lectura: accuracy, empates por predicciones exactas y menos queries. Las implementaciones no se publican.";
   if (brokenAgent) {
     rankingDescription =
-      "Ranking público de solo lectura: puntaje de producción, menos evaluaciones oficiales y, al final, hora de envío. Aparecen todas las personas con una postulación enviada y un puntaje de 95% o más, sin límite de participantes; los casos ocultos y las implementaciones no se publican.";
+      "Top 20 público para personas con una postulación enviada: puntaje de producción, menos evaluaciones oficiales y, al final, hora de envío. Los casos ocultos y las implementaciones no se publican.";
   }
   if (slowService)
     rankingDescription =
-      "Ranking público completo para personas con una postulación enviada, sin límite de participantes. Ordena por puntaje sobre 100; a igual puntaje, tiene prioridad quien lo alcanzó primero y después quien usó menos evaluaciones oficiales. La CPU registrada es un diagnóstico: las cargas de evaluación varían y no se usa como desempate. Los casos ocultos y las implementaciones no se publican.";
+      "Top 20 público para personas con una postulación enviada. Ordena por puntaje sobre 100; a igual puntaje, tiene prioridad quien lo alcanzó primero y después quien usó menos evaluaciones oficiales. La CPU registrada es un diagnóstico: las cargas de evaluación varían y no se usa como desempate. Los casos ocultos y las implementaciones no se publican.";
 
   return (
     <section

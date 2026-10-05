@@ -26,15 +26,13 @@ test("closed Scheduler renders the waiting message and retains its ranking", () 
   expect(html).toContain("Ya no se reciben soluciones ni evaluaciones");
   expect(html).toContain("Cerrado");
   expect(html).toContain("Ranking");
-  expect(html).toContain("95% o más");
-  expect(html).toContain(
-    "Todavía no hay participantes con un puntaje de 95% o más",
-  );
+  expect(html).toContain("Top 20");
+  expect(html).toContain("Nadie ha enviado una evaluación oficial todavía");
   expect(html).not.toContain("Aparecen todos los puntajes válidos");
   expect(html).not.toContain("andes challenge init --challenge broken-agent");
 });
 
-test("Scheduler page renders all qualifying participants, including ranks after 17", () => {
+test("Scheduler page renders only the top 20 participants", () => {
   const challenge = challengeBySlug("broken-agent");
   if (!challenge) throw new Error("missing broken-agent");
   const now = new Date("2026-10-02T05:00:00.000Z");
@@ -70,17 +68,17 @@ test("Scheduler page renders all qualifying participants, including ranks after 
     />,
   );
 
-  expect(html.match(/<tr\b/g)).toHaveLength(23);
+  expect(html.match(/<tr\b/g)).toHaveLength(21);
   expect(html).toContain("Participant 18");
-  expect(html).toContain("Participant 22");
-  expect(html).toContain("#22");
-  expect(html).toContain("95%");
+  expect(html).toContain("Participant 20");
+  expect(html).toContain("#20");
+  expect(html).not.toContain("Participant 21");
   expect(html).not.toContain("Participant 23");
   expect(html).not.toContain("Participant 24");
-  expect(html).toContain("sin límite de participantes");
+  expect(html).toContain("Top 20");
 });
 
-test("closed Slow Service publishes every result with its achievement time and CPU", () => {
+test("closed Slow Service publishes the top 20 with achievement time and CPU", () => {
   const challenge = challengeBySlug("make-it-fast");
   if (!challenge) throw new Error("missing make-it-fast");
   const now = new Date("2026-10-05T18:51:16.000Z");
@@ -110,15 +108,17 @@ test("closed Slow Service publishes every result with its achievement time and C
       }}
     />,
   );
-  expect(html.match(/<tr\b/g)).toHaveLength(35);
-  expect(html).toContain("Participant 34");
+  expect(html.match(/<tr\b/g)).toHaveLength(21);
+  expect(html).toContain("Participant 20");
+  expect(html).not.toContain("Participant 21");
+  expect(html).not.toContain("Participant 34");
   expect(html).toContain("Mejor resultado (Lima)");
   expect(html).toMatch(/datetime="2026-10-03T12:00:00.000Z"/i);
   expect(html).toContain("07:00:00");
   expect(html).toContain("CPU registrada");
   expect(html).toContain("70.32 s");
   expect(html).toContain("tiene prioridad quien lo alcanzó primero");
-  expect(html).toContain("sin límite de participantes");
+  expect(html).toContain("Top 20");
   expect(html).toContain("Cerrado");
   expect(html).not.toContain("andes challenge init --challenge make-it-fast");
 });

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import type { ChallengeScore } from "@chofex/challenges-contract";
+import {
+  type ChallengeScore,
+  challengeCatalog,
+} from "@chofex/challenges-contract";
 import {
   compareRankedChallengeEvaluations,
   competitionRanks,
@@ -74,70 +77,29 @@ describe("challenge ranking policy", () => {
     ).toEqual([1, 2, 3]);
   });
 
-  test("keeps the first 17 entries for other challenges", () => {
-    const ranked = Array.from({ length: 20 }, (_, index) => ({
+  test("shows the first 20 eligible results in every challenge regardless of score", () => {
+    const ranked = Array.from({ length: 25 }, (_, index) => ({
       position: index + 1,
-      accuracy: 0.9,
+      accuracy: 0.94 - index / 100,
     }));
-
-    for (const slug of ["black-box", "power-grid"]) {
-      expect(publicRankingEntries({ slug, ranked })).toEqual(
-        ranked.slice(0, 17),
-      );
+    for (const challenge of challengeCatalog) {
+      const entries = publicRankingEntries({ slug: challenge.slug, ranked });
+      expect(entries.map((entry) => entry.position)).toEqual([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+      ]);
     }
   });
 
-  test("publishes every Slow Service result beyond position 17", () => {
-    const ranked = Array.from({ length: 34 }, (_, index) => ({
-      position: index + 1,
-      accuracy: index < 24 ? 1 : 0.6,
-    }));
-    expect(publicRankingEntries({ slug: "make-it-fast", ranked })).toEqual(
-      ranked,
-    );
-  });
-
-  test("shows every Broken Agent score of at least 95%, beyond position 17", () => {
-    const ranked = Array.from({ length: 22 }, (_, index) => ({
-      position: index + 1,
-      accuracy: index < 19 ? 0.97 : 0.95,
-    }));
-    ranked.push({ position: 23, accuracy: 0.9499 });
-
-    expect(
-      publicRankingEntries({ slug: "broken-agent", ranked }).map(
-        (entry) => entry.position,
-      ),
-    ).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-      22,
-    ]);
-  });
-
-  test("excludes Broken Agent scores below 95% even within the first 17", () => {
-    expect(
-      publicRankingEntries({
-        slug: "broken-agent",
-        ranked: [
-          { position: 1, accuracy: 1 },
-          { position: 2, accuracy: 0.95 },
-          { position: 3, accuracy: 0.9499 },
-          { position: 4, accuracy: 0.8 },
-        ],
-      }),
-    ).toEqual([
-      { position: 1, accuracy: 1 },
-      { position: 2, accuracy: 0.95 },
-    ]);
-  });
-
-  test("returns no Broken Agent entries when nobody meets 95%", () => {
-    expect(
-      publicRankingEntries({
-        slug: "broken-agent",
-        ranked: [{ accuracy: 0.94 }],
-      }),
-    ).toEqual([]);
+  test("keeps all results when fewer than 20 people are ranked", () => {
+    const ranked = [{ accuracy: 0.94 }, { accuracy: 0.6 }];
+    for (const challenge of challengeCatalog) {
+      expect(publicRankingEntries({ slug: challenge.slug, ranked })).toEqual(
+        ranked,
+      );
+      expect(
+        publicRankingEntries({ slug: challenge.slug, ranked: [] }),
+      ).toEqual([]);
+    }
   });
 
   test("supports final tie breakers that produce distinct ranks", () => {

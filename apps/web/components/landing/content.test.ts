@@ -541,17 +541,22 @@ test("labels track cards as tracks", async () => {
   expect(source).not.toContain("Challenge {seat.index}");
 });
 
-test("advertises Challenge 2 as live after Challenge 1 closes", async () => {
-  const [homeSource, heroSource] = await Promise.all([
+test("links home challenge buttons to the final Challenge 3 ranking", async () => {
+  const [homeSource, heroSource, qualifierSource] = await Promise.all([
     Bun.file(new URL("../../app/page.tsx", import.meta.url)).text(),
     Bun.file(new URL("./hero.tsx", import.meta.url)).text(),
+    Bun.file(new URL("./qualifier-challenges.tsx", import.meta.url)).text(),
   ]);
 
   expect(homeSource).not.toContain("LiveChallengeBanner");
-  expect(heroSource).toContain('href="/challenges/broken-agent"');
+  expect(heroSource).toContain('href="/challenges/make-it-fast"');
+  expect(qualifierSource).toContain('href="/challenges/make-it-fast"');
   expect(heroSource).toContain("heroCopy.challengeCta");
-  expect(qualifierChallengesCopy.liveKicker).toMatch(/Challenge 2.*en vivo/i);
-  expect(qualifierChallengesCopy.liveCta).toMatch(/competir/i);
+  expect(qualifierChallengesCopy.liveKicker).toBe(
+    "Challenge 3 / ranking final",
+  );
+  expect(qualifierChallengesCopy.liveTitle).toBe("The Slow Service");
+  expect(qualifierChallengesCopy.liveCta).toMatch(/ranking/i);
 });
 
 test("exposes skip links and section jumps for keyboard users", async () => {
