@@ -110,6 +110,26 @@ describe("challenge catalog", () => {
     ).toBe(false);
   });
 
+  test("closes Slow Service submissions while keeping its ranking available", () => {
+    const challenge = challengeBySlug("make-it-fast");
+    if (!challenge) throw new Error("missing make-it-fast");
+
+    expect(challenge.closesAt).toBe("2026-10-05T18:51:16.000Z");
+    expect(
+      isChallengeOpenAt(challenge, new Date("2026-10-05T18:51:15.999Z")),
+    ).toBe(true);
+    expect(
+      isChallengeOpenAt(challenge, new Date("2026-10-05T18:51:16.000Z")),
+    ).toBe(false);
+    expect(
+      isChallengeRankingVisibleAt(
+        challenge,
+        new Date("2026-10-05T18:51:16.000Z"),
+      ),
+    ).toBe(true);
+    expect(challenge.playable).toBe(true);
+  });
+
   test("reveals the Black Box ranking on 23 September 2026 at 15:00 UTC-5", () => {
     const challenge = challengeBySlug("black-box");
     if (!challenge) throw new Error("missing black-box");

@@ -93,6 +93,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     format: "optimization",
     formatLabel: "Correctitud y crecimiento de CPU",
     opensAt: "2026-10-02T05:00:00.000Z",
+    closesAt: "2026-10-05T18:51:16.000Z",
     queryLimit: 0,
     evaluationLimit: 5,
     hiddenSampleSize: 100,
