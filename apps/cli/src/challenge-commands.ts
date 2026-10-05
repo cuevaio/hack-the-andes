@@ -501,7 +501,7 @@ const listCommand = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    "Discover available challenges, opening dates, and scoring formats. No login required.",
+    "Descubre los challenges disponibles para tu cuenta. Sin sesión, muestra el catálogo público.",
   ),
   Command.withExamples([
     {
@@ -516,28 +516,42 @@ const initCommand = Command.make(
   { challenge: challengeFlag },
   Effect.fn("challengeInitCommand")(function* ({ challenge }) {
     const options = yield* root;
-    const participationState = participationStateFor(challenge);
-    if (participationState !== "open") {
-      const message =
-        launchNoticeFor(challenge) ??
-        "El challenge todavía no está disponible.";
-      let code = "CHALLENGE_NOT_OPEN";
-      if (participationState === "closed") code = "CHALLENGE_CLOSED";
-      yield* execute(
-        options.output,
-        Effect.fail(cliError(code, message)),
-        challengeInitText,
-      );
-      return;
-    }
-    const operation = createChallengeScaffold(challenge).pipe(
-      Effect.map((data) => ({
+    const operation = Effect.gen(function* () {
+      if (challenge === "power-grid") {
+        const response = yield* getChallengeAttempt(
+          { apiUrl: options.apiUrl },
+          challenge,
+        );
+        if (
+          !response.data.challenge.playable ||
+          !response.data.challenge.open
+        ) {
+          return yield* Effect.fail(
+            cliError(
+              "CHALLENGE_NOT_AVAILABLE",
+              "Este challenge todavía no está disponible para tu cuenta.",
+            ),
+          );
+        }
+      } else {
+        const participationState = participationStateFor(challenge);
+        if (participationState !== "open") {
+          const message =
+            launchNoticeFor(challenge) ??
+            "El challenge todavía no está disponible.";
+          let code = "CHALLENGE_NOT_OPEN";
+          if (participationState === "closed") code = "CHALLENGE_CLOSED";
+          return yield* Effect.fail(cliError(code, message));
+        }
+      }
+      const data = yield* createChallengeScaffold(challenge);
+      return {
         version: 1 as const,
         ok: true as const,
         requestId: crypto.randomUUID(),
         data,
-      })),
-    );
+      };
+    });
     yield* execute(options.output, operation, challengeInitText);
   }),
 ).pipe(

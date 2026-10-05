@@ -15,10 +15,34 @@ import {
 } from "../src/challenge-output.js";
 import { createChallengeScaffold } from "../src/challenge-scaffold.js";
 
-test("keeps the participant scaffold unavailable during admin-only preview", async () => {
-  await expect(
-    Effect.runPromise(createChallengeScaffold("power-grid")),
-  ).rejects.toThrow("not available");
+test("creates the Power Grid starter without overwriting an existing directory", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "power-grid-scaffold-"));
+  const previousDirectory = process.cwd();
+  process.chdir(directory);
+  try {
+    expect(
+      await Effect.runPromise(createChallengeScaffold("power-grid")),
+    ).toEqual({
+      challenge: "power-grid",
+      path: "power-grid",
+      status: "created",
+    });
+    const file = join(directory, "power-grid/bill.js");
+    expect(await Bun.file(file).text()).toContain(
+      "function calculateBill(input)",
+    );
+    expect(
+      await Bun.file(join(directory, "power-grid/input.json")).json(),
+    ).toEqual(powerGridExample);
+    await writeFile(file, "my solution");
+    expect(
+      (await Effect.runPromise(createChallengeScaffold("power-grid"))).status,
+    ).toBe("exists");
+    expect(await Bun.file(file).text()).toBe("my solution");
+  } finally {
+    process.chdir(previousDirectory);
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("reads an electricity query and accepts a solution without a review", async () => {

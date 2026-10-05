@@ -26,7 +26,8 @@ import {
   splitFullName,
 } from "@chofex/registration-contract";
 import { DateTime, Schema } from "effect";
-
+import { currentChallengeTime } from "../challenges/clock";
+import { hasChallengeEarlyAccess } from "../challenges/early-access";
 import { challengeProgressForParticipant } from "../challenges/service";
 import { badgeOneLinerFor } from "../credential/profile";
 import { isUniqueViolation } from "../db-errors";
@@ -180,17 +181,24 @@ const resultFor = async (
   application: ApplicationRecord,
   details?: AcceptanceDetailsRecord,
 ): Promise<RegistrationResult> => {
-  const [challenges, [participant]] = await Promise.all([
-    challengeProgressForParticipant(application.participantId),
-    db
-      .select({
-        countryCode: participants.countryCode,
-        legalName: participants.legalName,
-      })
-      .from(participants)
-      .where(eq(participants.id, application.participantId)),
-  ]);
+  const [participant] = await db
+    .select({
+      countryCode: participants.countryCode,
+      legalName: participants.legalName,
+      clerkUserId: participants.clerkUserId,
+    })
+    .from(participants)
+    .where(eq(participants.id, application.participantId));
   if (!participant) throw new Error("Application participant not found");
+  const earlyAccess = await hasChallengeEarlyAccess(
+    participant.clerkUserId,
+    "power-grid",
+  );
+  const challenges = await challengeProgressForParticipant(
+    application.participantId,
+    currentChallengeTime(),
+    earlyAccess,
+  );
   const registration = toView(
     application,
     details,

@@ -1445,9 +1445,6 @@ export function CandidateDashboard({
             aria-label="Vistas de selección"
             className="mt-6 flex flex-wrap gap-2"
           >
-            <ButtonLink variant="outline" href="/admin/challenges/power-grid">
-              Probar challenge 4
-            </ButtonLink>
             <ButtonLink
               variant={isRankingView ? "outline" : "default"}
               href={pageHref({

@@ -21,6 +21,9 @@ process.env.PARTICIPANT_DATA_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString(
   "base64",
 );
 mock.module("server-only", () => ({}));
+mock.module("../../challenges/early-access", () => ({
+  hasChallengeEarlyAccess: async () => false,
+}));
 const identity = {
   clerkUserId: "user_names",
   email: "names@example.com",

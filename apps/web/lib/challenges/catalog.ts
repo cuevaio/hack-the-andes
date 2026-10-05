@@ -7,7 +7,9 @@ import {
   isChallengeOpenAt,
 } from "@chofex/challenges-contract";
 
+import { powerGridChallengeSlug } from "@chofex/challenges-contract/power-grid";
 import { challengesForceOpen, currentChallengeTime } from "./clock";
+import { hasChallengeEarlyAccess } from "./early-access";
 import { currentChallengeVersionFor } from "./engine";
 
 export const rankingPathFor = (slug: string): string => `/challenges/${slug}`;
@@ -16,10 +18,15 @@ export const catalogItemFor = (
   challenge: ChallengeDefinition,
   now: Date = currentChallengeTime(),
   forceOpen = challengesForceOpen(),
+  adminEarlyAccess = false,
 ): ChallengeCatalogItem => {
-  const closed = !forceOpen && isChallengeClosedAt(challenge, now);
+  const earlyAccess =
+    adminEarlyAccess && challenge.slug === powerGridChallengeSlug;
+  const closed =
+    !earlyAccess && !forceOpen && isChallengeClosedAt(challenge, now);
   const open =
-    challenge.playable && isChallengeOpenAt(challenge, now, forceOpen);
+    earlyAccess ||
+    (challenge.playable && isChallengeOpenAt(challenge, now, forceOpen));
   const item: ChallengeCatalogItem = {
     slug: challenge.slug,
     number: challenge.number,
@@ -33,7 +40,7 @@ export const catalogItemFor = (
     opensAt: challenge.opensAt,
     queryLimit: challenge.queryLimit,
     evaluationLimit: challenge.evaluationLimit,
-    playable: challenge.playable,
+    playable: earlyAccess || challenge.playable,
     open,
     closed,
     rankingPath: rankingPathFor(challenge.slug),
@@ -77,3 +84,19 @@ export const listPublicChallenges = (
   },
   challenges: publicChallengeCatalog(now),
 });
+
+export const listParticipantChallenges = async (
+  clerkUserId: string,
+  now: Date = currentChallengeTime(),
+) => {
+  const earlyAccess = await hasChallengeEarlyAccess(
+    clerkUserId,
+    powerGridChallengeSlug,
+  );
+  return {
+    ...listPublicChallenges(now),
+    challenges: challengeCatalog.map((challenge) =>
+      catalogItemFor(challenge, now, challengesForceOpen(), earlyAccess),
+    ),
+  };
+};

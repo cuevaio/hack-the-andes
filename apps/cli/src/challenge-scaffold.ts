@@ -57,7 +57,10 @@ export const createChallengeScaffold = Effect.fn("createChallengeScaffold")(
     challengeSlug = "black-box",
   ): Effect.fn.Return<ChallengeScaffoldResult, CliError> {
     const challenge = challengeBySlug(challengeSlug);
-    if (!challenge?.playable) {
+    if (
+      !challenge ||
+      (!challenge.playable && challengeSlug !== powerGridChallengeSlug)
+    ) {
       return yield* Effect.fail(
         cliError(
           "CHALLENGE_NOT_AVAILABLE",

@@ -57,3 +57,29 @@ test("Scheduler rejects new work at its deadline and tells participants to wait"
     );
   }
 });
+
+test("admin early access permits Power Grid while every ordinary participant stays blocked", () => {
+  const challenge = challengeBySlug("power-grid");
+  if (!challenge) throw new Error("missing power-grid");
+  for (const now of [
+    new Date("2026-10-05T17:00:00Z"),
+    new Date("2026-11-01T00:00:00Z"),
+  ]) {
+    expect(requireChallengeParticipationOpen(challenge, now, false, true)).toBe(
+      challenge,
+    );
+    expect(() =>
+      requireChallengeParticipationOpen(challenge, now, false),
+    ).toThrow("todavía no está disponible");
+  }
+  const closed = challengeBySlug("black-box");
+  if (!closed) throw new Error("missing black-box");
+  expect(() =>
+    requireChallengeParticipationOpen(
+      closed,
+      new Date("2026-10-05T17:00:00Z"),
+      false,
+      true,
+    ),
+  ).toThrow("cerrado");
+});

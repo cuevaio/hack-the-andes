@@ -47,6 +47,7 @@ import { participantIdFor } from "../registration/participants";
 import { runBrokenAgentPublicTests } from "./broken-agent-public";
 import { catalogItemFor, rankingPathFor } from "./catalog";
 import { challengesForceOpen, currentChallengeTime } from "./clock";
+import { hasChallengeEarlyAccess } from "./early-access";
 import {
   ChallengeEngineError,
   challengeEngine,
@@ -172,23 +173,26 @@ const requireChallenge = (slug: string): ChallengeDefinition => {
   return challenge;
 };
 
-const requirePlayableChallenge = (
+const requirePlayableChallenge = async (
   slug: string,
   now: Date,
-): ChallengeDefinition => {
+  clerkUserId: string,
+): Promise<ChallengeDefinition> => {
   const challenge = requireChallenge(slug);
   return requireChallengeParticipationOpen(
     challenge,
     now,
     challengesForceOpen(),
+    await hasChallengeEarlyAccess(clerkUserId, slug),
   );
 };
 
-const requireImplementedChallenge = (
+const requireImplementedChallenge = async (
   slug: string,
   now: Date,
-): ChallengeDefinition => {
-  const challenge = requirePlayableChallenge(slug, now);
+  clerkUserId: string,
+): Promise<ChallengeDefinition> => {
+  const challenge = await requirePlayableChallenge(slug, now, clerkUserId);
   if (
     challenge.slug !== blackBoxChallengeSlug &&
     challenge.slug !== powerGridChallengeSlug &&
@@ -324,7 +328,7 @@ const progressFrom = (
     status: progressStatus(attempt, evaluation),
     open: item.open,
     closed: item.closed,
-    playable: challenge.playable,
+    playable: item.playable,
     queriesUsed: attempt?.queriesUsed ?? 0,
     queriesLimit: attempt?.queriesLimit ?? challenge.queryLimit,
     evaluationsUsed: attempt?.evaluationsUsed ?? 0,
@@ -478,6 +482,7 @@ const loadChallengeActivityForParticipants = async (
   participantIds: ReadonlyArray<string>,
   now: Date,
   includeHistory: boolean,
+  adminEarlyAccess = false,
 ): Promise<ParticipantChallengeActivity> => {
   const uniqueParticipantIds = [...new Set(participantIds)];
   if (uniqueParticipantIds.length === 0) {
@@ -560,7 +565,12 @@ const loadChallengeActivityForParticipants = async (
         .map((attempt) => [attempt.challengeSlug, attempt]),
     );
     const progress = challengeCatalog.map((challenge) => {
-      const item = catalogItemFor(challenge, now, challengesForceOpen());
+      const item = catalogItemFor(
+        challenge,
+        now,
+        challengesForceOpen(),
+        adminEarlyAccess,
+      );
       const attempt = attemptBySlug.get(challenge.slug);
       let evaluation: EvaluationRecord | undefined;
       if (attempt) evaluation = evaluationByAttemptId.get(attempt.id);
@@ -628,10 +638,13 @@ export const challengeProgressForParticipants = async (
 export const challengeProgressForParticipant = async (
   participantId: string,
   now: Date = currentChallengeTime(),
+  adminEarlyAccess = false,
 ): Promise<Array<ParticipantChallengeProgress>> => {
-  const progressByParticipant = await challengeProgressForParticipants(
+  const { progressByParticipant } = await loadChallengeActivityForParticipants(
     [participantId],
     now,
+    false,
+    adminEarlyAccess,
   );
   return [...(progressByParticipant.get(participantId) ?? [])];
 };
@@ -644,7 +657,12 @@ export const getChallengeAttempt = async (
   const challenge = requireChallenge(slug);
   const challengeVersion = versionForChallenge(challenge);
   const participantId = await participantIdFor(clerkUserId);
-  const item = catalogItemFor(challenge, now, challengesForceOpen());
+  const item = catalogItemFor(
+    challenge,
+    now,
+    challengesForceOpen(),
+    await hasChallengeEarlyAccess(clerkUserId, slug),
+  );
   const rankingVisible = isChallengeRankingVisibleAt(challenge, now);
   const [existing] = await db
     .select()
@@ -755,7 +773,7 @@ export const queryChallenge = async (
   rawInput: unknown,
   now: Date = currentChallengeTime(),
 ): Promise<ChallengeQueryResult> => {
-  const challenge = requireImplementedChallenge(slug, now);
+  const challenge = await requireImplementedChallenge(slug, now, clerkUserId);
   if (
     challenge.slug !== blackBoxChallengeSlug &&
     challenge.slug !== powerGridChallengeSlug
@@ -824,7 +842,7 @@ export const testChallengeSolution = async (
   rawInput: unknown,
   now: Date = currentChallengeTime(),
 ): Promise<ChallengeLocalTestResult> => {
-  const challenge = requireImplementedChallenge(slug, now);
+  const challenge = await requireImplementedChallenge(slug, now, clerkUserId);
   const solution = parseInput(JavascriptSourceSolutionSchema, rawInput);
   const participantId = await participantIdFor(clerkUserId);
   const attempt = await attemptFor(participantId, challenge);
@@ -970,7 +988,7 @@ export const evaluateChallenge = async (
   now: Date = currentChallengeTime(),
   publicOrigin = "https://hacktheandes.com",
 ): Promise<ChallengeEvaluationResult> => {
-  const challenge = requireImplementedChallenge(slug, now);
+  const challenge = await requireImplementedChallenge(slug, now, clerkUserId);
   let solution: ChallengeSolution;
   let brokenAgentSourceDigest: string | undefined;
   let approvalReview: EvaluationApprovalReview | undefined;

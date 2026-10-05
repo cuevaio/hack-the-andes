@@ -374,11 +374,21 @@ export const submitRegistration = (
 export const listChallenges = (
   options: ApiClientOptions,
 ): Effect.Effect<ApiSuccess<ChallengeCatalogResponse>, CliError> =>
-  publicRequest(
+  request(
     options,
     "/api/v1/challenges",
     { method: "GET" },
     decodeChallengeCatalog,
+  ).pipe(
+    Effect.catch((error) => {
+      if (error.code !== "AUTHENTICATION_REQUIRED") return Effect.fail(error);
+      return publicRequest(
+        options,
+        "/api/v1/challenges",
+        { method: "GET" },
+        decodeChallengeCatalog,
+      );
+    }),
   );
 
 export const getChallengeAttempt = (

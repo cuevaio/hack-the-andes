@@ -78,7 +78,6 @@ jobs:
           DOKPLOY_URL: https://vps.cueva.io
           DOKPLOY_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           GH_TOKEN: ${{ github.token }}
-          POWER_GRID_ADMIN_PREVIEW_SECRET: ${{ secrets.POWER_GRID_ADMIN_PREVIEW_SECRET }}
         run: |
           if [[ -z "$DOKPLOY_API_KEY" || -z "$DOKPLOY_APPLICATION_ID" ]]; then
             echo "Dokploy deployment secrets are not configured yet; image publication is complete."
@@ -122,9 +121,7 @@ jobs:
             exit 1
           fi
           bun scripts/reconcile-service-environment.ts
-          if [[ "${{ inputs.deploy }}" == "true" ]]; then
-            bun scripts/configure-power-grid-preview.ts
-          fi
+          bun scripts/remove-power-grid-preview-secret.ts
           curl --fail --silent --show-error --output /dev/null \
             --request POST \
             --header "Content-Type: application/json" \

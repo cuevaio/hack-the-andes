@@ -61,6 +61,9 @@ assert.deepEqual(
 );
 
 mock.module("@chofex/db", () => ({ db: drizzle(client) }));
+mock.module("../../challenges/early-access", () => ({
+  hasChallengeEarlyAccess: async () => false,
+}));
 mock.module("../../challenges/service", () => ({
   challengeProgressForParticipant: async () => [],
 }));

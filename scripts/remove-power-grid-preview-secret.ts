@@ -5,21 +5,14 @@ const required = (name: string) => {
   if (!value) throw new Error(`${name} is required`);
   return value;
 };
-export const configurePowerGridPreview = async (options: {
+export const removePowerGridPreviewSecret = async (options: {
   baseUrl: string;
   apiKey: string;
   applicationId: string;
-  secret: string;
   fetch: typeof fetch;
 }) => {
   if (options.baseUrl !== "https://vps.cueva.io")
     throw new Error("Unexpected deployment server");
-  if (
-    options.secret.length < 32 ||
-    options.secret.length > 256 ||
-    !/^[A-Za-z0-9_-]+$/.test(options.secret)
-  )
-    throw new Error("Invalid preview secret configuration");
   const call = async (path: string, init: RequestInit): Promise<unknown> => {
     const response = await options.fetch(new URL(path, options.baseUrl), {
       ...init,
@@ -46,8 +39,8 @@ export const configurePowerGridPreview = async (options: {
   )
     throw new Error("Invalid deployment application response");
   const environment = parseEnvironment(state.env);
-  if (environment.POWER_GRID_ADMIN_PREVIEW_SECRET === options.secret) return;
-  environment.POWER_GRID_ADMIN_PREVIEW_SECRET = options.secret;
+  if (!("POWER_GRID_ADMIN_PREVIEW_SECRET" in environment)) return;
+  delete environment.POWER_GRID_ADMIN_PREVIEW_SECRET;
   await call("/api/application.saveEnvironment", {
     method: "POST",
     body: JSON.stringify({
@@ -60,14 +53,13 @@ export const configurePowerGridPreview = async (options: {
   });
 };
 if (import.meta.main) {
-  await configurePowerGridPreview({
+  await removePowerGridPreviewSecret({
     baseUrl: required("DOKPLOY_URL"),
     apiKey: required("DOKPLOY_API_KEY"),
     applicationId: required("DOKPLOY_APPLICATION_ID"),
-    secret: required("POWER_GRID_ADMIN_PREVIEW_SECRET"),
     fetch,
   });
   process.stdout.write(
-    "Admin preview configured. Existing runtime variables preserved.\n",
+    "Shared preview secret removed. Existing runtime variables preserved.\n",
   );
 }

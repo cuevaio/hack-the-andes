@@ -40,32 +40,44 @@ Deploy the Trigger tasks with `bun --filter @chofex/web trigger:deploy` and conf
 
 After deployment, confirm that the schedule is active in Trigger and that a public-name edit appears in Clerk. The participant's legal name must remain unchanged after a badge-name edit.
 
-## Challenge 4 admin preview
+## Challenge 4 admin early access
 
-The private electricity billing preview is at `/admin/challenges/power-grid`.
-An existing account with access to the admin panel and the shared
-`POWER_GRID_ADMIN_PREVIEW_SECRET` are both required. The key is entered in the
-browser, sent in a request header, and kept only in the current tab. It must not
-be placed in a URL or a `NEXT_PUBLIC_*` variable.
+Power Grid is available through the ordinary CLI endpoints before public launch
+when the authenticated Clerk user's public or private metadata contains
+`role: "admin"`, `role: "application_reviewer"`, or the corresponding
+`roles` array. OAuth and browser tokens authenticate
+normally; the server fetches current Clerk metadata on each operation.
+These are the same metadata roles used by the admin panel. Configured admin IDs
+alone do not grant early access.
+No shared secret or special preview endpoint is required.
 
-The preview calls the private `power-grid-v1` oracle and grader with separate,
-deterministic admin seeds. It does not create participant attempts, observations,
-evaluations, funnel milestones, or rankings. The browser simulates 25 queries
-and 3 evaluations. Reloading starts a fresh local notebook with the same rules.
-Admins can download their notebook and `bill.js` before reloading. Public Power
-Grid participation stays disabled by `playable: false`, including after its
-placeholder opening date, until a later explicit launch change.
+Admins use their regular participant attempt, notebook, query reservations,
+evaluations and scores. The limits are 25 successful queries and 3 official
+evaluations; closing the CLI or reloading a browser does not reset them. Tests
+against the notebook are free. Public participation remains disabled by
+`playable: false` until an explicit launch change. Authenticated admin catalog
+and attempt responses advertise Power Grid as playable and open.
 
-For a requested preview deployment, dispatch `production-image.yml` from the
-reviewed branch with the boolean input `deploy=true` in both repositories. The
-workflow builds and deploys the immutable commit image without merging to main
-or triggering an npm release. The web workflow requires the preview key in its
-GitHub `Production` environment and writes that key to the existing Dokploy
-application while preserving other runtime variables and build settings. Do not
-replace the application environment with a partial set of variables.
+Use a CLI build from this branch; the current npm version does not yet include
+Power Grid. From a checkout with Bun 1.3.14 installed:
 
-To test: sign in, open the preview page, enter the shared key, change a field in
-the reading JSON, and select `Consultar`. Edit `calculateBill(input)` in the code
-box, use `Probar cuaderno` for free notebook checks, and select `Evaluar solución`
-for the hidden score over 1,000 cases. Admin panel access follows the existing
-configured admin IDs and Clerk admin/application-reviewer roles.
+```sh
+bun install --frozen-lockfile
+bun --filter chofex-cli build
+npm install --global ./apps/cli --ignore-scripts
+andes login
+andes challenge list
+andes challenge init --challenge power-grid
+cd power-grid
+andes challenge query --challenge power-grid --input input.json
+andes challenge notebook --challenge power-grid
+andes challenge test --challenge power-grid --source bill.js
+andes challenge evaluate --challenge power-grid --source bill.js
+andes challenge show --challenge power-grid
+```
+
+For an authorized branch deployment, dispatch `production-image.yml` with
+`deploy=true`. The private engine already supports `power-grid-v1`. The web
+workflow removes the former shared preview secret from Dokploy while preserving
+other variables and build settings. Delete the former GitHub Production secret
+as well. npm publication continues to use the exact-commit release approval.

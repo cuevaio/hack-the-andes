@@ -73,3 +73,18 @@ test("advertises Power Grid v1 while keeping public participation disabled", () 
     evaluationLimit: 3,
   });
 });
+
+test("admin early access opens only Power Grid in the personalized catalog", () => {
+  const now = new Date("2026-10-05T17:00:00Z");
+  for (const slug of ["power-grid", "black-box", "agent-arena"]) {
+    const challenge = challengeBySlug(slug);
+    if (!challenge) throw new Error(`missing ${slug}`);
+    const item = catalogItemFor(challenge, now, false, true);
+    expect(item.open).toBe(slug === "power-grid");
+    if (slug === "power-grid") {
+      expect(item.playable).toBe(true);
+      expect(item.opensAt).toBe(challenge.opensAt);
+      expect(item.closed).toBe(false);
+    }
+  }
+});
