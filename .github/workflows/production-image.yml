@@ -10,6 +10,14 @@ on:
         required: false
         default: false
         type: boolean
+      runner:
+        description: Runner label for this manual build
+        required: false
+        default: ubuntu-latest
+        type: choice
+        options:
+          - ubuntu-latest
+          - power-grid-preview-local
 
 concurrency:
   group: production-image-${{ github.ref }}
@@ -23,7 +31,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     environment: Production
     steps:
       - uses: actions/checkout@v5
