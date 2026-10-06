@@ -42,7 +42,7 @@ test("advertises only the current playable challenge version", () => {
 });
 
 test("future dates and force-open cannot activate unimplemented challenges", () => {
-  for (const slug of ["power-grid", "agent-arena"]) {
+  for (const slug of ["agent-arena"]) {
     const challenge = challengeBySlug(slug);
     if (!challenge) throw new Error(`missing ${slug}`);
     for (const forceOpen of [false, true]) {
@@ -57,17 +57,17 @@ test("future dates and force-open cannot activate unimplemented challenges", () 
   }
 });
 
-test("advertises Power Grid v1 while keeping public participation disabled", () => {
+test("advertises Power Grid v1 publicly at its launch time", () => {
   const challenge = challengeBySlug("power-grid");
   if (!challenge) throw new Error("missing power-grid");
   const item = catalogItemFor(
     challenge,
-    new Date("2026-10-05T17:00:00Z"),
+    new Date("2026-10-06T00:33:04Z"),
     false,
   );
   expect(item).toMatchObject({
-    playable: false,
-    open: false,
+    playable: true,
+    open: true,
     challengeVersion: "power-grid-v1",
     queryLimit: 25,
     evaluationLimit: 3,

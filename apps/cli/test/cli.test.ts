@@ -404,6 +404,8 @@ describe("CLI JSON mode", () => {
         "test-token",
         "challenge",
         "query",
+        "--challenge",
+        "black-box",
         "--distance",
         "100",
         "--weight",

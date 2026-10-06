@@ -111,11 +111,11 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     coreSkill: "Ingeniería inversa y diseño de experimentos",
     format: "accuracy",
     formatLabel: "Porcentaje de coincidencias exactas",
-    opensAt: "2026-10-09T05:00:00.000Z",
+    opensAt: "2026-10-06T00:33:04.000Z",
     queryLimit: 25,
     evaluationLimit: 3,
     hiddenSampleSize: 1_000,
-    playable: false,
+    playable: true,
     solutionKind: "javascript_source",
   },
   {
