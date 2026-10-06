@@ -112,6 +112,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     format: "accuracy",
     formatLabel: "Porcentaje de coincidencias exactas",
     opensAt: "2026-10-09T05:00:00.000Z",
+    rankingVisibleAt: "2026-10-09T05:00:00.000Z",
     queryLimit: 25,
     evaluationLimit: 3,
     hiddenSampleSize: 1_000,
