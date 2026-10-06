@@ -32,21 +32,21 @@ test("accepts zero and maximum readings and rejects malformed input", () => {
   }
 });
 
-test("challenge four preserves the budgets while public participation remains disabled", () => {
+test("challenge four opens publicly without changing its budgets", () => {
   const challenge = challengeBySlug("power-grid");
   if (!challenge) throw new Error("Missing power-grid");
   expect(challenge).toMatchObject({
     number: 4,
-    playable: false,
+    playable: true,
     format: "accuracy",
     queryLimit: 25,
     evaluationLimit: 3,
     hiddenSampleSize: 1000,
   });
-  expect(isChallengeOpenAt(challenge, new Date("2026-10-09T04:59:59Z"))).toBe(
+  expect(isChallengeOpenAt(challenge, new Date("2026-10-06T00:33:03Z"))).toBe(
     false,
   );
-  expect(isChallengeOpenAt(challenge, new Date("2026-10-09T05:00:00Z"))).toBe(
+  expect(isChallengeOpenAt(challenge, new Date("2026-10-06T00:33:04Z"))).toBe(
     true,
   );
 });

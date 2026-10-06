@@ -49,17 +49,19 @@ when the authenticated Clerk user's public or private metadata contains
 normally; the server fetches current Clerk metadata on each operation.
 These are the same metadata roles used by the admin panel. Configured admin IDs
 alone do not grant early access.
-No shared secret or special preview endpoint is required.
+No shared secret or special preview endpoint is required. Power Grid opened to
+all participants on October 5, 2026 at 19:33:04 in Lima. Its version remains
+power-grid-v1, preserving existing attempts and scores.
 
 Admins use their regular participant attempt, notebook, query reservations,
 evaluations and scores. The limits are 25 successful queries and 3 official
 evaluations; closing the CLI or reloading a browser does not reset them. Tests
-against the notebook are free. Public participation remains disabled by
-`playable: false` until an explicit launch change. Authenticated admin catalog
-and attempt responses advertise Power Grid as playable and open.
+against the notebook are free. Public participation is now enabled through the
+regular CLI and API. Catalog and attempt responses advertise Power Grid as
+playable and open for every participant.
 
-Use a CLI build from this branch; the current npm version does not yet include
-Power Grid. From a checkout with Bun 1.3.14 installed:
+The published CLI supports Power Grid. Run `andes update` to refresh the CLI
+and participant skill. From a source checkout with Bun 1.3.14 installed:
 
 ```sh
 bun install --frozen-lockfile
