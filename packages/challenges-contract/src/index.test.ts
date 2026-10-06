@@ -130,6 +130,26 @@ describe("challenge catalog", () => {
     expect(challenge.playable).toBe(true);
   });
 
+  test("keeps Challenge 4 ranking private until Friday 9 October 2026 at 00:00 UTC-5", () => {
+    const challenge = challengeBySlug("power-grid");
+    if (!challenge) throw new Error("missing power-grid");
+
+    expect(challenge.number).toBe(4);
+    expect(challenge.rankingVisibleAt).toBe("2026-10-09T05:00:00.000Z");
+    expect(
+      isChallengeRankingVisibleAt(
+        challenge,
+        new Date("2026-10-09T04:59:59.999Z"),
+      ),
+    ).toBe(false);
+    expect(
+      isChallengeRankingVisibleAt(
+        challenge,
+        new Date("2026-10-09T05:00:00.000Z"),
+      ),
+    ).toBe(true);
+  });
+
   test("reveals the Black Box ranking on 23 September 2026 at 15:00 UTC-5", () => {
     const challenge = challengeBySlug("black-box");
     if (!challenge) throw new Error("missing black-box");
