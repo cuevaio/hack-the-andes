@@ -43,31 +43,6 @@ const DeliveryMetadataSchema = Schema.Struct({
 });
 export type DeliveryMetadata = typeof DeliveryMetadataSchema.Type;
 
-const campaignWhere = and(
-  eq(funnelEmailDeliveries.clerkUserId, campaignUserId),
-  eq(funnelEmailDeliveries.stage, campaignStage),
-);
-const scopeWhere = (scope: string) =>
-  and(campaignWhere, eq(funnelEmailDeliveries.scopeId, scope));
-const leaseValue = (lease: CampaignLease) =>
-  JSON.stringify({ kind: "campaign_lease", token: lease.token });
-const activeSince = sql`clock_timestamp() - (${leaseMs} * interval '1 millisecond')`;
-const leaseWhere = (lease: CampaignLease) =>
-  and(
-    scopeWhere("campaign_lease"),
-    eq(funnelEmailDeliveries.status, "locked"),
-    eq(funnelEmailDeliveries.triggerRunId, leaseValue(lease)),
-    gt(funnelEmailDeliveries.updatedAt, activeSince),
-  );
-// The Neon HTTP driver has no interactive transactions. Keep ownership checks
-// and account/email changes in one PostgreSQL statement.
-const ownerGuard = (lease: CampaignLease) => sql`
-  SELECT id FROM ${funnelEmailDeliveries}
-  WHERE clerk_user_id = ${campaignUserId} AND stage = ${campaignStage}
-    AND scope_id = 'campaign_lease' AND status = 'locked'
-    AND trigger_run_id = ${leaseValue(lease)} AND updated_at > ${activeSince}
-  FOR UPDATE`;
-
 function stored<S extends Schema.Top & { readonly DecodingServices: never }>(
   schema: S,
   value: string,
@@ -114,7 +89,38 @@ export function createDeliveryStore(
     "select" | "insert" | "update" | "execute"
   >,
   monotonicNow: () => number = () => performance.now(),
+  campaign = { id: campaignId, userId: campaignUserId, stage: campaignStage },
 ) {
+  const {
+    id: campaignId,
+    userId: campaignUserId,
+    stage: campaignStage,
+  } = campaign;
+  const campaignWhere = and(
+    eq(funnelEmailDeliveries.clerkUserId, campaignUserId),
+    eq(funnelEmailDeliveries.stage, campaignStage),
+  );
+  const scopeWhere = (scope: string) =>
+    and(campaignWhere, eq(funnelEmailDeliveries.scopeId, scope));
+  const leaseValue = (lease: CampaignLease) =>
+    JSON.stringify({ kind: "campaign_lease", token: lease.token });
+  const activeSince = sql`clock_timestamp() - (${leaseMs} * interval '1 millisecond')`;
+  const leaseWhere = (lease: CampaignLease) =>
+    and(
+      scopeWhere("campaign_lease"),
+      eq(funnelEmailDeliveries.status, "locked"),
+      eq(funnelEmailDeliveries.triggerRunId, leaseValue(lease)),
+      gt(funnelEmailDeliveries.updatedAt, activeSince),
+    );
+  // The Neon HTTP driver has no interactive transactions. Keep ownership checks
+  // and account/email changes in one PostgreSQL statement.
+  const ownerGuard = (lease: CampaignLease) => sql`
+    SELECT id FROM ${funnelEmailDeliveries}
+    WHERE clerk_user_id = ${campaignUserId} AND stage = ${campaignStage}
+      AND scope_id = 'campaign_lease' AND status = 'locked'
+      AND trigger_run_id = ${leaseValue(lease)} AND updated_at > ${activeSince}
+    FOR UPDATE`;
+
   async function heartbeat(lease: CampaignLease) {
     const started = monotonicNow();
     const [updated] = await database
