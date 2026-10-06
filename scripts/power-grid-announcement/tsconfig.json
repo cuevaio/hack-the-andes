@@ -1,0 +1,4 @@
+{
+  "extends": "../slow-service-announcement/tsconfig.json",
+  "include": ["./**/*.ts", "../announce-power-grid.ts"]
+}
