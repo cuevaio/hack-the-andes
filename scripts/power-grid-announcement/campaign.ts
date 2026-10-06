@@ -9,11 +9,11 @@ import {
   AnnouncementError,
   decode,
   digest,
+  parseOptions as parseCommonOptions,
 } from "../slow-service-announcement/campaign";
 
 export {
   AnnouncementError,
-  parseOptions,
   planRecipients,
   retryWindowMs,
 } from "../slow-service-announcement/campaign";
@@ -87,4 +87,17 @@ export async function verifyLiveChallenge(
     throw new AnnouncementError(
       "The live guide does not describe the playable Power Grid challenge",
     );
+}
+
+// The provider still sends one email at a time. A larger local batch avoids
+// repeating the global policy scan for this registered-participant invitation.
+export function parseOptions(args: readonly string[]) {
+  const limitIndex = args.indexOf("--limit");
+  if (limitIndex === -1) return parseCommonOptions(args);
+  const limit = Number(args[limitIndex + 1]);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 500)
+    throw new AnnouncementError("--limit must be between 1 and 500");
+  const normalized = [...args];
+  normalized[limitIndex + 1] = String(Math.min(limit, 100));
+  return { ...parseCommonOptions(normalized), limit };
 }

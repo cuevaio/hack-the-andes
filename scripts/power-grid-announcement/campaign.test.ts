@@ -11,6 +11,7 @@ import {
   campaignId,
   campaignStage,
   campaignUserId,
+  parseOptions,
   providerKey,
   snapshot,
   verifyLiveChallenge,
@@ -97,4 +98,14 @@ test("Power Grid deliveries cannot conflict with earlier announcement receipts",
   } finally {
     await pg.close();
   }
+});
+
+test("a single invitation batch still requires both send flags and has a bounded limit", () => {
+  expect(
+    parseOptions(["--send", "--confirm-live-challenge", "--limit", "500"]),
+  ).toEqual({ mode: "send", limit: 500 });
+  expect(() => parseOptions(["--send", "--limit", "500"])).toThrow("requires");
+  expect(() =>
+    parseOptions(["--send", "--confirm-live-challenge", "--limit", "501"]),
+  ).toThrow("between 1 and 500");
 });

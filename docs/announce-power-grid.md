@@ -24,7 +24,7 @@ bun --no-env-file scripts/announce-power-grid.ts --dry-run
 Send after the public Power Grid v1 catalog and guide pass live checks:
 
 ```sh
-bun --no-env-file scripts/announce-power-grid.ts --send --confirm-live-challenge --limit 100
+bun --no-env-file scripts/announce-power-grid.ts --send --confirm-live-challenge --limit 500
 ```
 
 Repeat the identical command until the report has no pending or retryable

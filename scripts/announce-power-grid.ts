@@ -116,6 +116,7 @@ export async function main(args: readonly string[]) {
     );
   try {
     let providerRequests = 0;
+    let providerPhase = "checking_recipient_policy";
     report({
       campaignId,
       phase: "checking_recipient_policy",
@@ -128,7 +129,7 @@ export async function main(args: readonly string[]) {
         if (providerRequests % 50 === 0)
           report({
             campaignId,
-            phase: "checking_recipient_policy",
+            phase: providerPhase,
             providerRequests,
           });
         if (ownership.kind === "acquired")
@@ -182,6 +183,7 @@ export async function main(args: readonly string[]) {
       content.contentHash,
       lease,
     );
+    providerPhase = "sending";
     const totals = {
       sent: 0,
       duplicate: 0,
