@@ -58,20 +58,27 @@ test("Scheduler rejects new work at its deadline and tells participants to wait"
   }
 });
 
-test("admin early access permits Power Grid while every ordinary participant stays blocked", () => {
+test("admin early access precedes launch and ordinary participants can enter after launch", () => {
   const challenge = challengeBySlug("power-grid");
   if (!challenge) throw new Error("missing power-grid");
   for (const now of [
     new Date("2026-10-05T17:00:00Z"),
-    new Date("2026-11-01T00:00:00Z"),
+    new Date("2026-10-06T00:33:03Z"),
   ]) {
     expect(requireChallengeParticipationOpen(challenge, now, false, true)).toBe(
       challenge,
     );
     expect(() =>
       requireChallengeParticipationOpen(challenge, now, false),
-    ).toThrow("todavía no está disponible");
+    ).toThrow("abre");
   }
+  expect(
+    requireChallengeParticipationOpen(
+      challenge,
+      new Date("2026-10-06T00:33:04Z"),
+      false,
+    ),
+  ).toBe(challenge);
   const closed = challengeBySlug("black-box");
   if (!closed) throw new Error("missing black-box");
   expect(() =>

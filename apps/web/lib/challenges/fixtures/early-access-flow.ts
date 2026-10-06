@@ -10,10 +10,11 @@ import { drizzle } from "drizzle-orm/pglite";
 
 const client = new PGlite();
 let adminRole = true;
+let challengeNow = new Date("2026-10-05T17:00:00Z");
 mock.module("server-only", () => ({}));
 mock.module("@chofex/db", () => ({ db: drizzle(client) }));
 mock.module("../clock", () => ({
-  currentChallengeTime: () => new Date("2026-10-05T17:00:00Z"),
+  currentChallengeTime: () => challengeNow,
   challengesForceOpen: () => false,
 }));
 mock.module("../../funnel-reminders/enqueue", () => ({
@@ -179,7 +180,7 @@ try {
     false,
   );
   for (const token of ["ordinary-oauth", "ordinary-session"]) {
-    assert.equal((await request("query", powerGridExample, token)).status, 404);
+    assert.equal((await request("query", powerGridExample, token)).status, 403);
     assert.equal(
       (
         await request(
@@ -191,7 +192,7 @@ try {
           token,
         )
       ).status,
-      404,
+      403,
     );
     assert.equal(
       (
@@ -204,7 +205,7 @@ try {
           token,
         )
       ).status,
-      404,
+      403,
     );
   }
   assert.deepEqual(
@@ -308,9 +309,9 @@ try {
   assert.equal(
     (await request("query", { ...powerGridExample, consumptionKwh: 501 }))
       .status,
-    404,
+    403,
   );
-  assert.equal((await request("evaluate", solution)).status, 404);
+  assert.equal((await request("evaluate", solution)).status, 403);
   const revoked = await runCli(
     "admin-oauth",
     "show",
@@ -318,6 +319,56 @@ try {
     "power-grid",
   );
   assert.equal(revoked.body.data.challenge.open, false);
+  challengeNow = new Date("2026-10-06T00:33:04Z");
+  const launchedCatalog = await (
+    await fetch(new URL("/api/v1/challenges", api.url))
+  ).json();
+  assert.equal(
+    launchedCatalog.data.challenges.find(
+      (entry: { slug: string }) => entry.slug === "power-grid",
+    ).open,
+    true,
+  );
+  for (const token of ["ordinary-oauth", "ordinary-session"]) {
+    assert.equal(
+      (await runCli(token, "init", "--challenge", "power-grid")).exitCode,
+      0,
+    );
+    assert.equal(
+      (
+        await request(
+          "query",
+          {
+            ...powerGridExample,
+            consumptionKwh: token.endsWith("-session") ? 101 : 100,
+          },
+          token,
+        )
+      ).status,
+      200,
+    );
+    assert.equal((await request("test", solution, token)).status, 200);
+  }
+  assert.equal(
+    (await request("evaluate", solution, "ordinary-oauth")).status,
+    200,
+  );
+  const ordinary = await runCli(
+    "ordinary-session",
+    "show",
+    "--challenge",
+    "power-grid",
+  );
+  assert.equal(ordinary.body.data.progress.queriesUsed, 2);
+  assert.equal(ordinary.body.data.progress.evaluationsUsed, 1);
+  const preserved = await runCli(
+    "admin-oauth",
+    "show",
+    "--challenge",
+    "power-grid",
+  );
+  assert.equal(preserved.body.data.progress.queriesUsed, 25);
+  assert.equal(preserved.body.data.progress.evaluationsUsed, 3);
   console.log("early access flow passed");
 } finally {
   api.stop(true);
