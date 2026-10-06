@@ -48,3 +48,15 @@ Validate with:
 bun --no-env-file test scripts/slow-service-announcement scripts/power-grid-announcement
 bunx --bun tsc --noEmit -p scripts/power-grid-announcement/tsconfig.json
 ```
+
+## Production delivery result
+
+Completed October 5, 2026, at 20:22 Lima time. The audience contained 189
+participants. One suppressed address was excluded; all 188 eligible accounts
+received a provider-accepted invitation. There were no duplicate, failed,
+changed-address or uncertain deliveries.
+
+Read-only verification confirmed 188 distinct provider receipts, the frozen
+content fingerprint, zero pending/retryable deliveries and a released campaign
+lease. Three sampled provider receipts reported `delivered`. Power Grid v1's
+public catalog and guide still passed live checks after the send.
