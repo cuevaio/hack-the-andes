@@ -618,6 +618,7 @@ export const footerNavigation = [
     links: [
       { href: "#sponsors", label: "Organizadores" },
       { href: "/credits", label: "Créditos" },
+      { href: "/brand", label: "Marca y kit de prensa" },
       ...legalNavigation,
     ],
   },

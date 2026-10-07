@@ -1,0 +1,57 @@
+Hack the Andes · Kit de prensa
+https://hacktheandes.com/brand
+
+Sobre el evento
+Hack the Andes es una hackathon presencial en Lima, Perú, para AI, product y software engineers. Reúne a 100 participantes durante 30 horas para construir y entregar un producto funcionando. El evento se realiza el 17 y 18 de octubre de 2026, con equipos de 1 a 4 personas y 3 tracks que se revelan al iniciar la hackathon.
+
+Datos para publicar
+Fecha: 17 y 18 de octubre de 2026.
+Ciudad: Lima, Perú. Sede exacta por anunciar.
+Formato: presencial, 30 horas.
+Cupos: 100 participantes.
+Equipos: 1 a 4 personas.
+Tracks: 3, revelados al iniciar el evento.
+Premios: más de S/ 8 000.
+Postulaciones: hasta el 9 de octubre de 2026, a través de https://hacktheandes.com/#apply.
+Registrarse no reserva un cupo. Es necesario enviar la postulación. Los mejores resultados en los challenges obtienen pase directo.
+
+Organización
+Organiza Crafter Station: https://crafter.run
+Sponsor principal: Chofex, https://chofex.com
+Aliado: Peru Tech Week, https://perutechweek.com
+
+Enlaces
+Sitio: https://hacktheandes.com
+Marca y recursos: https://hacktheandes.com/brand
+Challenges: https://hacktheandes.com/challenges
+Comunidad y consultas: https://hacktheandes.com/discord
+
+Identidad y uso
+Escribe el nombre como "Hack the Andes". Conserva las proporciones del wordmark, su color y un margen libre alrededor. Usa la versión clara sobre fondos oscuros y la oscura sobre fondos claros. No añadas sombras, contornos ni elementos dentro del wordmark. Mantén los logos de las organizaciones con su identidad original y su rol correspondiente.
+
+Tipografías
+Stack Sans Notch: nombre del evento.
+Barlow Condensed: títulos.
+Google Sans Flex: texto.
+IBM Plex Mono: etiquetas y datos.
+Las fuentes se distribuyen por sus canales oficiales y no se incluyen en este kit.
+
+Colores del sitio (tema oscuro)
+Fondo: #050406
+Texto: #f6f3ee
+Acciones: #6f9bff
+Acento: #f59d91
+Arena: #ddcfbd
+
+Contenido del ZIP
+Wordmarks claros y oscuros en SVG (trazados, sin dependencia de fuentes) y PNG transparentes.
+Logos de Crafter Station, Chofex y Peru Tech Week en PNG.
+Imagen del evento para redes (1200 × 675 px).
+Ilustración de los Andes en PNG. Es una ilustración de marca, no una fotografía de la sede.
+Este documento con datos, enlaces y pautas de uso.
+
+Créditos del relieve
+El relieve del Valle Sagrado proviene de Mapzen Terrain Tiles, distribuido mediante AWS Open Data. Los datos SRTM son cortesía del U.S. Geological Survey.
+https://registry.opendata.aws/terrain-tiles/
+https://github.com/tilezen/joerd/blob/master/docs/attribution.md
+Más créditos: https://hacktheandes.com/credits

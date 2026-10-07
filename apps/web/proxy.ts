@@ -13,6 +13,7 @@ function isPublicMarketingPath(pathname: string) {
     pathname === "/privacy" ||
     pathname === "/challenges" ||
     pathname === "/credits" ||
+    pathname === "/brand" ||
     pathname === "/api/webhooks/clerk" ||
     pathname === "/api/v1/oauth/authorize" ||
     pathname === "/opengraph-image.jpg" ||
@@ -34,7 +35,7 @@ function isPublicMarketingPath(pathname: string) {
     return true;
   }
 
-  if (pathname.startsWith("/hero/")) {
+  if (pathname.startsWith("/hero/") || pathname.startsWith("/brand/")) {
     return true;
   }
 
