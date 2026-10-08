@@ -175,6 +175,8 @@ test("publishes winner devtool prizes and participant credits separately", () =>
 
   expect(participantPerksCopy.title).toBe("Perks para participantes");
   expect(participantPerks.map((perk) => perk.title)).toEqual([
+    "Maritime",
+    "ElevenLabs",
     "n8n Cloud Pro",
     "Comida y bebidas",
     "Energizantes",

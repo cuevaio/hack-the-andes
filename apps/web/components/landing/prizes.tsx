@@ -87,6 +87,23 @@ export function LandingPrizes() {
           </div>
         </div>
 
+        <article className="mt-12 bg-[#08070a]/80 p-6 sm:mt-16 sm:p-8">
+          <h3 className="font-display text-3xl uppercase leading-none sm:text-4xl">
+            {prizesCopy.mentoring.title}
+          </h3>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--hud-type)]/70">
+            {prizesCopy.mentoring.body}
+          </p>
+          <a
+            className="mt-5 inline-flex font-mono text-xs uppercase tracking-[0.12em] text-[var(--hud-action)] underline-offset-4 hover:underline"
+            href={prizesCopy.mentoring.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {prizesCopy.mentoring.cta}
+          </a>
+        </article>
+
         <div className="mt-12 border-[var(--hud-type)]/15 border-t pt-8 sm:mt-16 sm:pt-10">
           <h3 className="font-display text-3xl uppercase leading-none sm:text-4xl">
             {devtoolCreditsCopy.title}

@@ -321,6 +321,12 @@ export const prizesCopy = {
    * readable lockup on a ~390px phone — not a 12px afterthought.
    */
   tripLines: ["Viaje a", "Chofex", "Headquarters"],
+  mentoring: {
+    title: "Mentorías de StartUPC",
+    body: "Mentorías post-evento para equipos ganadores.",
+    href: "https://startupc.pucp.edu.pe",
+    cta: "Conocer StartUPC",
+  },
 } as const;
 
 export const devtoolCreditsCopy = {
@@ -336,6 +342,18 @@ export const participantPerksCopy = {
 } as const;
 
 export const participantPerks = [
+  {
+    title: "Maritime",
+    body: "USD 100 en créditos de Maritime.",
+    href: "https://maritime.sh",
+    cta: "Conocer Maritime",
+  },
+  {
+    title: "ElevenLabs",
+    body: "ElevenLabs for Startups / Creators.",
+    href: "https://elevenlabs.io",
+    cta: "Conocer ElevenLabs",
+  },
   {
     title: "n8n Cloud Pro",
     body: "1 semana de n8n Cloud Pro para todos los participantes.",
