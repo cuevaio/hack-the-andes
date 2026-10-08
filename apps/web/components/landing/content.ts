@@ -368,7 +368,7 @@ export const participantPerks = [
   },
   {
     title: "Demo y tutorial de Qatom",
-    body: "Sesión en vivo de 90 minutos con Hassan Khan, CEO de Qatom. Viernes 2 de octubre a las 6:30 p. m. ET, por Zoom.",
+    body: "Sesión en vivo de 90 minutos con Hassan Khan, CEO de Qatom. Viernes 9 de octubre a las 6:30 p. m. ET, por Zoom.",
     href: "https://luma.com/830d5l83",
     cta: "Registrarte en Luma",
   },
