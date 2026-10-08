@@ -125,7 +125,7 @@ test("publishes winner devtool prizes and participant credits separately", () =>
   const qatom = devtoolPartners.find((partner) => partner.id === "qatom");
   expect(qatom?.href).toBe("https://www.qatom.ai/hack-the-andes");
   expect(qatom?.participantBenefit).toEqual({
-    duration: "6 meses",
+    headline: "6 meses",
     plan: "Plan Max",
     value: "$300 USD/mes · $1800 USD en total",
   });
@@ -149,7 +149,7 @@ test("publishes winner devtool prizes and participant credits separately", () =>
     (partner) => partner.id === "atomic-memory",
   );
   expect(atomicMemory?.participantBenefit).toEqual({
-    duration: "5 meses",
+    headline: "5 meses",
     plan: "Plan Pro",
     value: "$19 USD/mes · $95 USD en total",
   });
@@ -165,9 +165,16 @@ test("publishes winner devtool prizes and participant credits separately", () =>
   const zavu = participantDevtoolPartners.find(
     (partner) => partner.id === "zavu",
   );
-  expect(participantDevtoolPartners).toHaveLength(3);
+  expect(participantDevtoolPartners.map((partner) => partner.id)).toEqual([
+    "qatom",
+    "atomic-memory",
+    "zavu",
+    "maritime",
+    "elevenlabs",
+    "n8n",
+  ]);
   expect(zavu?.participantBenefit).toEqual({
-    duration: "3 meses",
+    headline: "3 meses",
     plan: "Plan Pro",
     value: "$20 USD/mes · $60 USD en total",
   });
@@ -175,9 +182,6 @@ test("publishes winner devtool prizes and participant credits separately", () =>
 
   expect(participantPerksCopy.title).toBe("Perks para participantes");
   expect(participantPerks.map((perk) => perk.title)).toEqual([
-    "Maritime",
-    "ElevenLabs",
-    "n8n Cloud Pro",
     "Comida y bebidas",
     "Energizantes",
     "Merch oficial",
@@ -214,7 +218,7 @@ test("aligns partner logos, prize rows, and the final participant perk", async (
   ]);
 
   expect(perksSource).toContain("h-12 items-center");
-  expect(perksSource).toContain("md:first:pl-0");
+  expect(perksSource).toContain("md:[&:nth-child(3n+1)]:pl-0");
   expect(perksSource).toContain("partner.logoClassName");
   expect(perksSource).toContain("sm:last:col-span-2");
   expect(prizesSource).toContain("min-h-12 items-center");
@@ -225,7 +229,7 @@ test("aligns partner logos, prize rows, and the final participant perk", async (
 
   expect(
     participantDevtoolPartners.map((partner) => partner.logoClassName),
-  ).toEqual(["h-10", "h-8", "h-10"]);
+  ).toEqual(["h-10", "h-8", "h-10", "h-8", "h-7", "h-10"]);
 });
 
 test("formats soles with the Peru locale", () => {

@@ -44,13 +44,13 @@ export function LandingParticipantPerks() {
           <div className="grid gap-px bg-[var(--hud-ink)]/15 md:grid-cols-3">
             {participantDevtoolPartners.map((partner) => (
               <a
-                className="flex min-h-52 flex-col bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8 md:first:pl-0 md:last:pr-0"
+                className="flex min-h-52 flex-col bg-[var(--hud-paper)] p-6 transition-colors hover:bg-[var(--hud-card)] sm:p-8 md:[&:nth-child(3n+1)]:pl-0 md:[&:nth-child(3n)]:pr-0"
                 href={partner.href}
                 key={partner.id}
                 rel="noreferrer"
                 target="_blank"
               >
-                <div className="flex h-12 items-center">
+                <div className="flex h-12 items-center gap-3">
                   <Image
                     alt={partner.name}
                     className={cn(
@@ -61,17 +61,24 @@ export function LandingParticipantPerks() {
                     src={partner.logoSrc}
                     width={partner.logoWidth}
                   />
+                  {"wordmark" in partner && (
+                    <span className="text-4xl font-semibold tracking-tight">
+                      {partner.wordmark}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-7">
                   <p className="font-display text-4xl uppercase leading-none">
-                    {partner.participantBenefit.duration}
+                    {partner.participantBenefit.headline}
                   </p>
                   <p className="mt-2 text-lg">
                     {partner.participantBenefit.plan}
                   </p>
-                  <p className="mt-2 font-mono text-xs text-[var(--hud-muted)]">
-                    {partner.participantBenefit.value}
-                  </p>
+                  {partner.participantBenefit.value && (
+                    <p className="mt-2 font-mono text-xs text-[var(--hud-muted)]">
+                      {partner.participantBenefit.value}
+                    </p>
+                  )}
                 </div>
               </a>
             ))}

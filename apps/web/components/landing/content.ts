@@ -343,24 +343,6 @@ export const participantPerksCopy = {
 
 export const participantPerks = [
   {
-    title: "Maritime",
-    body: "USD 100 en créditos de Maritime.",
-    href: "https://maritime.sh",
-    cta: "Conocer Maritime",
-  },
-  {
-    title: "ElevenLabs",
-    body: "ElevenLabs for Startups / Creators.",
-    href: "https://elevenlabs.io",
-    cta: "Conocer ElevenLabs",
-  },
-  {
-    title: "n8n Cloud Pro",
-    body: "1 semana de n8n Cloud Pro para todos los participantes.",
-    href: null,
-    cta: null,
-  },
-  {
     title: "Comida y bebidas",
     body: "Comida y bebidas durante las 30 horas para que puedas seguir construyendo.",
     href: null,
@@ -402,7 +384,7 @@ export const devtoolPartners = [
     logoHeight: 154,
     logoClassName: "h-10",
     participantBenefit: {
-      duration: "6 meses",
+      headline: "6 meses",
       plan: "Plan Max",
       value: "$300 USD/mes · $1800 USD en total",
     },
@@ -430,7 +412,7 @@ export const devtoolPartners = [
     logoHeight: 185.34,
     logoClassName: "h-8",
     participantBenefit: {
-      duration: "5 meses",
+      headline: "5 meses",
       plan: "Plan Pro",
       value: "$19 USD/mes · $95 USD en total",
     },
@@ -461,9 +443,52 @@ export const participantDevtoolPartners = [
     logoHeight: 40,
     logoClassName: "h-10",
     participantBenefit: {
-      duration: "3 meses",
+      headline: "3 meses",
       plan: "Plan Pro",
       value: "$20 USD/mes · $60 USD en total",
+    },
+  },
+  {
+    id: "maritime",
+    name: "Maritime",
+    href: "https://maritime.sh",
+    logoSrc: "/devtools/maritime.png",
+    logoWidth: 1158,
+    logoHeight: 1559,
+    logoClassName: "h-8",
+    wordmark: "maritime",
+    participantBenefit: {
+      headline: "USD 100",
+      plan: "Créditos de Maritime",
+      value: null,
+    },
+  },
+  {
+    id: "elevenlabs",
+    name: "ElevenLabs",
+    href: "https://elevenlabs.io",
+    logoSrc: "/devtools/elevenlabs.svg",
+    logoWidth: 117,
+    logoHeight: 15,
+    logoClassName: "h-7",
+    participantBenefit: {
+      headline: "Startups / Creators",
+      plan: "Programa ElevenLabs",
+      value: null,
+    },
+  },
+  {
+    id: "n8n",
+    name: "n8n",
+    href: "https://n8n.io",
+    logoSrc: "/devtools/n8n.svg",
+    logoWidth: 87,
+    logoHeight: 24,
+    logoClassName: "h-10",
+    participantBenefit: {
+      headline: "1 semana",
+      plan: "n8n Cloud Pro",
+      value: null,
     },
   },
 ] as const;
