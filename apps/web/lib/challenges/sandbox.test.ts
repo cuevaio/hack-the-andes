@@ -12,6 +12,24 @@ const shipment = {
 };
 
 describe("shipping solution sandbox", () => {
+  test("rejects oversized UTF-8 output without returning the payload", async () => {
+    await expect(
+      runShippingSolution('throw "ñ".repeat(40_000);', [shipment]),
+    ).rejects.toMatchObject({
+      code: "SOLUTION_EXECUTION_FAILED",
+      message:
+        "Could not run solution: The isolated runner exceeded its output limit",
+    });
+  });
+
+  test("rejects solutions that suppress the result list", async () => {
+    await expect(
+      runShippingSolution(
+        "Array.prototype.map = () => []; function calculateShipping() { return 1; }",
+        [shipment],
+      ),
+    ).rejects.toMatchObject({ code: "SOLUTION_EXECUTION_FAILED" });
+  });
   test("runs a named calculateShipping function", async () => {
     const results = await runShippingSolution(
       "function calculateShipping(input) { return input.distanceKm + input.weightKg; }",

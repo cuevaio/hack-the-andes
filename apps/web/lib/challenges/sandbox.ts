@@ -77,10 +77,6 @@ try {
 }
 `;
 
-type WorkerResponse =
-  | { readonly ok: true; readonly results: ReadonlyArray<unknown> }
-  | { readonly ok: false; readonly error: string };
-
 const executionError = (message: string): HttpError =>
   new HttpError(
     422,
@@ -89,18 +85,37 @@ const executionError = (message: string): HttpError =>
     false,
   );
 
-const parseWorkerResponse = (output: string): Array<number> => {
-  let response: WorkerResponse;
+const parseWorkerResponse = (
+  output: string,
+  expectedResults: number,
+): Array<number> => {
+  let response: unknown;
   try {
-    response = JSON.parse(output) as WorkerResponse;
+    response = JSON.parse(output) as unknown;
   } catch {
     throw executionError("The isolated runner returned an invalid response");
   }
-  if (!response.ok) throw executionError(response.error);
-  if (!Array.isArray(response.results)) {
+  if (!response || typeof response !== "object" || !("ok" in response)) {
+    throw executionError("The isolated runner returned an invalid response");
+  }
+  if (
+    response.ok === false &&
+    "error" in response &&
+    typeof response.error === "string"
+  ) {
+    throw executionError(response.error);
+  }
+  if (
+    response.ok !== true ||
+    !("results" in response) ||
+    !Array.isArray(response.results)
+  ) {
     throw executionError("Solution did not produce a result list");
   }
 
+  if (response.results.length !== expectedResults) {
+    throw executionError("Solution did not produce one result per input");
+  }
   const results: Array<number> = [];
   for (const value of response.results) {
     if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -145,19 +160,19 @@ const runNumericSolution = (
           stdio: ["pipe", "pipe", "pipe"],
         },
       );
-    } catch (error) {
+    } catch {
       activeWorkers -= 1;
-      reject(executionError(String(error)));
+      reject(executionError("The isolated runner could not start"));
       return;
     }
     let output = "";
-    let diagnostics = "";
+    let outputBytes = 0;
+    let diagnosticBytes = 0;
     let settled = false;
 
     const finish = (result: () => void): void => {
       if (settled) return;
       settled = true;
-      activeWorkers -= 1;
       clearTimeout(timeout);
       result();
     };
@@ -166,28 +181,42 @@ const runNumericSolution = (
       finish(() => reject(executionError("Execution timed out")));
     }, evaluationTimeoutMs + workerExitGraceMs);
 
+    const stopWorker = (message: string): void => {
+      child.kill("SIGKILL");
+      finish(() => reject(executionError(message)));
+    };
     child.stdout.setEncoding("utf8");
     child.stdout.on("data", (chunk: string) => {
+      if (settled) return;
+      outputBytes += Buffer.byteLength(chunk, "utf8");
+      if (outputBytes > maximumWorkerOutputBytes) {
+        stopWorker("The isolated runner exceeded its output limit");
+        return;
+      }
       output += chunk;
-      if (output.length > maximumWorkerOutputBytes) child.kill("SIGKILL");
     });
-    child.stderr.setEncoding("utf8");
-    child.stderr.on("data", (chunk: string) => {
-      diagnostics += chunk;
-      if (diagnostics.length > maximumWorkerOutputBytes) child.kill("SIGKILL");
+    child.stderr.on("data", (chunk: Buffer) => {
+      if (settled) return;
+      diagnosticBytes += chunk.byteLength;
+      if (diagnosticBytes > maximumWorkerOutputBytes) {
+        stopWorker("The isolated runner exceeded its output limit");
+      }
     });
-    child.on("error", (error) => {
-      finish(() => reject(executionError(error.message)));
+    child.on("error", () => {
+      stopWorker("The isolated runner could not start");
     });
-    child.on("close", (code) => {
+    child.stdin.on("error", () => {
+      stopWorker("The isolated runner could not read the solution");
+    });
+    child.once("close", (code) => {
+      activeWorkers -= 1;
       finish(() => {
         if (code !== 0) {
-          const message = diagnostics.trim() || "The isolated runner exited";
-          reject(executionError(message));
+          reject(executionError("The isolated runner exited"));
           return;
         }
         try {
-          resolve(parseWorkerResponse(output));
+          resolve(parseWorkerResponse(output, shipments.length));
         } catch (error) {
           reject(error);
         }
