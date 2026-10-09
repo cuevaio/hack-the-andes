@@ -21,6 +21,7 @@ test.each([
   ["/challenges/future-challenge/approve/approval_1", "signed-out"],
   ["/challenges", null],
   ["/brand", null],
+  ["/_next/image", null],
   ["/brand/media-kit.txt", null],
   ["/brand/hack-the-andes-media-kit.zip", null],
   ["/challenges/make-it-fast", null],

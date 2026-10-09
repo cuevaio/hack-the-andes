@@ -23,6 +23,7 @@ import {
   type Credential,
   initialsFor,
 } from "@/components/credential/credential-model";
+import { downloadImage, type ImageFetch } from "@/lib/badges/download-image";
 import { halftoneSvg } from "@/lib/portrait/halftone";
 import {
   HALFTONE_CONTRAST,
@@ -183,30 +184,23 @@ export const revalidate = 86_400;
  */
 export const halftonePortrait = async (
   url: string | null,
+  fetchImpl: ImageFetch = fetch,
 ): Promise<string | null> => {
   if (!url) {
     return null;
   }
 
   try {
-    const response = await fetch(url, {
-      next: { revalidate },
-      signal: AbortSignal.timeout(PICTURE_TIMEOUT_MS),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    const type = (response.headers.get("content-type") ?? "")
-      .split(";")[0]
-      ?.trim();
-    // A sign-in page returned as HTML with a 200 is the shape this
-    // guards: without it, markup reaches sharp as an image buffer.
-    if (!type?.startsWith("image/")) {
-      return null;
-    }
-
+    const source = Buffer.from(
+      await downloadImage(url, (input, init) =>
+        fetchImpl(input, {
+          ...init,
+          next: { revalidate },
+          signal: AbortSignal.timeout(PICTURE_TIMEOUT_MS),
+        }),
+      ),
+    );
     const { default: sharp } = await import("sharp");
-    const source = Buffer.from(await response.arrayBuffer());
     /*
       `top`, not centred. A portrait puts the face in the upper half of
       the frame, so a centre crop of a standing photograph takes the head

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ChallengesShell } from "@/components/challenges/challenges-shell";
 import { ChallengeRankingView } from "@/components/challenges/ranking-view";
 import { currentChallengeTime } from "@/lib/challenges/clock";
-import { getChallengeRanking } from "@/lib/challenges/ranking";
+import { getPublicChallengeRanking } from "@/lib/challenges/public-ranking";
 import { HttpError } from "@/lib/registration/http";
 
 // Returning no build-time paths enables on-demand ISR without querying the
@@ -37,7 +37,7 @@ export default async function ChallengeRankingPage({
   const { slug } = await params;
   try {
     const now = currentChallengeTime();
-    const ranking = await getChallengeRanking(slug, now);
+    const ranking = await getPublicChallengeRanking(slug);
     return (
       <ChallengesShell>
         <ChallengeRankingView now={now.toISOString()} ranking={ranking} />

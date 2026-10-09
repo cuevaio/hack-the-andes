@@ -14,6 +14,7 @@ WORKDIR /app
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=pruner /app/out/json/ ./
+COPY --from=pruner /app/patches/ ./patches/
 RUN bun install --frozen-lockfile
 
 FROM dependencies AS builder
@@ -47,6 +48,8 @@ RUN NEW_DATABASE_URL=postgresql://build:build@localhost/build \
 FROM node:24-bookworm-slim AS runner
 WORKDIR /app/apps/web
 
+ARG APP_REVISION=development
+ENV APP_REVISION=${APP_REVISION}
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0

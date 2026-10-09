@@ -17,7 +17,9 @@
         "CHALLENGE_ENGINE_API_SECRET",
         "CHALLENGES_FORCE_OPEN",
         "TRIGGER_*",
-        "RESEND_*"
+        "RESEND_*",
+        "APP_REVISION",
+        "EXPECTED_REVISION"
       ]
     },
     "lint": {

@@ -90,7 +90,7 @@ export const withApiHandler = async (
   }
 };
 
-const readLimitedBody = async (request: Request): Promise<string> => {
+export const readRequestBody = async (request: Request): Promise<string> => {
   if (!request.body) return "";
   const reader = request.body.getReader();
   const decoder = new TextDecoder();
@@ -137,7 +137,7 @@ export const readJson = async (request: Request): Promise<unknown> => {
   }
   let contents: string;
   try {
-    contents = await readLimitedBody(request);
+    contents = await readRequestBody(request);
   } catch (error) {
     if (error instanceof HttpError) throw error;
     throw new HttpError(400, "INVALID_JSON", "Request body is not valid JSON");

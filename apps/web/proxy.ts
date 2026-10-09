@@ -1,7 +1,14 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+import {
+  createRequestLimiter,
+  mutationOriginAllowed,
+  requestRejection,
+} from "@/lib/request-security";
+
 const clerk = clerkMiddleware();
+const limitRequest = createRequestLimiter();
 
 function isPublicMarketingPath(pathname: string) {
   if (/^\/challenges\/[^/]+\/approve(?:\/|$)/.test(pathname)) {
@@ -9,6 +16,7 @@ function isPublicMarketingPath(pathname: string) {
   }
   if (
     pathname === "/" ||
+    pathname === "/_next/image" ||
     pathname === "/terms" ||
     pathname === "/privacy" ||
     pathname === "/challenges" ||
@@ -56,6 +64,13 @@ function isPublicMarketingPath(pathname: string) {
 export default function proxy(...args: Parameters<typeof clerk>) {
   const request = args[0];
 
+  if (request) {
+    const retryAfter = limitRequest(request);
+    if (retryAfter !== undefined)
+      return requestRejection(request, 429, retryAfter);
+    if (!mutationOriginAllowed(request)) return requestRejection(request, 403);
+  }
+
   if (request && isPublicMarketingPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
@@ -67,6 +82,7 @@ export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|glb|wasm)).*)",
     "/(api|trpc)(.*)",
+    "/_next/image",
     "/__clerk/:path*",
   ],
 };

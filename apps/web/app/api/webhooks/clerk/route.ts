@@ -1,12 +1,13 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 
 import {
   configuredAdminIdsFrom,
   userGrantsApplicationReviewAccess,
 } from "@/lib/admin/roles";
 import { enqueueFunnelReminder } from "@/lib/funnel-reminders/enqueue";
+import { HttpError, readRequestBody } from "@/lib/registration/http";
 import { participantIdFor } from "@/lib/registration/participants";
 
 export const runtime = "nodejs";
@@ -14,9 +15,21 @@ export const runtime = "nodejs";
 export const POST = async (request: NextRequest): Promise<Response> => {
   let event: Awaited<ReturnType<typeof verifyWebhook>>;
   try {
-    event = await verifyWebhook(request);
+    const body = await readRequestBody(request);
+    event = await verifyWebhook(
+      new NextRequest(request.url, {
+        method: "POST",
+        headers: request.headers,
+        body,
+      }),
+    );
   } catch (error) {
-    console.error("Clerk webhook verification failed", error);
+    if (error instanceof HttpError) {
+      return new Response("Webhook body too large", {
+        status: error.status,
+        headers: { "cache-control": "no-store" },
+      });
+    }
     return new Response("Invalid webhook signature", { status: 400 });
   }
 

@@ -2,9 +2,9 @@ import { and, eq } from "@chofex/db/orm";
 import { participantBadges } from "@chofex/db/schema";
 import { db } from "@chofex/db/worker";
 import { logger, task } from "@trigger.dev/sdk";
-
+import { downloadImage } from "@/lib/badges/download-image";
 import { halftonePortraitPng } from "../lib/badges/portrait-image";
-import { downloadImage, uploadPng } from "./badge-assets";
+import { uploadPng } from "./badge-assets";
 
 /**
  * The participant's portrait, screened into dots.

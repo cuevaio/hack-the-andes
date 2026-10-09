@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 const appRoot = new URL("../../", import.meta.url).pathname;
 const startedIn = process.cwd();
 
-let halftonePortrait: (url: string | null) => Promise<string | null>;
+let halftonePortrait: typeof import("./card-texture").halftonePortrait;
 
 beforeAll(async () => {
   process.chdir(appRoot);
@@ -27,10 +27,17 @@ describe("halftonePortrait", () => {
     expect(await halftonePortrait(null)).toBeNull();
   });
 
-  test("answers null rather than throwing when the host is unreachable", async () => {
+  test("rejects internal addresses before making a network request", async () => {
     // A credential with initials on it is a credential. One that 500s
     // because a picture host was slow is not.
-    expect(await halftonePortrait("http://127.0.0.1:1/never.png")).toBeNull();
+    let requested = false;
+    expect(
+      await halftonePortrait("http://127.0.0.1:1/never.png", async () => {
+        requested = true;
+        throw new Error("Unexpected request");
+      }),
+    ).toBeNull();
+    expect(requested).toBe(false);
   });
 
   test("answers null when the host returns something that is not an image", async () => {
@@ -46,7 +53,8 @@ describe("halftonePortrait", () => {
 
     try {
       const answer = await halftonePortrait(
-        `http://localhost:${server.port}/x`,
+        "https://img.clerk.com/x",
+        (_input, init) => fetch(`http://localhost:${server.port}/x`, init),
       );
 
       expect(answer).toBeNull();
@@ -78,7 +86,10 @@ describe("halftonePortrait", () => {
     });
 
     try {
-      const uri = await halftonePortrait(`http://localhost:${server.port}/p`);
+      const uri = await halftonePortrait(
+        "https://img.clerk.com/p",
+        (_input, init) => fetch(`http://localhost:${server.port}/p`, init),
+      );
 
       expect(uri).toStartWith("data:image/png;base64,");
 
@@ -119,7 +130,10 @@ describe("halftonePortrait", () => {
     });
 
     try {
-      const uri = await halftonePortrait(`http://localhost:${server.port}/c`);
+      const uri = await halftonePortrait(
+        "https://img.clerk.com/c",
+        (_input, init) => fetch(`http://localhost:${server.port}/c`, init),
+      );
       const bytes = Buffer.from((uri ?? "").split(",")[1] ?? "", "base64");
       const { channels } = await sharp(bytes).stats();
 

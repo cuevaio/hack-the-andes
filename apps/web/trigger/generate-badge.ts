@@ -2,9 +2,9 @@ import { and, eq } from "@chofex/db/orm";
 import { participantBadges } from "@chofex/db/schema";
 import { db } from "@chofex/db/worker";
 import { task } from "@trigger.dev/sdk";
-
+import { downloadImage } from "@/lib/badges/download-image";
 import { renderShareBadge } from "../lib/badges/share-image";
-import { downloadImage, uploadPng } from "./badge-assets";
+import { uploadPng } from "./badge-assets";
 
 export interface GenerateBadgePayload {
   readonly applicationId: string;

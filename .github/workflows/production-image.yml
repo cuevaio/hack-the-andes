@@ -55,6 +55,7 @@ jobs:
           cache-from: type=gha,scope=production-image
           cache-to: type=gha,mode=min,scope=production-image
           build-args: |
+            APP_REVISION=${{ github.sha }}
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
             NEXT_PUBLIC_POSTHOG_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
@@ -134,3 +135,15 @@ jobs:
             --header "x-api-key: $DOKPLOY_API_KEY" \
             --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\",\"title\":\"GitHub Actions $GITHUB_SHA\"}" \
             "$DOKPLOY_URL/api/application.redeploy"
+
+      - name: Verify the live production revision and security boundaries
+        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
+        env:
+          EXPECTED_REVISION: ${{ github.sha }}
+          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
+        run: |
+          if [[ -z "$DOKPLOY_APPLICATION_ID" ]]; then
+            echo "Deployment is not configured; live verification is unavailable."
+            exit 0
+          fi
+          bun scripts/verify-production.ts

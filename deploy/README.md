@@ -83,3 +83,59 @@ For an authorized branch deployment, dispatch `production-image.yml` with
 workflow removes the former shared preview secret from Dokploy while preserving
 other variables and build settings. Delete the former GitHub Production secret
 as well. npm publication continues to use the exact-commit release approval.
+
+## Traffic limits and cache behavior
+
+The Next.js request proxy applies token buckets before Clerk authentication,
+route rendering, and database work. These budgets apply per client address
+and per server process. The burst is the maximum immediately available budget.
+
+| Request class | Client burst | Client requests per minute | Process burst | Process requests per minute |
+| --- | ---: | ---: | ---: | ---: |
+| API reads | 60 | 120 | 300 | 3000 |
+| API writes | 30 | 60 | 120 | 600 |
+| Challenge queries, tests and evaluations | 10 | 30 | 20 | 120 |
+| Clerk webhooks | 60 | 600 | 120 | 1200 |
+| Image optimization | 30 | 120 | 100 | 600 |
+| Page requests | 60 | 240 | 300 | 6000 |
+
+Excess requests receive HTTP 429, `Retry-After`, and a versioned error envelope.
+Health checks remain available. The address map has at most 10,000 entries and
+reclaims entries after two idle minutes. New addresses are rejected while the
+map is full. IPv6 addresses share a budget within their /64 prefix.
+
+Traefik must remain the only ingress and must append the socket peer address
+to `X-Forwarded-For`. The app uses that final hop, not the caller's first hop.
+Do not expose the app container's port directly. Aggregate limits still apply
+if client addresses are missing or rotate. Budgets reset on process restart
+and are not shared between replicas. Add a shared limiter or an ingress limit
+before increasing replica count or requiring a cluster-wide quota.
+
+The public challenge index uses a 30-second ISR interval. Public challenge
+ranking pages retain their 60-second ISR interval. Ranking API calls and page
+renders share a five-second data cache per process, including pending reads.
+API responses retain `no-store` so request IDs never enter a shared response
+cache. Admission, placement, admin queries, and participant data stay fresh.
+
+Browser writes must come from the canonical origin or an origin listed in
+`CLERK_AUTHORIZED_PARTIES`. CLI writes without an Origin header remain valid.
+Webhooks use signature verification instead of browser origin checks. The
+webhook body limit is 64 KiB. Production OAuth and WebAuthn URLs use the
+canonical origin and ignore forwarded host and protocol headers.
+
+Credential images use an HTTPS host allowlist, validate every redirect, and
+stop downloads above six MiB. The server-side image renderer keeps its
+2.5-second request timeout. Updated Next.js and Sharp versions include the
+published image-rendering and image-optimization security fixes.
+
+The root `patches` directory bounds recursion in `braces@3.0.3` and width and
+precision in `sprintf-js@1.0.3`. Neither package has an upstream fixed release
+as of October 8, 2026. `bun audit` still reports their versions; do not suppress
+those findings or describe the audit as clean. `scripts/dependency-security.test.ts`
+checks these mitigations. Replace the patches when upstream fixes are available.
+
+Production images include `APP_REVISION`, and `/api/health` exposes that commit
+SHA. The deployment workflow waits for that exact healthy revision, then
+checks public pages, ranking envelopes, unauthenticated API access, cross-site
+write rejection, unsigned webhook rejection, and OAuth host poisoning. Run the
+same checks manually with `EXPECTED_REVISION=<full SHA> bun scripts/verify-production.ts`.

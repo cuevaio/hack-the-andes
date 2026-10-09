@@ -6,7 +6,7 @@ import {
 } from "@/components/challenges/challenges-index";
 import { ChallengesShell } from "@/components/challenges/challenges-shell";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export const metadata: Metadata = {
   title: "Challenges de clasificación | Hack the Andes",

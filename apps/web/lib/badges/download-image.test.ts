@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { downloadImage } from "./badge-assets";
+import { downloadImage } from "./download-image";
 
 const pngResponse = (body: BodyInit, headers?: HeadersInit): Response =>
   new Response(body, {
