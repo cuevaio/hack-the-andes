@@ -23,6 +23,36 @@ const shipment: Shipment = {
 };
 
 describe("private challenge engine adapter", () => {
+  test("rejects and cancels oversized engine response streams", async () => {
+    let cancelled = false;
+    const engine = createChallengeEngine({
+      baseUrl: "https://private-engine.example",
+      apiSecret: "private-secret",
+      fetch: async () =>
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start: (controller) => {
+              controller.enqueue(
+                new TextEncoder().encode(
+                  JSON.stringify({
+                    version: 1,
+                    output: 14,
+                    diagnostics: "x".repeat(1_048_576),
+                  }),
+                ),
+              );
+            },
+            cancel: () => {
+              cancelled = true;
+            },
+          }),
+        ),
+    });
+    await expect(engine.query("participant_1", shipment)).rejects.toMatchObject(
+      { status: 502, code: "CHALLENGE_ENGINE_ERROR" },
+    );
+    expect(cancelled).toBeTrue();
+  });
   test("does not forward the engine secret to a redirected endpoint", async () => {
     let redirectedRequests = 0;
     const server = Bun.serve({

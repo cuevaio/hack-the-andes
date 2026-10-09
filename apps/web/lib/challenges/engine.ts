@@ -164,6 +164,37 @@ const parseScore = (value: unknown): ChallengeScore | undefined => {
   return parsed;
 };
 
+const readEngineResponse = async (response: Response): Promise<unknown> => {
+  const maximumResponseBytes = 1_048_576;
+  const declaredBytes = Number(response.headers.get("content-length"));
+  if (declaredBytes > maximumResponseBytes) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error("Engine response exceeds 1 MiB");
+  }
+  if (!response.body) throw new Error("Empty engine response");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let contents = "";
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      bytes += chunk.value.byteLength;
+      if (bytes > maximumResponseBytes) {
+        throw new Error("Engine response exceeds 1 MiB");
+      }
+      contents += decoder.decode(chunk.value, { stream: true });
+    }
+    return JSON.parse(contents + decoder.decode()) as unknown;
+  } catch (error) {
+    await reader.cancel().catch(() => undefined);
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
+};
+
 export const createChallengeEngine = (options: ChallengeEngineOptions) => {
   const baseUrl = options.baseUrl.replace(/\/$/, "");
   const post = async (
@@ -195,7 +226,7 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
 
     let result: unknown;
     try {
-      result = await response.json();
+      result = await readEngineResponse(response);
     } catch {
       throw new ChallengeEngineError(
         502,
