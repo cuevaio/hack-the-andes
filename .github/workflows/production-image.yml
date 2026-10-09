@@ -76,6 +76,8 @@ jobs:
           DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
           DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
           DOKPLOY_APPLICATION_NAME: Website
+          RATE_LIMIT_SERVICE_URL: ${{ secrets.RATE_LIMIT_SERVICE_URL }}
+          RATE_LIMIT_SERVICE_TOKEN: ${{ secrets.RATE_LIMIT_SERVICE_TOKEN }}
           DOKPLOY_URL: https://vps.cueva.io
           DOKPLOY_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           GH_TOKEN: ${{ github.token }}

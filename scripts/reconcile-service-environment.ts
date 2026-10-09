@@ -35,6 +35,12 @@ const run = async (): Promise<void> => {
     ),
     `application named ${applicationName}`,
   );
+  const additionalEnvironment: Record<string, string> = {};
+  if (applicationName === "Website") {
+    for (const name of ["RATE_LIMIT_SERVICE_URL", "RATE_LIMIT_SERVICE_TOKEN"]) {
+      additionalEnvironment[name] = requiredEnvironmentValue(name);
+    }
+  }
   const result = await reconcileServiceEnvironment({
     serverUrl: requiredEnvironmentValue("DOKPLOY_URL"),
     expectedServerUrl: manifest.serverUrl,
@@ -43,6 +49,7 @@ const run = async (): Promise<void> => {
     application,
     applications: manifest.applications,
     fetch: globalThis.fetch,
+    additionalEnvironment,
   });
   process.stdout.write(
     `${JSON.stringify({ application: applicationName, ...result })}\n`,

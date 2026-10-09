@@ -6,9 +6,11 @@ import {
   mutationOriginAllowed,
   requestRejection,
 } from "@/lib/request-security";
+import { createSharedRequestLimiter } from "@/lib/shared-request-limiter";
 
 const clerk = clerkMiddleware();
 const limitRequest = createRequestLimiter();
+const limitSharedRequest = createSharedRequestLimiter();
 
 function isPublicMarketingPath(pathname: string) {
   if (/^\/challenges\/[^/]+\/approve(?:\/|$)/.test(pathname)) {
@@ -62,7 +64,7 @@ function isPublicMarketingPath(pathname: string) {
   );
 }
 
-export default function proxy(...args: Parameters<typeof clerk>) {
+export default async function proxy(...args: Parameters<typeof clerk>) {
   const request = args[0];
 
   if (request) {
@@ -70,6 +72,8 @@ export default function proxy(...args: Parameters<typeof clerk>) {
     if (retryAfter !== undefined)
       return requestRejection(request, 429, retryAfter);
     if (!mutationOriginAllowed(request)) return requestRejection(request, 403);
+    const sharedRejection = await limitSharedRequest(request);
+    if (sharedRejection) return sharedRejection;
   }
 
   if (request && isPublicMarketingPath(request.nextUrl.pathname)) {

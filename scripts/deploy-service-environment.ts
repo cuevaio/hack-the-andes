@@ -23,6 +23,7 @@ interface ReconcileServiceEnvironmentOptions {
   readonly application: ApplicationEnvironment;
   readonly applications: ApplicationEnvironment[];
   readonly fetch: Fetch;
+  readonly additionalEnvironment?: Record<string, string>;
 }
 
 interface ReconcileServiceEnvironmentResult {
@@ -138,7 +139,10 @@ export const reconcileServiceEnvironment = async (
     options.apiKey,
     { method: "GET" },
   )) as DokployApplicationEnvironment;
-  const desired = serviceEnvironment(options.application, options.applications);
+  const desired = {
+    ...serviceEnvironment(options.application, options.applications),
+    ...options.additionalEnvironment,
+  };
   const { environment, changedNames } = reconciledEnvironment(
     applicationState.env ?? "",
     desired,

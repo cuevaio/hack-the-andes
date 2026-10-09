@@ -13,7 +13,11 @@ for (let attempt = 0; attempt < 60; attempt += 1) {
     });
     if (response.ok) {
       const health = await response.json();
-      if (health.ok === true && health.revision === expectedRevision) {
+      if (
+        health.ok === true &&
+        health.revision === expectedRevision &&
+        health.requestLimits === "shared"
+      ) {
         deployed = true;
         break;
       }

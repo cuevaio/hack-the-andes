@@ -140,7 +140,7 @@ export const mutationOriginAllowed = (request: Request): boolean => {
 
 export const requestRejection = (
   request: Request,
-  status: 403 | 429,
+  status: 403 | 429 | 503,
   retryAfter?: number,
 ): Response => {
   const suppliedId = request.headers.get("x-request-id");
@@ -155,12 +155,17 @@ export const requestRejection = (
     code = "RATE_LIMITED";
     message = "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.";
   }
+  if (status === 503) {
+    code = "RATE_LIMIT_SERVICE_UNAVAILABLE";
+    message =
+      "El servicio está temporalmente ocupado. Inténtalo de nuevo en unos segundos.";
+  }
   return Response.json(
     {
       version: 1,
       ok: false,
       requestId,
-      error: { code, message, retryable: status === 429 },
+      error: { code, message, retryable: status !== 403 },
     },
     { status, headers },
   );

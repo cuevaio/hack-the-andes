@@ -31,7 +31,12 @@ test("actual proxy rejects bursts and hostile writes before authentication or da
     import assert from "node:assert/strict";
     import { NextRequest } from "next/server";
     import { NextFetchEvent } from "next/dist/server/web/spec-extension/fetch-event";
-    import proxy from "../proxy";
+    const service = Bun.serve({ port: 0, fetch: () => new Response(null, { status: 204 }) });
+    process.env.RATE_LIMIT_SERVICE_URL = "https://limiter.example";
+    process.env.RATE_LIMIT_SERVICE_TOKEN = "local-test-secret";
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (input, init) => originalFetch(service.url, init);
+    const { default: proxy } = await import("../proxy");
     let response;
     for (let i = 0; i < 61; i++) {
       const request = new NextRequest("https://hacktheandes.com/api/v1/challenges/black-box/ranking", { headers: { "x-forwarded-for": "192.0.2.1" } });
@@ -44,6 +49,25 @@ test("actual proxy rejects bursts and hostile writes before authentication or da
     response = await proxy(request, new NextFetchEvent({ request, page: "/proxy", context: undefined }));
     assert.equal(response.status, 403);
     assert.equal((await response.json()).error.code, "ORIGIN_NOT_ALLOWED");
+    service.stop(true);
+    console.log("security routes passed");
+  `);
+});
+
+test("production proxy and health refuse missing shared limiter configuration", async () => {
+  await run(`
+    import assert from "node:assert/strict";
+    import { NextRequest } from "next/server";
+    import { NextFetchEvent } from "next/dist/server/web/spec-extension/fetch-event";
+    process.env.RATE_LIMIT_SERVICE_URL = "";
+    process.env.RATE_LIMIT_SERVICE_TOKEN = "";
+    const { default: proxy } = await import("../proxy");
+    const request = new NextRequest("https://hacktheandes.com/challenges");
+    const response = await proxy(request, new NextFetchEvent({ request, page: "/proxy", context: undefined }));
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).error.code, "RATE_LIMIT_SERVICE_UNAVAILABLE");
+    const { GET } = await import("../app/api/health/route");
+    assert.equal(GET().status, 503);
     console.log("security routes passed");
   `);
 });

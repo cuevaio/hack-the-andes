@@ -24,6 +24,45 @@ const applications: ApplicationEnvironment[] = [
 ];
 
 describe("Dokploy service environment reconciliation", () => {
+  test("installs shared limiter credentials while preserving other runtime settings", async () => {
+    let saved: unknown;
+    const result = await reconcileServiceEnvironment({
+      serverUrl: "https://vps.example",
+      expectedServerUrl: "https://vps.example",
+      apiKey: "dokploy-secret",
+      applicationId: "website-id",
+      application: website,
+      applications,
+      additionalEnvironment: {
+        RATE_LIMIT_SERVICE_URL: "https://limiter.example",
+        RATE_LIMIT_SERVICE_TOKEN: "local-test-secret",
+      },
+      fetch: async (input, init) => {
+        if (String(input).includes("application.one"))
+          return Response.json({
+            env: 'NEW_DATABASE_URL="preserved"\nCHALLENGE_ENGINE_URL="https://engine.hacktheandes.com"',
+            buildArgs: "existing",
+            createEnvFile: true,
+          });
+        saved = JSON.parse(String(init?.body));
+        return Response.json(true);
+      },
+    });
+    expect(result.changedNames).toEqual([
+      "RATE_LIMIT_SERVICE_URL",
+      "RATE_LIMIT_SERVICE_TOKEN",
+    ]);
+    expect(saved).toMatchObject({ buildArgs: "existing", createEnvFile: true });
+    if (
+      !saved ||
+      typeof saved !== "object" ||
+      !("env" in saved) ||
+      typeof saved.env !== "string"
+    )
+      throw new Error("Missing saved environment");
+    expect(saved.env).toContain('NEW_DATABASE_URL="preserved"');
+    expect(saved.env).toContain('RATE_LIMIT_SERVICE_TOKEN="local-test-secret"');
+  });
   test("replaces a stale service URL without changing secrets", async () => {
     const requests: Array<{ url: string; init: RequestInit }> = [];
     const fetch = async (input: string | URL | Request, init?: RequestInit) => {

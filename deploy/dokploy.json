@@ -29,7 +29,9 @@
         "CHALLENGE_SEED_SECRET",
         "CHALLENGE_ENGINE_API_SECRET",
         "CHALLENGES_FORCE_OPEN",
-        "AI_GATEWAY_API_KEY"
+        "AI_GATEWAY_API_KEY",
+        "RATE_LIMIT_SERVICE_URL",
+        "RATE_LIMIT_SERVICE_TOKEN"
       ],
       "serviceEnvironmentVariables": {
         "CHALLENGE_ENGINE_URL": "Challenge Engine"

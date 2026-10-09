@@ -88,9 +88,11 @@ as well. npm publication continues to use the exact-commit release approval.
 
 The Next.js request proxy applies token buckets before Clerk authentication,
 route rendering, and database work. These budgets apply per client address
-and per server process. The burst is the maximum immediately available budget.
+and across all production replicas through the shared Cloudflare limiter.
+The local guard remains in front of network and authentication work. The burst
+is the maximum immediately available budget.
 
-| Request class | Client burst | Client requests per minute | Process burst | Process requests per minute |
+| Request class | Client burst | Client requests per minute | Shared burst | Shared requests per minute |
 | --- | ---: | ---: | ---: | ---: |
 | API reads | 60 | 120 | 300 | 3000 |
 | API writes | 30 | 60 | 120 | 600 |
@@ -100,16 +102,20 @@ and per server process. The burst is the maximum immediately available budget.
 | Page requests | 60 | 240 | 300 | 6000 |
 
 Excess requests receive HTTP 429, `Retry-After`, and a versioned error envelope.
-Health checks remain available. The address map has at most 10,000 entries and
-reclaims entries after two idle minutes. New addresses are rejected while the
-map is full. IPv6 addresses share a budget within their /64 prefix.
+IPv6 addresses share a budget within their /64 prefix. Local tracking is capped
+at 10,000 entries; shared tracking is capped at 10,000 per request class. Both
+reclaim fully refilled entries after two idle minutes and reject new identities
+while full. Health checks bypass consumption; production health reports 503
+when shared limiter configuration is missing.
 
 Traefik must remain the only ingress and must append the socket peer address
 to `X-Forwarded-For`. The app uses that final hop, not the caller's first hop.
 Do not expose the app container's port directly. Aggregate limits still apply
-if client addresses are missing or rotate. Budgets reset on process restart
-and are not shared between replicas. Add a shared limiter or an ingress limit
-before increasing replica count or requiring a cluster-wide quota.
+if client addresses are missing or rotate. Shared budgets persist in SQLite-backed Durable Objects across app and worker
+restarts. Requests in each class consume their client and aggregate budget
+atomically. The service receives HMAC-derived client identifiers, never raw
+addresses. Missing configuration, timeouts and invalid replies fail closed
+with a retryable HTTP 503. Each service request has a 1.5-second deadline.
 
 The public challenge index uses a 30-second ISR interval. Public challenge
 ranking pages retain their 60-second ISR interval. Ranking API calls and page
@@ -156,3 +162,24 @@ SHA. The deployment workflow waits for that exact healthy revision, then
 checks public pages, ranking envelopes, unauthenticated API access, cross-site
 write rejection, unsigned webhook rejection, and OAuth host poisoning. Run the
 same checks manually with `EXPECTED_REVISION=<full SHA> bun scripts/verify-production.ts`.
+
+## Shared limiter deployment
+
+`apps/rate-limiter/wrangler.jsonc` pins the personal Cloudflare account. Deploy
+with `wrangler deploy --config apps/rate-limiter/wrangler.jsonc` using its saved
+personal profile. The service token is a random 32-byte secret shared between
+the Worker and the web app. Set it through Wrangler secret input and the
+GitHub `Production` environment; never put it in Wrangler configuration.
+`RATE_LIMIT_SERVICE_URL` and `RATE_LIMIT_SERVICE_TOKEN` are required production
+variables. The web image workflow preserves existing Dokploy variables while
+reconciling these two from GitHub secrets. The local production env file needs
+them for manual deployments.
+
+Run `bun --env-file=.env.production.local scripts/verify-shared-limiter.ts`
+after deploying the Worker. This sends a bounded burst with a fresh test
+identity and verifies authentication, denial, and isolation between clients.
+The service uses one fixed object per request class, so incoming client IDs
+cannot create unlimited objects. Deploy Worker policy changes before a web
+version that depends on them. Keep budgets unchanged during routine deployments
+and reuse the token; rotating it creates new client hashes while aggregate
+budgets remain intact.
