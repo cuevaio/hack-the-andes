@@ -103,7 +103,7 @@ jobs:
     if: needs.detect-release.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     outputs:
-      stale: ${{ steps.verify-target.outputs.stale == 'true' || steps.verify-current.outputs.stale == 'true' }}
+      stale: ${{ steps.verify-target.outputs.stale == 'true' || steps.verify-current.outputs.stale == 'true' || steps.promote.outputs.stale == 'true' }}
     concurrency:
       group: publish-cli
       cancel-in-progress: false
@@ -261,13 +261,37 @@ jobs:
             artifacts/*
 
       - name: Promote current release
+        id: promote
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
           NPM_CONFIG_FORCE: "true"
         run: |
-          for package in chofex-cli hacktheandes-cli; do
-            npm --prefix apps/cli --workspaces=false dist-tag add "${package}@${RELEASE_VERSION}" latest
+          echo "stale=false" >> "$GITHUB_OUTPUT"
+          for attempt in {1..36}; do
+            default_branch_sha="$(git ls-remote origin "refs/heads/${DEFAULT_BRANCH}" | cut -f1)"
+            if [[ "$default_branch_sha" != "$RELEASE_COMMIT" ]]; then
+              echo "A newer commit exists; refusing to promote this release."
+              echo "stale=true" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+
+            if [[ "$attempt" == 1 || "$attempt" == 13 || "$attempt" == 25 ]]; then
+              for package in chofex-cli hacktheandes-cli; do
+                npm --prefix apps/cli --workspaces=false dist-tag add "${package}@${RELEASE_VERSION}" latest
+              done
+            fi
+
+            cli_version="$(npm --prefix apps/cli --workspaces=false view chofex-cli version --prefer-online 2>/dev/null || true)"
+            andes_version="$(npm --prefix apps/cli --workspaces=false view hacktheandes-cli version --prefer-online 2>/dev/null || true)"
+            if [[ "$cli_version" == "$RELEASE_VERSION" && "$andes_version" == "$RELEASE_VERSION" ]]; then
+              echo "Both npm latest tags resolve to ${RELEASE_VERSION}."
+              exit 0
+            fi
+            echo "Waiting for both npm latest tags (${attempt}/36)."
+            if [[ "$attempt" -lt 36 ]]; then sleep 10; fi
           done
+          echo "npm did not promote both packages; refusing to report a successful release."
+          exit 1
 
   recover-current-release:
     name: Requeue current CLI release
