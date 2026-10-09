@@ -68,6 +68,16 @@ test("actual webhook accepts exact signed bytes and rejects tampering and oversi
     assert.equal((await POST(make(body + " "))).status, 400);
     assert.equal((await POST(make(body, {}))).status, 400);
     assert.equal((await POST(make("x".repeat(66000)))).status, 413);
+    const controller = new AbortController();
+    const interrupted = new NextRequest("https://hacktheandes.com/api/webhooks/clerk", {
+      method: "POST",
+      body: new ReadableStream(),
+      signal: controller.signal,
+    });
+    controller.abort();
+    const cancelled = await POST(interrupted);
+    assert.equal(cancelled.status, 408);
+    assert.equal(await cancelled.text(), "Request body did not complete in time");
     console.log("security routes passed");
   `);
 });

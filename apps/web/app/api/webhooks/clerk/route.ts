@@ -25,7 +25,7 @@ export const POST = async (request: NextRequest): Promise<Response> => {
     );
   } catch (error) {
     if (error instanceof HttpError) {
-      return new Response("Webhook body too large", {
+      return new Response(error.message, {
         status: error.status,
         headers: { "cache-control": "no-store" },
       });
