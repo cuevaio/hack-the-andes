@@ -90,16 +90,36 @@ export const withApiHandler = async (
   }
 };
 
-export const readRequestBody = async (request: Request): Promise<string> => {
+export const readRequestBody = async (
+  request: Request,
+  timeoutMs = 10_000,
+): Promise<string> => {
   if (!request.body) return "";
   const reader = request.body.getReader();
   const decoder = new TextDecoder();
   let contents = "";
   let bytesRead = 0;
+  let stopReading: () => void = () => undefined;
+  const interrupted = new Promise<never>((_resolve, reject) => {
+    stopReading = () => {
+      reject(
+        new HttpError(
+          408,
+          "REQUEST_TIMEOUT",
+          "Request body did not complete in time",
+          true,
+        ),
+      );
+      void reader.cancel().catch(() => undefined);
+    };
+  });
+  const timeout = setTimeout(stopReading, timeoutMs);
+  request.signal.addEventListener("abort", stopReading, { once: true });
 
   try {
+    if (request.signal.aborted) stopReading();
     while (true) {
-      const chunk = await reader.read();
+      const chunk = await Promise.race([interrupted, reader.read()]);
       if (chunk.done) break;
       bytesRead += chunk.value.byteLength;
       if (bytesRead > maximumBodyBytes) {
@@ -114,6 +134,8 @@ export const readRequestBody = async (request: Request): Promise<string> => {
     }
     return contents + decoder.decode();
   } finally {
+    clearTimeout(timeout);
+    request.signal.removeEventListener("abort", stopReading);
     reader.releaseLock();
   }
 };

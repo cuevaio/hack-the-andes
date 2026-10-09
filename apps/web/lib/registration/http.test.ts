@@ -1,8 +1,51 @@
 import { describe, expect, test } from "bun:test";
 
-import { HttpError, readJson, withApiHandler } from "./http";
+import { HttpError, readJson, readRequestBody, withApiHandler } from "./http";
 
 describe("registration HTTP boundary", () => {
+  test("stops reading and cancels the body when the caller disconnects", async () => {
+    const controller = new AbortController();
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      cancel: () => {
+        cancelled = true;
+      },
+    });
+    const request = new Request("http://localhost/api/v1/registrations", {
+      method: "POST",
+      body,
+      signal: controller.signal,
+    });
+    const reading = readRequestBody(request);
+    controller.abort();
+    await expect(reading).rejects.toMatchObject({
+      status: 408,
+      code: "REQUEST_TIMEOUT",
+    });
+    expect(cancelled).toBeTrue();
+  }, 500);
+
+  test("times out bodies that never finish, including after partial input", async () => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        controller.enqueue(new TextEncoder().encode('{"value":'));
+      },
+      cancel: () => {
+        cancelled = true;
+      },
+    });
+    const request = new Request("http://localhost/api/v1/registrations", {
+      method: "POST",
+      body,
+    });
+    await expect(readRequestBody(request, 20)).rejects.toMatchObject({
+      status: 408,
+      code: "REQUEST_TIMEOUT",
+      retryable: true,
+    });
+    expect(cancelled).toBeTrue();
+  }, 500);
   test("rejects non-JSON input", async () => {
     const request = new Request("http://localhost/api/v1/registrations", {
       method: "POST",
