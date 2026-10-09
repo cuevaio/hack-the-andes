@@ -281,8 +281,8 @@ jobs:
               done
             fi
 
-            cli_version="$(npm --prefix apps/cli --workspaces=false view chofex-cli version --prefer-online 2>/dev/null || true)"
-            andes_version="$(npm --prefix apps/cli --workspaces=false view hacktheandes-cli version --prefer-online 2>/dev/null || true)"
+            cli_version="$(curl --fail --silent --max-time 15 --header 'Cache-Control: no-cache' "https://registry.npmjs.org/chofex-cli/latest?release=${RELEASE_VERSION}&attempt=${attempt}" | jq -r '.version // empty' || true)"
+            andes_version="$(curl --fail --silent --max-time 15 --header 'Cache-Control: no-cache' "https://registry.npmjs.org/hacktheandes-cli/latest?release=${RELEASE_VERSION}&attempt=${attempt}" | jq -r '.version // empty' || true)"
             if [[ "$cli_version" == "$RELEASE_VERSION" && "$andes_version" == "$RELEASE_VERSION" ]]; then
               echo "Both npm latest tags resolve to ${RELEASE_VERSION}."
               exit 0
