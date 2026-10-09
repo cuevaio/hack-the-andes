@@ -73,29 +73,36 @@ export const downloadImage = async (
 ): Promise<ArrayBuffer> => {
   let url = trustedImageUrl(value);
   let response: Response | undefined;
-  for (let redirects = 0; redirects <= maximumRedirects; redirects += 1) {
-    response = await fetchImpl(url, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(30_000),
-    });
-    const location = response.headers.get("location");
-    const redirected = response.status >= 300 && response.status < 400;
-    if (!redirected) break;
-    if (!location || redirects === maximumRedirects) {
-      throw new Error("Badge asset redirected too many times");
+  const signal = AbortSignal.timeout(30_000);
+  try {
+    for (let redirects = 0; redirects <= maximumRedirects; redirects += 1) {
+      response = await fetchImpl(url, {
+        redirect: "manual",
+        signal,
+      });
+      const location = response.headers.get("location");
+      const redirected = response.status >= 300 && response.status < 400;
+      if (!redirected) break;
+      await response.body?.cancel().catch(() => undefined);
+      if (!location || redirects === maximumRedirects) {
+        throw new Error("Badge asset redirected too many times");
+      }
+      url = trustedImageUrl(new URL(location, url).toString());
     }
-    url = trustedImageUrl(new URL(location, url).toString());
-  }
 
-  if (!response) throw new Error("Could not download image");
-  if (!response.ok) {
-    throw new Error(`Could not download image: HTTP ${response.status}`);
+    if (!response) throw new Error("Could not download image");
+    if (!response.ok) {
+      throw new Error(`Could not download image: HTTP ${response.status}`);
+    }
+    const contentType = response.headers.get("content-type") ?? "";
+    const supportedContentTypes = ["image/jpeg", "image/png", "image/webp"];
+    const mediaType = contentType.toLowerCase().split(";")[0] ?? "";
+    if (!supportedContentTypes.includes(mediaType)) {
+      throw new Error("Downloaded badge asset is not a supported image");
+    }
+    return await readBoundedBody(response);
+  } catch (error) {
+    await response?.body?.cancel().catch(() => undefined);
+    throw error;
   }
-  const contentType = response.headers.get("content-type") ?? "";
-  const supportedContentTypes = ["image/jpeg", "image/png", "image/webp"];
-  const mediaType = contentType.toLowerCase().split(";")[0] ?? "";
-  if (!supportedContentTypes.includes(mediaType)) {
-    throw new Error("Downloaded badge asset is not a supported image");
-  }
-  return readBoundedBody(response);
 };

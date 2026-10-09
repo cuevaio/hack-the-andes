@@ -8,6 +8,61 @@ const pngResponse = (body: BodyInit, headers?: HeadersInit): Response =>
   });
 
 describe("badge asset downloads", () => {
+  test("cancels discarded response streams", async () => {
+    const cases = [
+      { status: 302, headers: { location: "http://127.0.0.1/private" } },
+      { status: 503, headers: {} },
+      { status: 200, headers: { "content-type": "text/html" } },
+      {
+        status: 200,
+        headers: { "content-type": "image/png", "content-length": "6291457" },
+      },
+    ];
+    for (const responseInit of cases) {
+      let cancelled = false;
+      const body = new ReadableStream<Uint8Array>({
+        cancel: () => {
+          cancelled = true;
+        },
+      });
+      await expect(
+        downloadImage(
+          "https://img.clerk.com/avatar.png",
+          async () => new Response(body, responseInit),
+        ),
+      ).rejects.toThrow();
+      expect(cancelled).toBeTrue();
+    }
+  });
+
+  test("releases redirect streams before fetching the next image", async () => {
+    let cancelled = false;
+    let requests = 0;
+    const result = await downloadImage(
+      "https://github.com/avatar.png",
+      async () => {
+        requests += 1;
+        if (requests === 1) {
+          return new Response(
+            new ReadableStream({
+              cancel: () => {
+                cancelled = true;
+              },
+            }),
+            {
+              status: 302,
+              headers: {
+                location: "https://avatars.githubusercontent.com/avatar.png",
+              },
+            },
+          );
+        }
+        expect(cancelled).toBeTrue();
+        return pngResponse(new Uint8Array([1]));
+      },
+    );
+    expect(new Uint8Array(result)).toEqual(new Uint8Array([1]));
+  });
   test("downloads supported images from trusted hosts", async () => {
     const requested: Array<string> = [];
     const fetchImpl = async (input: string | URL | Request) => {
