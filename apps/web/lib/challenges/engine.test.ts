@@ -23,6 +23,38 @@ const shipment: Shipment = {
 };
 
 describe("private challenge engine adapter", () => {
+  test("does not forward the engine secret to a redirected endpoint", async () => {
+    let redirectedRequests = 0;
+    const server = Bun.serve({
+      port: 0,
+      fetch: (request) => {
+        if (new URL(request.url).pathname === "/api/v1/query") {
+          return new Response(null, {
+            status: 307,
+            headers: { location: "/unexpected" },
+          });
+        }
+        redirectedRequests += 1;
+        return Response.json({ version: 1, output: 14 });
+      },
+    });
+    try {
+      const engine = createChallengeEngine({
+        baseUrl: server.url.toString(),
+        apiSecret: "private-secret",
+        fetch,
+      });
+      await expect(
+        engine.query("participant_1", shipment),
+      ).rejects.toMatchObject({
+        status: 503,
+        code: "CHALLENGE_ENGINE_UNAVAILABLE",
+      });
+      expect(redirectedRequests).toBe(0);
+    } finally {
+      server.stop(true);
+    }
+  });
   test("Slow Service uses the existing v1 evaluate envelope and preserves CPU diagnostics", async () => {
     let request: unknown;
     const engine = createChallengeEngine({

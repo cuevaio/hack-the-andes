@@ -181,6 +181,7 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
         },
         body: JSON.stringify(payload),
         cache: "no-store",
+        redirect: "error",
         signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (error) {
