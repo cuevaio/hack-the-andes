@@ -88,6 +88,9 @@ test("uses the appended ingress hop and normalizes IPv4 and IPv6 identities", ()
   expect(
     requestClientAddress(requestFor(undefined, "2001:0db8:0000:0000:ffff::2")),
   ).toBe("2001:0db8:0000:0000/64");
+  expect(requestClientAddress(requestFor(undefined, "fe80::1%eth0"))).toBe(
+    "unknown",
+  );
   expect(requestClientAddress(requestFor(undefined, "not-an-ip"))).toBe(
     "unknown",
   );

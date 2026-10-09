@@ -75,7 +75,7 @@ export const requestClientAddress = (request: Request): string => {
   let address = forwarded.split(",").at(-1)?.trim() ?? "";
   if (address.startsWith("::ffff:") && isIP(address.slice(7)) === 4)
     address = address.slice(7);
-  if (!isIP(address)) return "unknown";
+  if (!isIP(address) || address.includes("%")) return "unknown";
   // Group IPv6 privacy addresses within a /64 to prevent trivial address rotation.
   if (isIP(address) === 6) {
     const normalized = new URL(`http://[${address}]/`).hostname.slice(1, -1);
