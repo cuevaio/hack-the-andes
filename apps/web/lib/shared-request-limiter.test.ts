@@ -66,8 +66,9 @@ test("production rejects missing configuration while health checks stay availabl
     await limiter(new Request("https://hacktheandes.com/api/health")),
   ).toBeUndefined();
   expect(
-    await limiter(new Request("https://hacktheandes.com/__clerk/oauth/token")),
-  ).toBeUndefined();
+    (await limiter(new Request("https://hacktheandes.com/__clerk/oauth/token")))
+      ?.status,
+  ).toBe(503);
   const development = createSharedRequestLimiter({
     required: false,
     configuration: () => ({ url: undefined, token: undefined }),

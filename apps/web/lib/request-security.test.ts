@@ -7,6 +7,14 @@ import {
   requestRejection,
 } from "./request-security";
 
+test("Clerk-prefixed paths cannot bypass the front-door budgets", () => {
+  const limit = createRequestLimiter({ now: () => 0 });
+  for (let index = 0; index < 60; index += 1)
+    expect(limit(requestFor("/__clerk/unknown"))).toBeUndefined();
+  expect(limit(requestFor("/__clerk/another-path"))).toBe(1);
+  expect(limit(requestFor("/api/health"))).toBeUndefined();
+});
+
 const requestFor = (
   path = "/api/v1/challenges/black-box/ranking",
   address = "192.0.2.1",

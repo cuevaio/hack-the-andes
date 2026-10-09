@@ -12,7 +12,7 @@ export const policyFor = (request: Request) => {
     pagePolicy,
   ] = requestPolicies;
   const { pathname } = new URL(request.url);
-  if (pathname === "/api/health" || pathname.startsWith("/__clerk/")) return;
+  if (pathname === "/api/health") return;
   if (pathname === "/api/webhooks/clerk") return webhookPolicy;
   if (pathname === "/_next/image") return imagePolicy;
   if (/^\/api\/v1\/challenges\/[^/]+\/(?:test|evaluate|query)$/.test(pathname))
