@@ -1,0 +1,19 @@
+{
+  "name": "@chofex/request-limits",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./buckets": "./src/buckets.ts"
+  },
+  "scripts": {
+    "lint": "biome lint --error-on-warnings .",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@chofex/typescript-config": "*",
+    "@types/bun": "^1.3.14",
+    "typescript": "7.0.2"
+  }
+}

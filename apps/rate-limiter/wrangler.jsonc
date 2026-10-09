@@ -1,0 +1,22 @@
+{
+  "name": "andes-rate-limiter",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-08",
+  "account_id": "541e1e926ecd3c40c0b204180978349f",
+  "workers_dev": true,
+  "preview_urls": false,
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LIMITS",
+        "class_name": "RateLimits"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RateLimits"]
+    }
+  ]
+}

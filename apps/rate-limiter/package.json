@@ -1,0 +1,17 @@
+{
+  "name": "@chofex/rate-limiter",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "biome lint --error-on-warnings .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chofex/request-limits": "*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261009.1",
+    "typescript": "7.0.2"
+  }
+}
