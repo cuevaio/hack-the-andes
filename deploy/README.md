@@ -123,10 +123,23 @@ Webhooks use signature verification instead of browser origin checks. The
 webhook body limit is 64 KiB. Production OAuth and WebAuthn URLs use the
 canonical origin and ignore forwarded host and protocol headers.
 
+API and webhook body reads have a ten-second total deadline. A disconnected
+caller cancels the read. Interrupted reads return HTTP 408; ordinary JSON
+envelopes and CLI authentication remain unchanged.
+
+Private challenge engine requests reject redirects, keep their existing
+query and evaluation deadlines, and reject response bodies above one MiB.
+The numeric solution runner measures output in UTF-8 bytes, rejects missing
+results, handles closed input pipes, and retains its concurrency slot until
+the child process closes. Process failures return a bounded generic message
+instead of the child's raw diagnostics.
+
 Credential images use an HTTPS host allowlist, validate every redirect, and
 stop downloads above six MiB. The server-side image renderer keeps its
 2.5-second request timeout. Updated Next.js and Sharp versions include the
 published image-rendering and image-optimization security fixes.
+Discarded image streams are cancelled, and the downloader uses one
+30-second deadline across its redirect chain.
 
 The root `patches` directory bounds recursion in `braces@3.0.3` and width and
 precision in `sprintf-js@1.0.3`. Neither package has an upstream fixed release
