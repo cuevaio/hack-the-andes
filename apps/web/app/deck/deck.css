@@ -632,6 +632,68 @@
   color: var(--deck-ink);
 }
 
+/* Supporting notes are deliberately quieter than the slide's main copy. */
+.deck-note {
+  max-width: 96ch;
+  font-size: clamp(0.875rem, 1.7cqmin, 1.2rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+  color: var(--deck-muted);
+}
+
+.comunal-logo-wall {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  border-top: 1px solid var(--deck-line-strong);
+  border-left: 1px solid var(--deck-line-strong);
+  background: var(--deck-card);
+}
+
+.comunal-logo {
+  display: flex;
+  min-width: 0;
+  min-height: 4.75rem;
+  padding: 0.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-right: 1px solid var(--deck-line-strong);
+  border-bottom: 1px solid var(--deck-line-strong);
+}
+
+.comunal-logo img {
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.comunal-logo span {
+  color: var(--deck-muted);
+  font-size: 0.625rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+@container deck-stage (max-width: 1100px) {
+  .comunal-logo-wall {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container deck-stage (max-width: 620px) {
+  .comunal-logo-wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.comunal-meeting-link {
+  display: inline-flex;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--deck-ink);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
 .deck-rule {
   height: 2px;
   border: 0;

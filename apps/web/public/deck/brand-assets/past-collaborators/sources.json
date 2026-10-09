@@ -1,0 +1,324 @@
+[
+  {
+    "name": "v0",
+    "src": "https://crafter.run/collaborations/v0.png",
+    "slug": "v0",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/v0.png",
+    "asset": "/deck/brand-assets/past-collaborators/v0-white.png"
+  },
+  {
+    "name": "Featherless AI",
+    "src": "https://featherless.ai/ (footer SVG)",
+    "slug": "featherless-ai",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/featherless-ai.svg",
+    "asset": "/deck/brand-assets/past-collaborators/featherless-ai-white.png"
+  },
+  {
+    "name": "ElevenLabs",
+    "src": "https://crafter.run/hackathons/partners/elevenlabs.svg",
+    "slug": "elevenlabs",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/elevenlabs.svg",
+    "asset": "/deck/brand-assets/past-collaborators/elevenlabs-white.png"
+  },
+  {
+    "name": "Make",
+    "src": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/make.svg",
+    "slug": "make",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/make.svg",
+    "asset": "/deck/brand-assets/past-collaborators/make-white.png"
+  },
+  {
+    "name": "Tropicalia",
+    "src": "https://crafter.run/hackathons/partners/tropicalia.png",
+    "slug": "tropicalia",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/tropicalia.png",
+    "asset": "/deck/brand-assets/past-collaborators/tropicalia-white.png"
+  },
+  {
+    "name": "Tavily",
+    "src": "https://crafter.run/hackathons/partners/tavily.svg",
+    "slug": "tavily",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/tavily.svg",
+    "asset": "/deck/brand-assets/past-collaborators/tavily-white.png"
+  },
+  {
+    "name": "Vapi",
+    "src": "https://crafter.run/hackathons/partners/vapi.svg",
+    "slug": "vapi",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/vapi.svg",
+    "asset": "/deck/brand-assets/past-collaborators/vapi-white.png"
+  },
+  {
+    "name": "Apify",
+    "src": "https://crafter.run/hackathons/partners/apify.svg",
+    "slug": "apify",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/apify.svg",
+    "asset": "/deck/brand-assets/past-collaborators/apify-white.png"
+  },
+  {
+    "name": "Cursor",
+    "src": "https://crafter.run/collaborations/cursor.svg",
+    "slug": "cursor",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/cursor.svg",
+    "asset": "/deck/brand-assets/past-collaborators/cursor-white.png"
+  },
+  {
+    "name": "n8n",
+    "src": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/n8n.svg",
+    "slug": "n8n",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/n8n.svg",
+    "asset": "/deck/brand-assets/past-collaborators/n8n-white.png"
+  },
+  {
+    "name": "Replit",
+    "src": "https://crafter.run/hackathons/partners/replit.svg",
+    "slug": "replit",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/replit.svg",
+    "asset": "/deck/brand-assets/past-collaborators/replit-white.png"
+  },
+  {
+    "name": "Convex",
+    "src": "https://crafter.run/hackathons/partners/convex.svg",
+    "slug": "convex",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/convex.svg",
+    "asset": "/deck/brand-assets/past-collaborators/convex-white.png"
+  },
+  {
+    "name": "Portal",
+    "src": "https://crafter.run/collaborations/portal.svg",
+    "slug": "portal",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/portal.svg",
+    "asset": "/deck/brand-assets/past-collaborators/portal-white.png"
+  },
+  {
+    "name": "Yalo",
+    "src": "https://crafter.run/hackathons/partners/yalo.svg",
+    "slug": "yalo",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/yalo.svg",
+    "asset": "/deck/brand-assets/past-collaborators/yalo-white.png"
+  },
+  {
+    "name": "Clerk",
+    "src": "https://crafter.run/hackathons/partners/clerk.svg",
+    "slug": "clerk",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/clerk.svg",
+    "asset": "/deck/brand-assets/past-collaborators/clerk-white.png"
+  },
+  {
+    "name": "Exa",
+    "src": "https://crafter.run/hackathons/partners/exa.svg",
+    "slug": "exa",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/exa.svg",
+    "asset": "/deck/brand-assets/past-collaborators/exa-white.png"
+  },
+  {
+    "name": "3DevLabs",
+    "src": "https://crafter.run/hackathons/partners/3DevLabs.svg",
+    "slug": "3devlabs",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/3devlabs.svg",
+    "asset": "/deck/brand-assets/past-collaborators/3devlabs-white.png"
+  },
+  {
+    "name": "Sezzle",
+    "src": "https://crafter.run/collaborations/sezzle.png",
+    "slug": "sezzle",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/sezzle.png",
+    "asset": "/deck/brand-assets/past-collaborators/sezzle-white.png"
+  },
+  {
+    "name": "Lovable",
+    "src": "https://peru.ai-hackathon.co/logo_lovable.svg",
+    "slug": "lovable",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/lovable.svg",
+    "asset": "/deck/brand-assets/past-collaborators/lovable-white.png"
+  },
+  {
+    "name": "Huawei",
+    "src": "https://peru.ai-hackathon.co/_logo_Logo-Huawei.png",
+    "slug": "huawei",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/huawei.png",
+    "asset": "/deck/brand-assets/past-collaborators/huawei-white.png"
+  },
+  {
+    "name": "Cayetano Heredia",
+    "src": "https://peru.ai-hackathon.co/logo_cayetano_BN_1.png",
+    "slug": "cayetano-heredia",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/cayetano-heredia.png",
+    "asset": "/deck/brand-assets/past-collaborators/cayetano-heredia-white.png"
+  },
+  {
+    "name": "Bioincuba",
+    "src": "https://peru.ai-hackathon.co/logo_bioincuba_BN_1.png",
+    "slug": "bioincuba",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/bioincuba.png",
+    "asset": "/deck/brand-assets/past-collaborators/bioincuba-white.png"
+  },
+  {
+    "name": "Yavendió",
+    "src": "https://peru.ai-hackathon.co/1.png",
+    "slug": "yavendi",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/yavendi.png",
+    "asset": "/deck/brand-assets/past-collaborators/yavendi-white.png"
+  },
+  {
+    "name": "forHuman",
+    "src": "https://peru.ai-hackathon.co/3.png",
+    "slug": "forhuman",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/forhuman.png",
+    "asset": "/deck/brand-assets/past-collaborators/forhuman-white.png"
+  },
+  {
+    "name": "Repensar",
+    "src": "https://peru.ai-hackathon.co/logo_repensar_logo.png",
+    "slug": "repensar",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/repensar.png",
+    "asset": "/deck/brand-assets/past-collaborators/repensar-white.png"
+  },
+  {
+    "name": "CloudForge AI",
+    "src": "https://peru.ai-hackathon.co/_logo_logo%20cloud%20forge%20ai.png",
+    "slug": "cloudforge-ai",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/cloudforge-ai.png",
+    "asset": "/deck/brand-assets/past-collaborators/cloudforge-ai-white.png"
+  },
+  {
+    "name": "Little Caesars",
+    "src": "https://peru.ai-hackathon.co/logo-little-caesars.png",
+    "slug": "little-caesars",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/little-caesars.png",
+    "asset": "/deck/brand-assets/past-collaborators/little-caesars-white.png"
+  },
+  {
+    "name": "UCSM",
+    "src": "https://crafter.run/hackathons/partners/ucsm.png",
+    "slug": "ucsm",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/ucsm.png",
+    "asset": "/deck/brand-assets/past-collaborators/ucsm-white.png"
+  },
+  {
+    "name": "The Hackathon Company",
+    "src": "https://www.peru.ai-hackathon.co/THC-BRAND-WHITE.svg",
+    "slug": "the-hackathon-company",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/the-hackathon-company.svg",
+    "asset": "/deck/brand-assets/past-collaborators/the-hackathon-company-white.png"
+  },
+  {
+    "name": "MAKERS",
+    "src": "https://www.peru.ai-hackathon.co/partner_makers.svg",
+    "slug": "makers",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/makers.svg",
+    "asset": "/deck/brand-assets/past-collaborators/makers-white.png"
+  },
+  {
+    "name": "START Lima",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2FSTART-lima.png&w=384&q=95",
+    "slug": "start-lima",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/start-lima.png",
+    "asset": "/deck/brand-assets/past-collaborators/start-lima-white.png"
+  },
+  {
+    "name": "AI Playgrounds",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2Fai-playgrounds-logo.png&w=384&q=95",
+    "slug": "ai-playgrounds",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/ai-playgrounds.png",
+    "asset": "/deck/brand-assets/past-collaborators/ai-playgrounds-white.png"
+  },
+  {
+    "name": "KEBO",
+    "src": "https://www.peru.ai-hackathon.co/KEBO-Brand-WhitePurple.svg",
+    "slug": "kebo",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/kebo.svg",
+    "asset": "/deck/brand-assets/past-collaborators/kebo-white.png"
+  },
+  {
+    "name": "Valtec",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2F_logo_logo-valtec.png&w=640&q=100",
+    "slug": "valtec",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/valtec.png",
+    "asset": "/deck/brand-assets/past-collaborators/valtec-white.png"
+  },
+  {
+    "name": "Nutriera",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2F_logo_logo%20nutriera.png&w=640&q=100",
+    "slug": "nutriera",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/nutriera.png",
+    "asset": "/deck/brand-assets/past-collaborators/nutriera-white.png"
+  },
+  {
+    "name": "Leasy",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2F_logo_Logo%20Leasy.png&w=640&q=100",
+    "slug": "leasy",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/leasy.png",
+    "asset": "/deck/brand-assets/past-collaborators/leasy-white.png"
+  },
+  {
+    "name": "Finity",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2F_logo_logo%20finity.png&w=640&q=100",
+    "slug": "finity",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/finity.png",
+    "asset": "/deck/brand-assets/past-collaborators/finity-white.png"
+  },
+  {
+    "name": "IEEE USIL",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2Fieee_usil.png&w=384&q=100",
+    "slug": "ieee-usil",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/ieee-usil.png",
+    "asset": "/deck/brand-assets/past-collaborators/ieee-usil-white.png"
+  },
+  {
+    "name": "Hackeando Productos",
+    "src": "https://www.peru.ai-hackathon.co/HackeandoProductos.svg",
+    "slug": "hackeando-productos",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/hackeando-productos.svg",
+    "asset": "/deck/brand-assets/past-collaborators/hackeando-productos-white.png"
+  },
+  {
+    "name": "Utec Ventures",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2Futecventures.png&w=384&q=100",
+    "slug": "utec-ventures",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/utec-ventures.png",
+    "asset": "/deck/brand-assets/past-collaborators/utec-ventures-white.png"
+  },
+  {
+    "name": "Spin",
+    "src": "https://www.peru.ai-hackathon.co/_next/image?url=%2Fspin.png&w=384&q=95",
+    "slug": "spin",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/spin.png",
+    "asset": "/deck/brand-assets/past-collaborators/spin-white.png"
+  },
+  {
+    "name": "INNICIA UCSM",
+    "src": "https://thenextcraft.org/_next/image?url=%2Fsponsors%2Finnicia-ucsm.png&w=2048&q=75",
+    "slug": "innicia-ucsm",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/innicia-ucsm.png",
+    "asset": "/deck/brand-assets/past-collaborators/innicia-ucsm-white.png"
+  },
+  {
+    "name": "AI Labs",
+    "src": "https://thenextcraft.org/_next/image?url=%2Forganizadores%2Fai-labs.png&w=256&q=75",
+    "slug": "ai-labs",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/ai-labs.png",
+    "asset": "/deck/brand-assets/past-collaborators/ai-labs-white.png"
+  },
+  {
+    "name": "Nucleo Labs",
+    "src": "https://thenextcraft.org/_next/image?url=%2Forganizadores%2Fnucleo-labs.png&w=256&q=75",
+    "slug": "nucleo-labs",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/nucleo-labs.png",
+    "asset": "/deck/brand-assets/past-collaborators/nucleo-labs-white.png"
+  },
+  {
+    "name": "Open2",
+    "src": "https://thenextcraft.org/_next/image?url=%2Forganizadores%2Fopen2.png&w=256&q=75",
+    "slug": "open2",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/open2.png",
+    "asset": "/deck/brand-assets/past-collaborators/open2-white.png"
+  },
+  {
+    "name": "Visagente",
+    "src": "https://thenextcraft.org/sponsors/visagente.svg",
+    "slug": "visagente",
+    "raw": "apps/web/public/deck/brand-assets/past-collaborators/raw/visagente.svg",
+    "asset": "/deck/brand-assets/past-collaborators/visagente-white.png"
+  }
+]

@@ -1,0 +1,66 @@
+---
+title: Marcas que han colaborado con nosotros
+backdrop: contour
+veil: heavy
+layout: wide
+---
+
+<SlideTitle label="Colaboraciones anteriores" size="sm">Marcas y aliados que han colaborado con nosotros</SlideTitle>
+
+<div className="comunal-logo-wall">
+  {[
+    { name: "v0", slug: "v0" },
+    { name: "Featherless AI", slug: "featherless-ai" },
+    { name: "ElevenLabs", slug: "elevenlabs" },
+    { name: "Make", slug: "make" },
+    { name: "Tropicalia", slug: "tropicalia" },
+    { name: "Tavily", slug: "tavily" },
+    { name: "Vapi", slug: "vapi" },
+    { name: "Apify", slug: "apify" },
+    { name: "Cursor", slug: "cursor" },
+    { name: "n8n", slug: "n8n" },
+    { name: "Replit", slug: "replit" },
+    { name: "Convex", slug: "convex" },
+    { name: "Portal", slug: "portal" },
+    { name: "Yalo", slug: "yalo" },
+    { name: "Clerk", slug: "clerk" },
+    { name: "Exa", slug: "exa" },
+    { name: "3DevLabs", slug: "3devlabs" },
+    { name: "Sezzle", slug: "sezzle" },
+    { name: "Lovable", slug: "lovable" },
+    { name: "Huawei", slug: "huawei" },
+    { name: "Cayetano Heredia", slug: "cayetano-heredia" },
+    { name: "Bioincuba", slug: "bioincuba" },
+    { name: "Yavendió", slug: "yavendi" },
+    { name: "forHuman", slug: "forhuman" },
+    { name: "Repensar", slug: "repensar" },
+    { name: "CloudForge AI", slug: "cloudforge-ai" },
+    { name: "Little Caesars", slug: "little-caesars" },
+    { name: "UCSM", slug: "ucsm" },
+    { name: "The Hackathon Company", slug: "the-hackathon-company" },
+    { name: "MAKERS", slug: "makers" },
+    { name: "START Lima", slug: "start-lima" },
+    { name: "AI Playgrounds", slug: "ai-playgrounds" },
+    { name: "KEBO", slug: "kebo" },
+    { name: "Valtec", slug: "valtec" },
+    { name: "Nutriera", slug: "nutriera" },
+    { name: "Leasy", slug: "leasy" },
+    { name: "Finity", slug: "finity" },
+    { name: "IEEE USIL", slug: "ieee-usil" },
+    { name: "Hackeando Productos", slug: "hackeando-productos" },
+    { name: "Utec Ventures", slug: "utec-ventures" },
+    { name: "Spin", slug: "spin" },
+    { name: "INNICIA UCSM", slug: "innicia-ucsm" },
+    { name: "AI Labs", slug: "ai-labs" },
+    { name: "Nucleo Labs", slug: "nucleo-labs" },
+    { name: "Open2", slug: "open2" },
+    { name: "Visagente", slug: "visagente" }
+  ].map((brand) => (
+    <div className="comunal-logo" key={brand.slug}>
+      <Logo src={`/deck/brand-assets/past-collaborators/${brand.slug}-white.png`} alt={brand.name} height={36} />
+      <span>{brand.name}</span>
+    </div>
+  ))}
+</div>
+
+<div className="deck-note">Colaboraciones en eventos anteriores: marcas, instituciones y comunidades. No son un anuncio de patrocinadores de Hack the Andes.</div>
