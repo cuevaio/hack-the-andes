@@ -49,6 +49,35 @@ const registrationResult = {
 } as const;
 
 describe("registration API client", () => {
+  test("does not send participant credentials through API redirects", async () => {
+    let redirectedRequests = 0;
+    const server = Bun.serve({
+      port: 0,
+      fetch: (request) => {
+        if (new URL(request.url).pathname === "/api/v1/me") {
+          return new Response(null, {
+            status: 307,
+            headers: { location: "/unexpected" },
+          });
+        }
+        redirectedRequests += 1;
+        return Response.json({});
+      },
+    });
+    try {
+      await expect(
+        Effect.runPromise(
+          getCurrentUser({
+            apiUrl: server.url.toString(),
+            token: "participant-token",
+          }),
+        ),
+      ).rejects.toThrow("Could not reach the registration API");
+      expect(redirectedRequests).toBe(0);
+    } finally {
+      server.stop(true);
+    }
+  });
   test("Slow Service waits through cold evaluation while Scheduler keeps its existing timeout", async () => {
     const originalTimeout = AbortSignal.timeout;
     const timeouts: number[] = [];

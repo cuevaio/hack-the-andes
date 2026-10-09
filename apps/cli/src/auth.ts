@@ -266,6 +266,7 @@ const tokenRequest = async (
       "content-type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams(values),
+    redirect: "error",
     signal: AbortSignal.timeout(20_000),
   });
   const body = (await response.json().catch(() => ({}))) as TokenResponse;
@@ -475,6 +476,7 @@ export const logout = async (): Promise<void> => {
           token: revocationToken(credentials),
           client_id: config.oauthClientId,
         }),
+        redirect: "error",
         signal: AbortSignal.timeout(20_000),
       });
       if (!response.ok) {

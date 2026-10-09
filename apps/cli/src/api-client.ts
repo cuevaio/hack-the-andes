@@ -103,6 +103,7 @@ const sendRequest = (
       return fetch(endpoint(options.apiUrl, path), {
         ...init,
         headers,
+        redirect: "error",
         signal: AbortSignal.timeout(timeoutMs),
       });
     },
