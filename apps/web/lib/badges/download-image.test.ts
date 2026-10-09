@@ -9,7 +9,7 @@ const pngResponse = (body: BodyInit, headers?: HeadersInit): Response =>
 
 describe("badge asset downloads", () => {
   test("cancels discarded response streams", async () => {
-    const cases = [
+    const cases: Array<ResponseInit> = [
       { status: 302, headers: { location: "http://127.0.0.1/private" } },
       { status: 503, headers: {} },
       { status: 200, headers: { "content-type": "text/html" } },
