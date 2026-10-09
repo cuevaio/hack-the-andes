@@ -141,11 +141,15 @@ published image-rendering and image-optimization security fixes.
 Discarded image streams are cancelled, and the downloader uses one
 30-second deadline across its redirect chain.
 
-The root `patches` directory bounds recursion in `braces@3.0.3` and width and
-precision in `sprintf-js@1.0.3`. Neither package has an upstream fixed release
-as of October 8, 2026. `bun audit` still reports their versions; do not suppress
-those findings or describe the audit as clean. `scripts/dependency-security.test.ts`
-checks these mitigations. Replace the patches when upstream fixes are available.
+Deck metadata uses `yaml` rather than the older `gray-matter` dependency chain.
+The UI vendors the MIT-licensed Shadcn stylesheet instead of installing the
+component generator and its dependency tree. The `braces` override resolves
+to upstream `brace-expansion@5.0.12`: the remaining consumer, Chokidar, only
+calls the compatible `expand` function. Trigger's published CLI lists `braces`
+but does not call its AST APIs. Do not reintroduce a consumer of those APIs
+without removing this alias or migrating the consumer.
+`scripts/dependency-security.test.ts` checks expansion bounds and the real
+Chokidar watcher. Both vulnerable packages and their local patches are removed.
 
 Production images include `APP_REVISION`, and `/api/health` exposes that commit
 SHA. The deployment workflow waits for that exact healthy revision, then
