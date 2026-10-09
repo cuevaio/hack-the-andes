@@ -14,6 +14,7 @@ WORKDIR /app
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=pruner /app/out/json/ ./
+COPY --from=pruner /app/patches/ ./patches/
 RUN bun install --frozen-lockfile
 
 FROM dependencies AS builder

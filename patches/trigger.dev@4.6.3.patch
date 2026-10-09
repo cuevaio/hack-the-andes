@@ -1,0 +1,22 @@
+diff --git a/dist/esm/build/externals.js b/dist/esm/build/externals.js
+index c0d5a606bf6952ee3e2d404fcae458dbf6b40bba..0998678cf3b0d2e3a1b1a1087dbca2e382a25f31 100644
+--- a/dist/esm/build/externals.js
++++ b/dist/esm/build/externals.js
+@@ -6,7 +6,7 @@ import nodeResolve from "resolve";
+ import { alwaysExternal, } from "@trigger.dev/core/v3/build";
+ import { logger } from "../utilities/logger.js";
+ import { resolvePathSync as esmResolveSync } from "mlly";
+-import braces from "braces";
++import { expand as expandBraces } from "braces";
+ import { builtinModules } from "node:module";
+ import { tryCatch } from "@trigger.dev/core/v3";
+ import { resolveModule } from "./resolveModule.js";
+@@ -282,7 +282,7 @@ function createExternalsCollector(target, resolvedConfig, forcedExternal = []) {
+                         const fields = [packageJson.main, packageJson.module, packageJson.browser].filter((f) => typeof f === "string");
+                         const allFiles = files.concat(fields);
+                         // We need to expand any braces in the files array, e.g. ["{js,ts}"] -> ["js", "ts"]
+-                        const allFilesExpanded = braces(allFiles, { expand: true });
++                        const allFilesExpanded = allFiles.filter((file) => typeof file === "string").flatMap((file) => expandBraces(file));
+                         // Use a regexp to match native-related extensions
+                         const nativeExtRegexp = /\.(wasm|node|gyp|c|cc|cpp|cxx|h|hpp|hxx)$/;
+                         const hasNativeFile = allFilesExpanded.some((file) => nativeExtRegexp.test(file));

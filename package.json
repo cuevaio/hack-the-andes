@@ -48,5 +48,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "patchedDependencies": {
+    "trigger.dev@4.6.3": "patches/trigger.dev@4.6.3.patch"
+  }
 }

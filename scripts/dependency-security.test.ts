@@ -10,6 +10,19 @@ const check = (source: string) => {
   });
 };
 
+test("Trigger CLI starts under Node with the maintained expansion package", () => {
+  const entry = new URL(
+    "../node_modules/trigger.dev/dist/esm/index.js",
+    import.meta.url,
+  ).pathname;
+  const result = Bun.spawnSync(["node", entry, "--help"]);
+  expect({ code: result.exitCode, stderr: result.stderr.toString() }).toEqual({
+    code: 0,
+    stderr: "",
+  });
+  expect(result.stdout.toString()).toContain("deploy");
+});
+
 test("maintained brace expansion preserves watcher patterns and bounds hostile inputs", () => {
   check(`
     const assert = require("node:assert/strict");

@@ -151,11 +151,12 @@ Deck metadata uses `yaml` rather than the older `gray-matter` dependency chain.
 The UI vendors the MIT-licensed Shadcn stylesheet instead of installing the
 component generator and its dependency tree. The `braces` override resolves
 to upstream `brace-expansion@5.0.12`: the remaining consumer, Chokidar, only
-calls the compatible `expand` function. Trigger's published CLI lists `braces`
-but does not call its AST APIs. Do not reintroduce a consumer of those APIs
+calls the compatible `expand` function. Trigger's published CLI also expands arrays of file patterns; a small
+compatibility patch switches that call to the maintained named export. Do not reintroduce a consumer of those APIs
 without removing this alias or migrating the consumer.
 `scripts/dependency-security.test.ts` checks expansion bounds and the real
-Chokidar watcher. Both vulnerable packages and their local patches are removed.
+Chokidar watcher. Both vulnerable packages and their security patches are removed; the remaining
+Trigger patch only adapts its import and array expansion call.
 
 Production images include `APP_REVISION`, and `/api/health` exposes that commit
 SHA. The deployment workflow waits for that exact healthy revision, then
