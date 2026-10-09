@@ -31,14 +31,3 @@ test("patched braces preserves ordinary expansion and rejects deep patterns and 
     }
   `);
 });
-
-test("patched sprintf preserves trusted formatting and rejects unbounded width or precision", () => {
-  check(`
-    const assert = require("node:assert/strict");
-    const { sprintf } = require("sprintf-js");
-    assert.equal(sprintf("%.2f %s", 1.25, "ok"), "1.25 ok");
-    assert.equal(sprintf("%5s", "ok"), "   ok");
-    assert.throws(() => sprintf("%1000000000s", "x"), /safety limit/);
-    assert.throws(() => sprintf("%.1000000000f", 1), /safety limit/);
-  `);
-});

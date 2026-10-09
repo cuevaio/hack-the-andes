@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import matter from "gray-matter";
+import { parseFrontmatter } from "./frontmatter";
 
 const DECKS_DIR = join(process.cwd(), "content", "decks");
 
@@ -291,7 +291,7 @@ export async function loadDeck(slug: string): Promise<LoadedDeck | null> {
     if (!parsed) continue;
 
     const raw = await readFile(join(deckDir, entry.name), "utf-8");
-    const { data, content } = matter(raw);
+    const { data, content } = parseFrontmatter(raw);
 
     slides.push({
       meta: data as SlideMeta,

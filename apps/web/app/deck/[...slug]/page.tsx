@@ -83,7 +83,7 @@ export default async function DeckPage({
 
   const compiledSlides = await Promise.all(
     deck.slides.map(async (slide) => {
-      // Frontmatter was already stripped by gray-matter in the loader, hence
+      // Frontmatter was already stripped by the deck loader, hence
       // parseFrontmatter: false.
       //
       // blockJS: false is required — slides pass real arrays and objects as

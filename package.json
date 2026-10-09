@@ -49,7 +49,6 @@
     "packages/*"
   ],
   "patchedDependencies": {
-    "braces@3.0.3": "patches/braces@3.0.3.patch",
-    "sprintf-js@1.0.3": "patches/sprintf-js@1.0.3.patch"
+    "braces@3.0.3": "patches/braces@3.0.3.patch"
   }
 }

@@ -36,7 +36,6 @@
     "@vercel/blob": "^2.8.0",
     "ai": "^7.0.97",
     "effect": "4.0.0-rc.112",
-    "gray-matter": "^4.0.3",
     "lucide-react": "^1.43.0",
     "meshline": "^3.3.1",
     "next": "16.3.8",
@@ -51,7 +50,8 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "sharp": "^0.35.5",
-    "three": "^0.186.0"
+    "three": "^0.186.0",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.12",
