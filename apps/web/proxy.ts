@@ -18,6 +18,7 @@ function isPublicMarketingPath(pathname: string) {
   }
   if (
     pathname === "/" ||
+    pathname === "/game" ||
     pathname === "/_next/image" ||
     pathname === "/terms" ||
     pathname === "/privacy" ||
