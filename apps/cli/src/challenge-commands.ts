@@ -236,7 +236,7 @@ const slowServiceQuickstart = {
   helpCommand: "andes challenge test --help",
 };
 const mountainLodgeQuickstart = {
-  title: "MOUNTAIN LODGE / EL REFUGIO DE LA MONTAÑA",
+  title: "CHALLENGE 05 / EL REFUGIO DE LA MONTAÑA",
   story: [
     "Un refugio perdió el código de su sistema de reservas. Solo conserva una máquina que recibe cotizaciones y devuelve céntimos.",
   ],

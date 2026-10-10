@@ -30,7 +30,7 @@ export const mountainLodgeStarterSource = `/**
  * arrivalHour: entero 0–23, hora local de llegada.
  * equipment: boolean, el grupo trae su propio equipo.
  * expedition: boolean, la reserva pertenece a una expedición organizada.
- * Devuelve el importe del periodo en céntimos enteros.
+ * Devuelve el importe de la reserva en céntimos enteros.
  * Define una función global o usa module.exports. No uses import/export.
  */
 function quoteStay(input) {

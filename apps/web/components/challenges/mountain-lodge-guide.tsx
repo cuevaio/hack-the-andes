@@ -36,7 +36,7 @@ export function MountainLodgeChallengeGuide() {
   return (
     <div className="mt-14 space-y-10">
       <section aria-labelledby="mountain-lodge-brief">
-        <BrandKicker>Challenge 05 / Mountain Lodge</BrandKicker>
+        <BrandKicker>Challenge 05 / Refugio de montaña</BrandKicker>
         <h2
           id="mountain-lodge-brief"
           className="mt-3 font-display text-4xl uppercase"

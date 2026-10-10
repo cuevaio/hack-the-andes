@@ -124,7 +124,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     slug: "mountain-lodge",
     number: 5,
     code: "05",
-    theme: "Mountain Lodge",
+    theme: "Refugio de montaña",
     title: "El refugio de la montaña",
     summary:
       "Descubre las reglas de un sistema de reservas sin documentación con 25 consultas y reemplázalo con tu propia función.",
