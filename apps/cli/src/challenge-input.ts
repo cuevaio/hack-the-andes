@@ -10,6 +10,7 @@ import {
   ShipmentSchema,
   SlowServiceCompanionReviewSchema,
 } from "@chofex/challenges-contract";
+import { LodgeBookingSchema } from "@chofex/challenges-contract/mountain-lodge";
 import { PowerReadingSchema } from "@chofex/challenges-contract/power-grid";
 import { isSlowServiceSourceWithinLimit } from "@chofex/challenges-contract/slow-service";
 import { Effect, Schema } from "effect";
@@ -55,6 +56,7 @@ export const javascriptSourceFromPath = (
     let expectedFunction = "calculateShipping(input)";
     if (challenge === "broken-agent")
       expectedFunction = "createScheduler(dependencies)";
+    if (challenge === "mountain-lodge") expectedFunction = "quoteStay(input)";
     if (challenge === "power-grid") expectedFunction = "calculateBill(input)";
     if (challenge === "make-it-fast") expectedFunction = "createLedger()";
     return Effect.fail(
@@ -353,6 +355,35 @@ export const powerReadingInput = (path: string | undefined) => {
     ),
     Effect.flatMap((input) =>
       Schema.decodeUnknownEffect(PowerReadingSchema, {
+        onExcessProperty: "error",
+      })(input).pipe(
+        Effect.mapError((error) => cliError("VALIDATION_ERROR", error.message)),
+      ),
+    ),
+  );
+};
+
+export const lodgeBookingInput = (path: string | undefined) => {
+  if (!path)
+    return Effect.fail(
+      cliError(
+        "INPUT_REQUIRED",
+        "Usa --input input.json con durationHours, guests, arrivalHour, equipment y expedition.",
+      ),
+    );
+  return readTextFile(path).pipe(
+    Effect.flatMap((contents) =>
+      Effect.try({
+        try: (): unknown => JSON.parse(contents),
+        catch: () =>
+          cliError(
+            "INVALID_INPUT_FILE",
+            "El archivo debe contener JSON válido",
+          ),
+      }),
+    ),
+    Effect.flatMap((input) =>
+      Schema.decodeUnknownEffect(LodgeBookingSchema, {
         onExcessProperty: "error",
       })(input).pipe(
         Effect.mapError((error) => cliError("VALIDATION_ERROR", error.message)),

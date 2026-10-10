@@ -48,7 +48,7 @@ test("early access does not open other challenges and fails closed when Clerk is
     await hasChallengeEarlyAccess("user_admin", "black-box", readUser),
   ).toBe(false);
   expect(
-    await hasChallengeEarlyAccess("user_admin", "agent-arena", readUser),
+    await hasChallengeEarlyAccess("user_admin", "mountain-lodge", readUser),
   ).toBe(false);
   await expect(
     hasChallengeEarlyAccess("user_admin", "power-grid", readUser),

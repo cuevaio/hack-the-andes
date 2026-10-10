@@ -7,6 +7,11 @@ import {
   type Shipment,
 } from "@chofex/challenges-contract";
 import {
+  type LodgeBooking,
+  mountainLodgeChallengeSlug,
+  mountainLodgeChallengeVersion,
+} from "@chofex/challenges-contract/mountain-lodge";
+import {
   type PowerReading,
   powerGridChallengeSlug,
   powerGridChallengeVersion,
@@ -19,6 +24,7 @@ import {
 export const currentChallengeVersion = "black-box-v2" as const;
 export const brokenAgentChallengeVersion = "broken-agent-v3" as const;
 export type CurrentChallengeVersion =
+  | typeof mountainLodgeChallengeVersion
   | typeof powerGridChallengeVersion
   | typeof currentChallengeVersion
   | typeof brokenAgentChallengeVersion
@@ -31,6 +37,7 @@ export const slowServiceEngineEvaluateTimeoutMs = 330_000;
 export const currentChallengeVersionFor = (
   slug: ChallengeSlug | string,
 ): CurrentChallengeVersion | undefined => {
+  if (slug === mountainLodgeChallengeSlug) return mountainLodgeChallengeVersion;
   if (slug === powerGridChallengeSlug) return powerGridChallengeVersion;
   if (slug === blackBoxChallengeSlug) return currentChallengeVersion;
   if (slug === brokenAgentChallengeSlug) return brokenAgentChallengeVersion;
@@ -246,6 +253,11 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
           input: Shipment;
         }
       | {
+          challengeVersion: typeof mountainLodgeChallengeVersion;
+          participantKey: string;
+          input: LodgeBooking;
+        }
+      | {
           challengeVersion: typeof powerGridChallengeVersion;
           participantKey: string;
           input: PowerReading;
@@ -273,6 +285,12 @@ export const createChallengeEngine = (options: ChallengeEngineOptions) => {
         participantKey,
         input,
         challengeVersion: currentChallengeVersion,
+      }),
+    queryMountainLodge: (participantKey: string, input: LodgeBooking) =>
+      queryOracle({
+        participantKey,
+        input,
+        challengeVersion: mountainLodgeChallengeVersion,
       }),
     queryPowerGrid: (participantKey: string, input: PowerReading) =>
       queryOracle({

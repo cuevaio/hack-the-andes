@@ -25,6 +25,10 @@ import {
   SlowServiceEvaluationSolutionSchema,
 } from "@chofex/challenges-contract";
 import {
+  LodgeBookingSchema,
+  mountainLodgeChallengeSlug,
+} from "@chofex/challenges-contract/mountain-lodge";
+import {
   PowerReadingSchema,
   powerGridChallengeSlug,
 } from "@chofex/challenges-contract/power-grid";
@@ -77,7 +81,11 @@ import {
   releaseChallengeReservation,
   reserveChallengeUse,
 } from "./reservations";
-import { runPowerGridSolution, runShippingSolution } from "./sandbox";
+import {
+  runMountainLodgeSolution,
+  runPowerGridSolution,
+  runShippingSolution,
+} from "./sandbox";
 import { participantVisibleScore, scoreFromStored } from "./score";
 import { attemptSeed, shareCodeFromSeed } from "./seed";
 import { runSlowServicePublicTests } from "./slow-service-public";
@@ -196,6 +204,7 @@ const requireImplementedChallenge = async (
   if (
     challenge.slug !== blackBoxChallengeSlug &&
     challenge.slug !== powerGridChallengeSlug &&
+    challenge.slug !== mountainLodgeChallengeSlug &&
     challenge.slug !== brokenAgentChallengeSlug &&
     challenge.slug !== slowServiceChallengeSlug
   ) {
@@ -723,6 +732,10 @@ export const getChallengeAttempt = async (
 
   let localTestHint =
     "Test against your notebook with `andes challenge test --challenge black-box --source ./shipping.js`. Official evaluation consumes one attempt.";
+  if (challenge.slug === mountainLodgeChallengeSlug) {
+    localTestHint =
+      "Prueba gratis contra tu cuaderno con `andes challenge test --challenge mountain-lodge --source ./stay.js`. Cada evaluación oficial consume uno de tus 3 intentos y usa 1,000 cotizaciones ocultas.";
+  }
   if (challenge.slug === powerGridChallengeSlug) {
     localTestHint =
       "Prueba gratis contra tu cuaderno con `andes challenge test --challenge power-grid --source ./bill.js`. Cada evaluación oficial consume uno de tus 3 intentos y usa 1,000 lecturas ocultas.";
@@ -753,9 +766,18 @@ export const getChallengeAttempt = async (
 
 const parsePowerReading = (input: unknown) =>
   parseInput(PowerReadingSchema, input);
+const parseLodgeBooking = (input: unknown) =>
+  parseInput(LodgeBookingSchema, input);
 const parseShipment = (input: unknown) => parseInput(ShipmentSchema, input);
 
 const prepareOracleQuery = (slug: string, rawInput: unknown) => {
+  if (slug === mountainLodgeChallengeSlug) {
+    const input = parseLodgeBooking(rawInput);
+    return {
+      input,
+      run: (key: string) => challengeEngine().queryMountainLodge(key, input),
+    };
+  }
   if (slug === powerGridChallengeSlug) {
     const input = parsePowerReading(rawInput);
     return {
@@ -776,7 +798,8 @@ export const queryChallenge = async (
   const challenge = await requireImplementedChallenge(slug, now, clerkUserId);
   if (
     challenge.slug !== blackBoxChallengeSlug &&
-    challenge.slug !== powerGridChallengeSlug
+    challenge.slug !== powerGridChallengeSlug &&
+    challenge.slug !== mountainLodgeChallengeSlug
   ) {
     throw new HttpError(
       404,
@@ -861,7 +884,10 @@ export const testChallengeSolution = async (
   }
 
   let actual: number[];
-  if (challenge.slug === powerGridChallengeSlug) {
+  if (challenge.slug === mountainLodgeChallengeSlug) {
+    const readings = observations.map((row) => parseLodgeBooking(row.input));
+    actual = await runMountainLodgeSolution(solution.source, readings);
+  } else if (challenge.slug === powerGridChallengeSlug) {
     const readings = observations.map((row) => parsePowerReading(row.input));
     actual = await runPowerGridSolution(solution.source, readings);
   } else {

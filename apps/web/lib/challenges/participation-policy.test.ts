@@ -90,3 +90,13 @@ test("admin early access precedes launch and ordinary participants can enter aft
     ),
   ).toThrow("cerrado");
 });
+
+test("Power Grid rejects new work at closure even with admin early access", () => {
+  const challenge = challengeBySlug("power-grid");
+  if (!challenge?.closesAt) throw new Error("missing Power Grid closure");
+  const closedAt = new Date(challenge.closesAt);
+  for (const admin of [false, true])
+    expect(() =>
+      requireChallengeParticipationOpen(challenge, closedAt, false, admin),
+    ).toThrow("cerrado");
+});

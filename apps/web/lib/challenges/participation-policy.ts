@@ -16,7 +16,11 @@ export const requireChallengeParticipationOpen = (
   forceOpen: boolean,
   adminEarlyAccess = false,
 ): ChallengeDefinition => {
-  if (adminEarlyAccess && challenge.slug === powerGridChallengeSlug)
+  if (
+    adminEarlyAccess &&
+    challenge.slug === powerGridChallengeSlug &&
+    !isChallengeClosedAt(challenge, now)
+  )
     return challenge;
   if (!challenge.playable) {
     throw new HttpError(

@@ -9,6 +9,13 @@ import {
   brokenAgentStarterSource,
 } from "@chofex/challenges-contract/broken-agent";
 import {
+  mountainLodgeAgentInstructions,
+  mountainLodgeChallengeSlug,
+  mountainLodgeExample,
+  mountainLodgeReadme,
+  mountainLodgeStarterSource,
+} from "@chofex/challenges-contract/mountain-lodge";
+import {
   powerGridAgentInstructions,
   powerGridChallengeSlug,
   powerGridExample,
@@ -68,6 +75,38 @@ export const createChallengeScaffold = Effect.fn("createChallengeScaffold")(
           `Challenge ${challengeSlug} is not available`,
         ),
       );
+    }
+
+    if (challengeSlug === mountainLodgeChallengeSlug) {
+      const directory = "mountain-lodge";
+      const status = yield* Effect.tryPromise({
+        try: async () => {
+          await mkdir(directory);
+          await Promise.all([
+            writeFile(`${directory}/stay.js`, mountainLodgeStarterSource),
+            writeFile(
+              `${directory}/input.json`,
+              `${JSON.stringify(mountainLodgeExample, null, 2)}\n`,
+            ),
+            writeFile(`${directory}/README.md`, mountainLodgeReadme),
+            writeFile(`${directory}/AGENTS.md`, mountainLodgeAgentInstructions),
+          ]);
+          return "created" as const;
+        },
+        catch: (error) => error,
+      }).pipe(
+        Effect.catch((error) => {
+          if (Predicate.hasProperty(error, "code") && error.code === "EEXIST")
+            return Effect.succeed("exists" as const);
+          return Effect.fail(
+            cliError(
+              "SCAFFOLD_FAILED",
+              `No se pudo crear ${directory}: ${String(error)}`,
+            ),
+          );
+        }),
+      );
+      return { challenge: challengeSlug, path: directory, status };
     }
 
     if (challengeSlug === powerGridChallengeSlug) {

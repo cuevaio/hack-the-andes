@@ -21,7 +21,9 @@ export const catalogItemFor = (
   adminEarlyAccess = false,
 ): ChallengeCatalogItem => {
   const earlyAccess =
-    adminEarlyAccess && challenge.slug === powerGridChallengeSlug;
+    adminEarlyAccess &&
+    challenge.slug === powerGridChallengeSlug &&
+    !isChallengeClosedAt(challenge, now);
   const closed =
     !earlyAccess && !forceOpen && isChallengeClosedAt(challenge, now);
   const open =

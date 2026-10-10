@@ -1,5 +1,6 @@
 import * as childProcess from "node:child_process";
 import type { Shipment } from "@chofex/challenges-contract";
+import type { LodgeBooking } from "@chofex/challenges-contract/mountain-lodge";
 import type { PowerReading } from "@chofex/challenges-contract/power-grid";
 
 import { HttpError } from "../registration/http";
@@ -31,7 +32,7 @@ try {
   const request = JSON.parse(requestText);
   const shipmentsJson = JSON.stringify(request.shipments);
   const functionName = request.functionName;
-  if (!["calculateShipping", "calculateBill"].includes(functionName)) throw new Error("Invalid entry point");
+  if (!["calculateShipping", "calculateBill", "quoteStay"].includes(functionName)) throw new Error("Invalid entry point");
   const scriptSource = [
     '"use strict";',
     "const __loadSolution = () => {",
@@ -128,8 +129,8 @@ const parseWorkerResponse = (
 
 const runNumericSolution = (
   source: string,
-  shipments: ReadonlyArray<Shipment | PowerReading>,
-  functionName: "calculateShipping" | "calculateBill",
+  shipments: ReadonlyArray<Shipment | PowerReading | LodgeBooking>,
+  functionName: "calculateShipping" | "calculateBill" | "quoteStay",
 ): Promise<Array<number>> => {
   if (activeWorkers >= maximumConcurrentWorkers) {
     return Promise.reject(
@@ -236,3 +237,8 @@ export const runPowerGridSolution = (
   source: string,
   inputs: ReadonlyArray<PowerReading>,
 ) => runNumericSolution(source, inputs, "calculateBill");
+
+export const runMountainLodgeSolution = (
+  source: string,
+  inputs: ReadonlyArray<LodgeBooking>,
+) => runNumericSolution(source, inputs, "quoteStay");

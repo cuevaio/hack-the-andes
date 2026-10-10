@@ -22,6 +22,7 @@ import {
   challengeEvaluationInput,
   defaultChallengeSlug,
   javascriptSourceFromPath,
+  lodgeBookingInput,
   powerReadingInput,
   shipmentInput,
 } from "./challenge-input.js";
@@ -234,6 +235,54 @@ const slowServiceQuickstart = {
   ],
   helpCommand: "andes challenge test --help",
 };
+const mountainLodgeQuickstart = {
+  title: "MOUNTAIN LODGE / EL REFUGIO DE LA MONTAÑA",
+  story: [
+    "Un refugio perdió el código de su sistema de reservas. Solo conserva una máquina que recibe cotizaciones y devuelve céntimos.",
+  ],
+  mission: "Descubre las reglas y reemplázala con quoteStay(input).",
+  rules: [
+    "25 consultas, 3 evaluaciones y 1,000 cotizaciones ocultas.",
+    "Los tests del cuaderno son gratuitos. Trabaja con tu agente por rondas y decide cuándo continuar.",
+    "Cada cotización es independiente. Las tarifas son ficticias.",
+  ],
+  workflow: [
+    {
+      step: 1,
+      action: "Prepara tu carpeta",
+      command: "andes challenge init --challenge mountain-lodge",
+      note: "Luego entra con cd mountain-lodge y lee README.md y AGENTS.md.",
+    },
+    {
+      step: 2,
+      action: "Consulta la máquina",
+      command:
+        "andes challenge query --challenge mountain-lodge --input input.json",
+      note: "Elige la hipótesis con tu agente. Usen hasta 3 consultas nuevas y revisen los resultados antes de continuar.",
+    },
+    {
+      step: 3,
+      action: "Consulta el cuaderno",
+      command: "andes challenge notebook --challenge mountain-lodge",
+      note: "Los cinco campos son durationHours, guests, arrivalHour, equipment y expedition.",
+    },
+    {
+      step: 4,
+      action: "Prueba tu modelo",
+      command:
+        "andes challenge test --challenge mountain-lodge --source stay.js",
+      note: "Coincidir con el cuaderno no certifica el puntaje oculto.",
+    },
+    {
+      step: 5,
+      action: "Evalúa oficialmente",
+      command:
+        "andes challenge evaluate --challenge mountain-lodge --source stay.js",
+      note: "Consume un intento. El ranking conserva tu mejor puntaje.",
+    },
+  ],
+  helpCommand: "andes challenge query --help",
+};
 const powerGridQuickstart = {
   title: "POWER GRID / LA MÁQUINA DE FACTURACIÓN ELÉCTRICA",
   story: [
@@ -282,6 +331,7 @@ const powerGridQuickstart = {
   helpCommand: "andes challenge query --help",
 };
 type ChallengeQuickstart =
+  | typeof mountainLodgeQuickstart
   | typeof powerGridQuickstart
   | typeof challengeQuickstart
   | typeof slowServiceQuickstart;
@@ -374,6 +424,9 @@ const evaluationErrorText = (
     if (challenge === "make-it-fast")
       retryCommand =
         "andes challenge evaluate --challenge make-it-fast --source ./ledger.js";
+    if (challenge === "mountain-lodge")
+      retryCommand =
+        "andes challenge evaluate --challenge mountain-lodge --source ./stay.js";
     if (challenge === "power-grid")
       retryCommand =
         "andes challenge evaluate --challenge power-grid --source ./bill.js";
@@ -517,7 +570,7 @@ const initCommand = Command.make(
   Effect.fn("challengeInitCommand")(function* ({ challenge }) {
     const options = yield* root;
     const operation = Effect.gen(function* () {
-      if (challenge === "power-grid") {
+      if (challenge === "power-grid" || challenge === "mountain-lodge") {
         const response = yield* getChallengeAttempt(
           { apiUrl: options.apiUrl },
           challenge,
@@ -623,6 +676,14 @@ const queryCommand = Command.make(
     const options = yield* root;
     const token = Option.getOrUndefined(options.token);
     const operation = Effect.gen(function* () {
+      if (challenge === "mountain-lodge") {
+        const reading = yield* lodgeBookingInput(Option.getOrUndefined(input));
+        return yield* queryChallenge(
+          { apiUrl: options.apiUrl, token },
+          challenge,
+          reading,
+        );
+      }
       if (challenge === "power-grid") {
         const reading = yield* powerReadingInput(Option.getOrUndefined(input));
         return yield* queryChallenge(
@@ -862,6 +923,12 @@ export const challengeCommand = Command.make(
           nextStep.challengeSlug === "power-grid"
         )
           guide = powerGridQuickstart;
+        if (
+          (nextStep.kind === "challenge_start" ||
+            nextStep.kind === "challenge_continue") &&
+          nextStep.challengeSlug === "mountain-lodge"
+        )
+          guide = mountainLodgeQuickstart;
         return { ...response, data: { ...response.data, guide } };
       }),
     );

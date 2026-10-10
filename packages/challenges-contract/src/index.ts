@@ -12,7 +12,7 @@ export type ChallengeSlug =
   | typeof brokenAgentChallengeSlug
   | "make-it-fast"
   | "power-grid"
-  | "agent-arena";
+  | "mountain-lodge";
 
 export type ChallengeFormat =
   | "accuracy"
@@ -113,6 +113,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     formatLabel: "Porcentaje de coincidencias exactas",
     opensAt: "2026-10-06T00:33:04.000Z",
     rankingVisibleAt: "2026-10-09T05:00:00.000Z",
+    closesAt: "2026-10-10T01:27:21.000Z",
     queryLimit: 25,
     evaluationLimit: 3,
     hiddenSampleSize: 1_000,
@@ -120,22 +121,22 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     solutionKind: "javascript_source",
   },
   {
-    slug: "agent-arena",
+    slug: "mountain-lodge",
     number: 5,
     code: "05",
-    theme: "Agent Arena",
-    title: "The Tool-Using Agent",
+    theme: "Mountain Lodge",
+    title: "El refugio de la montaña",
     summary:
-      "Configure an agent that balances accuracy, tool calls, model cost, and latency.",
-    coreSkill: "AI engineering & system design",
-    format: "multi_objective",
-    formatLabel: "Accuracy + cost + latency",
+      "Descubre las reglas de un sistema de reservas sin documentación con 25 consultas y reemplázalo con tu propia función.",
+    coreSkill: "Ingeniería inversa y diseño de experimentos",
+    format: "accuracy",
+    formatLabel: "Porcentaje de coincidencias exactas",
     opensAt: "2026-10-13T05:00:00.000Z",
-    queryLimit: 0,
+    queryLimit: 25,
     evaluationLimit: 3,
-    hiddenSampleSize: 1,
-    playable: false,
-    solutionKind: "agent_config",
+    hiddenSampleSize: 1000,
+    playable: true,
+    solutionKind: "javascript_source",
   },
 ];
 
@@ -217,7 +218,7 @@ export const ChallengeSlugSchema = Schema.Literals([
   "broken-agent",
   "make-it-fast",
   "power-grid",
-  "agent-arena",
+  "mountain-lodge",
 ]);
 
 export const ShipmentSchema = Schema.Struct({

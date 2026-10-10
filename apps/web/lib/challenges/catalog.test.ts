@@ -41,9 +41,10 @@ test("advertises only the current playable challenge version", () => {
   expect(item.challengeVersion).not.toBe("broken-agent-v1");
 });
 
-test("future dates and force-open cannot activate unimplemented challenges", () => {
-  for (const slug of ["agent-arena"]) {
-    const challenge = challengeBySlug(slug);
+test("future dates and force-open cannot activate an unimplemented definition", () => {
+  for (const slug of ["mountain-lodge"]) {
+    const available = challengeBySlug(slug);
+    const challenge = available && { ...available, playable: false };
     if (!challenge) throw new Error(`missing ${slug}`);
     for (const forceOpen of [false, true]) {
       const item = catalogItemFor(
@@ -76,7 +77,7 @@ test("advertises Power Grid v1 publicly at its launch time", () => {
 
 test("admin early access opens only Power Grid in the personalized catalog", () => {
   const now = new Date("2026-10-05T17:00:00Z");
-  for (const slug of ["power-grid", "black-box", "agent-arena"]) {
+  for (const slug of ["power-grid", "black-box", "mountain-lodge"]) {
     const challenge = challengeBySlug(slug);
     if (!challenge) throw new Error(`missing ${slug}`);
     const item = catalogItemFor(challenge, now, false, true);
@@ -87,4 +88,38 @@ test("admin early access opens only Power Grid in the personalized catalog", () 
       expect(item.closed).toBe(false);
     }
   }
+});
+
+test("Power Grid closes for participants and admins while preserving its version and ranking", () => {
+  const challenge = challengeBySlug("power-grid");
+  if (!challenge?.closesAt) throw new Error("missing closure");
+  const now = new Date(challenge.closesAt);
+  for (const admin of [false, true]) {
+    expect(catalogItemFor(challenge, now, false, admin)).toMatchObject({
+      open: false,
+      closed: true,
+      playable: true,
+      challengeVersion: "power-grid-v1",
+      rankingPath: "/challenges/power-grid",
+    });
+  }
+});
+
+test("Mountain Lodge publishes the fifth version and opens at the scheduled instant", () => {
+  const challenge = challengeBySlug("mountain-lodge");
+  if (!challenge) throw new Error("missing Mountain Lodge");
+  expect(
+    catalogItemFor(challenge, new Date("2026-10-13T04:59:59.999Z"), false),
+  ).toMatchObject({
+    number: 5,
+    playable: true,
+    open: false,
+    closed: false,
+    challengeVersion: "mountain-lodge-v1",
+    queryLimit: 25,
+    evaluationLimit: 3,
+  });
+  expect(
+    catalogItemFor(challenge, new Date("2026-10-13T05:00:00Z"), false).open,
+  ).toBe(true);
 });

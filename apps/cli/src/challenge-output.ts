@@ -14,6 +14,7 @@ import {
   formatChallengeOpeningInPeru,
   isChallengeRankingVisibleAt,
 } from "@chofex/challenges-contract";
+import { LodgeBookingSchema } from "@chofex/challenges-contract/mountain-lodge";
 import { PowerReadingSchema } from "@chofex/challenges-contract/power-grid";
 import { slowServiceChallengeVersion } from "@chofex/challenges-contract/slow-service";
 import type { RegistrationResult } from "@chofex/registration-contract";
@@ -99,6 +100,34 @@ export const challengeListText = (
 
 export const challengeShowText = (attempt: ChallengeAttemptView): string => {
   const { challenge, progress } = attempt;
+  if (challenge.slug === "mountain-lodge") {
+    const lines = [
+      challenge.title,
+      challenge.summary,
+      `Consultas restantes: ${progress.queriesLimit - progress.queriesUsed} / ${progress.queriesLimit}`,
+      `Evaluaciones restantes: ${progress.evaluationsLimit - progress.evaluationsUsed} / ${progress.evaluationsLimit}`,
+      "Cada cotización es independiente. Devuelve el importe en céntimos enteros.",
+      "Las reglas están personalizadas para tu intento. Puedes usar AI.",
+    ];
+    if (!challenge.open)
+      lines.push(
+        challengeParticipationNotice(
+          challenge.title,
+          challenge.opensAt,
+          challenge.closesAt,
+        ) ?? "Los envíos están deshabilitados.",
+      );
+    else
+      lines.push(
+        "andes challenge init --challenge mountain-lodge",
+        "cd mountain-lodge",
+        "andes challenge query --challenge mountain-lodge --input input.json",
+        attempt.localTestHint,
+      );
+    if (progress.bestAccuracy !== undefined)
+      lines.push(`Mejor puntaje: ${percent(progress.bestAccuracy)}`);
+    return lines.join("\n");
+  }
   if (challenge.slug === "power-grid") {
     const lines = [
       challenge.title,
@@ -299,6 +328,38 @@ export const challengeQueryText = (result: ChallengeQueryResult): string => {
   return lines.join("\n");
 };
 
+const lodgeNotebookText = (
+  observations: ReadonlyArray<ChallengeObservation>,
+  csv: boolean,
+  challengeClosed = false,
+): string => {
+  const rows = observations.map((observation) => {
+    const input = Schema.decodeUnknownSync(LodgeBookingSchema)(
+      observation.input,
+    );
+    return [
+      observation.sequence,
+      input.durationHours,
+      input.guests,
+      input.arrivalHour,
+      input.equipment,
+      input.expedition,
+      observation.output,
+    ].join(",");
+  });
+  const header =
+    "sequence,durationHours,guests,arrivalHour,equipment,expedition,output";
+  if (csv) return [header, ...rows].join("\n");
+  let next =
+    "Prueba gratis: andes challenge test --challenge mountain-lodge --source ./stay.js";
+  if (challengeClosed)
+    next =
+      "El challenge está cerrado. Consulta el ranking con andes challenge ranking --challenge mountain-lodge";
+  return ["Cuaderno del refugio de la montaña", header, ...rows, next].join(
+    "\n",
+  );
+};
+
 const powerNotebookText = (
   observations: ReadonlyArray<ChallengeObservation>,
   csv: boolean,
@@ -364,6 +425,8 @@ export const notebookTableText = (
   challengeClosed = false,
   slug = "black-box",
 ): string => {
+  if (slug === "mountain-lodge")
+    return lodgeNotebookText(observations, false, challengeClosed);
   if (slug === "power-grid")
     return powerNotebookText(observations, false, challengeClosed);
   if (observations.length === 0) {
@@ -440,6 +503,7 @@ export const notebookCsvText = (
   observations: ReadonlyArray<ChallengeObservation>,
   slug = "black-box",
 ): string => {
+  if (slug === "mountain-lodge") return lodgeNotebookText(observations, true);
   if (slug === "power-grid") return powerNotebookText(observations, true);
   const header = "sequence,distanceKm,weightKg,hour,fragile,express,output";
   const rows = observations.map((observation) => {
@@ -461,6 +525,19 @@ export const challengeTestText = (
   result: ChallengeLocalTestResult,
   slug = "black-box",
 ): string => {
+  if (slug === "mountain-lodge") {
+    return [
+      `Cuaderno: ${result.matchedObservations} / ${result.observationCount} coincidencias exactas`,
+      `Error medio: ${result.meanError.toFixed(2)} céntimos`,
+      ...result.mismatches.map(
+        (item) =>
+          `#${item.sequence}: esperado ${JSON.stringify(item.expected)}, recibido ${JSON.stringify(item.actual)}`,
+      ),
+      "Estos tests solo usan tus observaciones. No certifican las cotizaciones ocultas.",
+      "Prueba gratis: andes challenge test --challenge mountain-lodge --source ./stay.js",
+      "Evalúa: andes challenge evaluate --challenge mountain-lodge --source ./stay.js",
+    ].join("\n");
+  }
   if (slug === "power-grid") {
     return [
       `Cuaderno: ${result.matchedObservations} / ${result.observationCount} coincidencias exactas`,
@@ -606,10 +683,19 @@ export const challengeEvaluateText = (
     return lines.join("\n");
   }
 
+  let verdict = "OFFICIAL VERDICT — BLACK BOX REPLICATION";
+  let retest = "  andes challenge test --source ./shipping.js";
+  if (result.rankingPath.endsWith("/power-grid")) {
+    verdict = "Veredicto oficial de facturación eléctrica";
+    retest = "  andes challenge test --challenge power-grid --source ./bill.js";
+  }
+  if (result.rankingPath.endsWith("/mountain-lodge")) {
+    verdict = "Veredicto oficial del refugio de la montaña";
+    retest =
+      "  andes challenge test --challenge mountain-lodge --source ./stay.js";
+  }
   const lines = [
-    result.rankingPath.endsWith("/power-grid")
-      ? "Veredicto oficial de facturación eléctrica"
-      : "OFFICIAL VERDICT — BLACK BOX REPLICATION",
+    verdict,
     `Accuracy            ${percent(result.accuracy)}`,
     `Exact predictions   ${result.exactCount} / ${result.sampleSize}`,
     `Mean error          ${result.meanError.toFixed(2)}`,
@@ -629,9 +715,7 @@ export const challengeEvaluateText = (
     lines.push(
       "",
       "Before spending another evaluation, improve and retest your model against the notebook.",
-      result.rankingPath.endsWith("/power-grid")
-        ? "  andes challenge test --challenge power-grid --source ./bill.js"
-        : "  andes challenge test --source ./shipping.js",
+      retest,
     );
   }
   return lines.join("\n");
