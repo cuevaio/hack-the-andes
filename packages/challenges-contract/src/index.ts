@@ -131,7 +131,7 @@ export const challengeCatalog: ReadonlyArray<ChallengeDefinition> = [
     coreSkill: "Ingeniería inversa y diseño de experimentos",
     format: "accuracy",
     formatLabel: "Porcentaje de coincidencias exactas",
-    opensAt: "2026-10-13T05:00:00.000Z",
+    opensAt: "2026-10-10T01:38:21.000Z",
     queryLimit: 25,
     evaluationLimit: 3,
     hiddenSampleSize: 1000,

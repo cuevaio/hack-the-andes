@@ -105,11 +105,15 @@ test("Power Grid closes for participants and admins while preserving its version
   }
 });
 
-test("Mountain Lodge publishes the fifth version and opens at the scheduled instant", () => {
+test("Mountain Lodge publishes the fifth version and opens at the launch instant", () => {
   const challenge = challengeBySlug("mountain-lodge");
   if (!challenge) throw new Error("missing Mountain Lodge");
   expect(
-    catalogItemFor(challenge, new Date("2026-10-13T04:59:59.999Z"), false),
+    catalogItemFor(
+      challenge,
+      new Date(Date.parse(challenge.opensAt) - 1),
+      false,
+    ),
   ).toMatchObject({
     number: 5,
     playable: true,
@@ -120,6 +124,6 @@ test("Mountain Lodge publishes the fifth version and opens at the scheduled inst
     evaluationLimit: 3,
   });
   expect(
-    catalogItemFor(challenge, new Date("2026-10-13T05:00:00Z"), false).open,
+    catalogItemFor(challenge, new Date(challenge.opensAt), false).open,
   ).toBe(true);
 });

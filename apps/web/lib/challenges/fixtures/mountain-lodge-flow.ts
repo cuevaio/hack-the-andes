@@ -4,13 +4,16 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { challengeBySlug } from "@chofex/challenges-contract";
 import { mountainLodgeExample } from "@chofex/challenges-contract/mountain-lodge";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 
 const client = new PGlite();
 const adminRole = true;
-let challengeNow = new Date("2026-10-12T23:59:59Z");
+const lodge = challengeBySlug("mountain-lodge");
+if (!lodge) throw new Error("Missing lodge challenge");
+let challengeNow = new Date(Date.parse(lodge.opensAt) - 1);
 mock.module("server-only", () => ({}));
 mock.module("@chofex/db", () => ({ db: drizzle(client) }));
 mock.module("../clock", () => ({
@@ -177,7 +180,7 @@ try {
   );
   assert.equal(scheduled.status, 403);
   assert.equal(scheduled.body.error.code, "CHALLENGE_NOT_OPEN");
-  challengeNow = new Date("2026-10-13T05:00:00Z");
+  challengeNow = new Date(lodge.opensAt);
   const initialized = await runCli(
     "ordinary-oauth",
     "init",
