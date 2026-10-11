@@ -12,11 +12,13 @@ const profileFor = (
   application: typeof applications.$inferSelect,
   badge: typeof participantBadges.$inferSelect | null,
   participantName: string | null,
+  tangledUrl: string | null,
 ): BadgeProfile => {
   const resolved = resolveBadgeProfile(
     {
       ...application,
       name: participantName,
+      tangledUrl,
       websiteUrl: application.portfolioUrl,
     },
     badge,
@@ -37,6 +39,7 @@ export const getParticipantBadge = async (
       application: applications,
       badge: participantBadges,
       participantName: participants.name,
+      tangledUrl: participants.tangledUrl,
     })
     .from(participants)
     .innerJoin(applications, eq(applications.participantId, participants.id))
@@ -58,6 +61,7 @@ export const getParticipantBadge = async (
     record.application,
     record.badge,
     record.participantName,
+    record.tangledUrl,
   );
   if (!record.badge) return { status: "not_started", profile };
   if (record.badge.status === "completed" && record.badge.badgeUrl) {

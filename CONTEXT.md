@@ -8,6 +8,10 @@ A person identified by a Clerk user account who may apply to join the hackathon.
 
 The participant's public name used in the admin dashboard, challenge rankings, and badge. First login creates the participant and initializes this name from Clerk. Later logins preserve the saved name. Attendance confirmation shows the current name and lets the participant keep or change it. Badge edits change the same name. The database owns this value; public-name edits also synchronize to Clerk, with failed synchronization retried without losing the saved edit.
 
+## Participant Tangled profile
+
+The participant's optional public Tangled profile link persists across application attempts. Registration can set it, and confirmed participants can update or clear it when editing their badge. It appears on reviewer cards and public challenge rankings without changing historical applications. It is also a fallback QR destination after portfolio and GitHub; an explicitly chosen badge QR destination takes precedence.
+
 ## Participant legal name
 
 The participant's full name exactly as it appears on their identity document. It is requested during attendance confirmation and stored separately from the public name. It is not synchronized to Clerk or used as a public-name fallback. The full name entered on an application remains part of that application's history.

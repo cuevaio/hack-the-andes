@@ -132,6 +132,7 @@ const toView = (
   challenges: ReadonlyArray<ParticipantChallengeProgress>,
   countryCode: string | null,
   legalName: string | null,
+  tangledUrl: string | null,
 ): RegistrationView => ({
   id: application.id,
   status: application.status,
@@ -154,6 +155,7 @@ const toView = (
   hackathonProject: optional(application.hackathonProject),
   bio: optional(application.bio),
   githubUrl: optional(application.githubUrl),
+  tangledUrl: optional(tangledUrl),
   linkedInUrl: optional(application.linkedInUrl),
   portfolioUrl: optional(application.portfolioUrl),
   teamPreference: optional(application.teamPreference),
@@ -185,6 +187,7 @@ const resultFor = async (
     .select({
       countryCode: participants.countryCode,
       legalName: participants.legalName,
+      tangledUrl: participants.tangledUrl,
       clerkUserId: participants.clerkUserId,
     })
     .from(participants)
@@ -205,6 +208,7 @@ const resultFor = async (
     challenges,
     participant.countryCode,
     participant.legalName,
+    participant.tangledUrl,
   );
   return {
     registration,
@@ -327,6 +331,13 @@ export const saveRegistrationDraft = async (
 
   if (input.countryCode !== undefined) {
     await selectParticipantCountry(participantId, input.countryCode);
+  }
+
+  if (input.tangledUrl !== undefined) {
+    await db
+      .update(participants)
+      .set({ tangledUrl: input.tangledUrl, updatedAt: now })
+      .where(eq(participants.id, participantId));
   }
 
   if (current?.application.status === "draft") {

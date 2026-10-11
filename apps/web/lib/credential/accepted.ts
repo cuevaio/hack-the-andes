@@ -75,6 +75,7 @@ export const acceptedByClerkUser = async (
       application: applications,
       badge: participantBadges,
       participantName: participants.name,
+      tangledUrl: participants.tangledUrl,
     })
     .from(applications)
     .innerJoin(participants, eq(applications.participantId, participants.id))
@@ -98,6 +99,7 @@ export const acceptedByClerkUser = async (
     {
       ...row.application,
       name: row.participantName,
+      tangledUrl: row.tangledUrl,
       websiteUrl: row.application.portfolioUrl,
     },
     row.badge,

@@ -95,6 +95,7 @@ type CandidateRecord = {
   readonly participantName: string | null;
   readonly participantLegalName: string | null;
   readonly countryCode: string | null;
+  readonly tangledUrl?: string | null;
   readonly participantCreatedAt: Date;
   readonly attemptNumber: number;
   readonly applicationHistory: ReadonlyArray<ApplicationHistoryRecord>;
@@ -185,6 +186,7 @@ const toCandidate = (
     hackathonProject: optional(application.hackathonProject),
     bio: optional(application.bio),
     githubUrl: optional(application.githubUrl),
+    tangledUrl: optional(record.tangledUrl),
     linkedInUrl: optional(application.linkedInUrl),
     portfolioUrl: optional(application.portfolioUrl),
     badgeUrl: optional(record.badge?.badgeUrl),
@@ -369,6 +371,7 @@ const candidateRecordById = async (
       participantName: participants.name,
       participantLegalName: participants.legalName,
       countryCode: participants.countryCode,
+      tangledUrl: participants.tangledUrl,
       participantCreatedAt: participants.createdAt,
     })
     .from(applications)
@@ -440,6 +443,7 @@ export const listCandidates = async (
           ilike(applications.email, pattern),
           ilike(applications.organization, pattern),
           ilike(applications.githubUrl, pattern),
+          ilike(participants.tangledUrl, pattern),
           ilike(applications.linkedInUrl, pattern),
           ilike(sql`${applications.id}::text`, pattern),
           sql`exists (
@@ -548,6 +552,7 @@ export const listCandidates = async (
         participantName: participants.name,
         participantLegalName: participants.legalName,
         countryCode: participants.countryCode,
+        tangledUrl: participants.tangledUrl,
         participantCreatedAt: participants.createdAt,
       })
       .from(applications)

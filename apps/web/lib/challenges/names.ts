@@ -1,3 +1,5 @@
+import { isTangledProfileUrl } from "@chofex/registration-contract";
+
 interface ParticipantName {
   readonly firstName: string;
   readonly lastName: string;
@@ -20,6 +22,7 @@ export const rankingDisplayName = (identity: {
 };
 
 export interface PublicProfileLinks {
+  readonly tangledUrl?: string;
   readonly githubUrl?: string;
   readonly linkedInUrl?: string;
 }
@@ -99,10 +102,18 @@ export const publicProfileIdentitiesFor = (identity: {
 };
 
 export const publicProfileLinksFor = (identity: {
+  readonly tangledUrl?: string | null;
   readonly githubUrl?: string | null;
   readonly linkedInUrl?: string | null;
 }): PublicProfileLinks => {
-  const links: { githubUrl?: string; linkedInUrl?: string } = {};
+  const links: {
+    tangledUrl?: string;
+    githubUrl?: string;
+    linkedInUrl?: string;
+  } = {};
+  if (identity.tangledUrl && isTangledProfileUrl(identity.tangledUrl)) {
+    links.tangledUrl = new URL(identity.tangledUrl).href;
+  }
   const githubUrl = publicProfileUrl(
     identity.githubUrl,
     isGitHubHostname,

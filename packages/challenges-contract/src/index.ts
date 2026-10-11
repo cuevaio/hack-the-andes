@@ -551,6 +551,7 @@ export const ChallengeRankingEntrySchema = Schema.Struct({
   displayName: Schema.String,
   shareCode: Schema.String,
   githubUrl: Schema.optional(Schema.String),
+  tangledUrl: Schema.optional(Schema.String),
   linkedInUrl: Schema.optional(Schema.String),
   accuracy: Schema.Number,
   exactCount: Schema.Number,

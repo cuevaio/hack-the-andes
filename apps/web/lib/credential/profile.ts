@@ -13,6 +13,7 @@ export const badgeOneLinerFor = (oneLiner: string | null): string => {
 export interface BadgeLinkCandidates {
   readonly websiteUrl?: string | null;
   readonly githubUrl?: string | null;
+  readonly tangledUrl?: string | null;
   readonly linkedInUrl?: string | null;
 }
 
@@ -20,6 +21,7 @@ export const badgeLinkFor = (candidates: BadgeLinkCandidates): string => {
   const ordered = [
     candidates.websiteUrl,
     candidates.githubUrl,
+    candidates.tangledUrl,
     candidates.linkedInUrl,
   ];
   for (const candidate of ordered) {
@@ -119,6 +121,7 @@ export const resolveBadgeProfile = (
       badgeLinkFor({
         websiteUrl: application.websiteUrl,
         githubUrl: application.githubUrl,
+        tangledUrl: application.tangledUrl,
         linkedInUrl: application.linkedInUrl,
       }),
     placement: overrides?.placement?.trim() || "PARTICIPANT",

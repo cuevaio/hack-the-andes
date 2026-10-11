@@ -20,6 +20,7 @@ export const participants = pgTable(
     nameSyncAfter: timestamp("name_sync_after", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    tangledUrl: varchar("tangled_url", { length: 2_048 }),
     countryCode: varchar("country_code", { length: 2 }),
     ...auditTimestamps(),
   },

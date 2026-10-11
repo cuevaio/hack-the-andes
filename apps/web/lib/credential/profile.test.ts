@@ -87,3 +87,18 @@ describe("badge profile", () => {
     });
   });
 });
+
+test("uses Tangled as a QR fallback and preserves an explicitly chosen destination", () => {
+  const tangledUrl = "https://tangled.org/dante.tngl.sh";
+  expect(badgeLinkFor({ tangledUrl })).toBe(tangledUrl);
+  expect(acceptanceBadgeProfileFor({ tangledUrl }).linkUrl).toBe(tangledUrl);
+  expect(resolveBadgeProfile({ firstName: "Dante", tangledUrl }).linkUrl).toBe(
+    tangledUrl,
+  );
+  expect(
+    resolveBadgeProfile(
+      { firstName: "Dante", tangledUrl },
+      { linkUrl: "https://dante.dev" },
+    ).linkUrl,
+  ).toBe("https://dante.dev");
+});

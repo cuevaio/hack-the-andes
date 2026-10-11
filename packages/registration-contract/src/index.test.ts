@@ -591,3 +591,74 @@ describe("registration contract", () => {
     expect(applicationRequirementsFor(completed).stage).toBe("complete");
   });
 });
+
+describe("Tangled profiles", () => {
+  test("normalizes Dante's profile during registration and badge editing", () => {
+    const tangledUrl = "tangled.org/dante.tngl.sh";
+    expect(
+      Schema.decodeUnknownSync(ApplicationInput)({ ...application, tangledUrl })
+        .tangledUrl,
+    ).toBe("https://tangled.org/dante.tngl.sh");
+    expect(
+      Schema.decodeUnknownSync(BadgeRegenerationInput)({
+        fullName: "Dante",
+        oneLiner: "Builder",
+        linkUrl: tangledUrl,
+        tangledUrl,
+      }),
+    ).toMatchObject({
+      linkUrl: "https://tangled.org/dante.tngl.sh",
+      tangledUrl: "https://tangled.org/dante.tngl.sh",
+    });
+  });
+
+  test("preserves a participant profile when replacing an application without that field", () => {
+    expect(applicationDraftReplacementFrom(application)).not.toHaveProperty(
+      "tangledUrl",
+    );
+    expect(
+      applicationDraftReplacementFrom({
+        ...application,
+        tangledUrl: "https://tangled.org/dante.tngl.sh",
+      }).tangledUrl,
+    ).toBe("https://tangled.org/dante.tngl.sh");
+  });
+
+  test("preserves omitted profile updates and allows explicit clearing", () => {
+    const input = {
+      fullName: "Dante",
+      oneLiner: "Builder",
+      linkUrl: "tangled.org/dante.tngl.sh",
+    };
+    expect(
+      Schema.decodeUnknownSync(BadgeRegenerationInput)(input),
+    ).not.toHaveProperty("tangledUrl");
+    expect(
+      Schema.decodeUnknownSync(BadgeRegenerationInput)({
+        ...input,
+        tangledUrl: null,
+      }).tangledUrl,
+    ).toBeNull();
+    expect(
+      Schema.decodeUnknownSync(ApplicationDraftInput)({ tangledUrl: null })
+        .tangledUrl,
+    ).toBeNull();
+  });
+
+  test("rejects unsafe URLs and repository links in the profile field", () => {
+    for (const tangledUrl of [
+      "http://tangled.org/dante.tngl.sh",
+      "https://tangled.org.evil.test/dante.tngl.sh",
+      "https://evil.test/dante.tngl.sh",
+      "https://user@tangled.org/dante.tngl.sh",
+      "https://tangled.org/dante.tngl.sh/repo",
+      "https://tangled.org/dante..tngl.sh",
+      "https://tangled.org/dante.tngl.sh?next=evil",
+      "javascript:alert(1)",
+    ]) {
+      expect(() =>
+        Schema.decodeUnknownSync(ApplicationDraftInput)({ tangledUrl }),
+      ).toThrow();
+    }
+  });
+});

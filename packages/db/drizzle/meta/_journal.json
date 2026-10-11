@@ -218,6 +218,13 @@
       "when": 1791068941055,
       "tag": "0030_idempotent_slow_service_evaluation",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791686277171,
+      "tag": "0031_sticky_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

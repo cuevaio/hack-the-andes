@@ -1,0 +1,1 @@
+ALTER TABLE "participants" ADD COLUMN "tangled_url" varchar(2048);

@@ -150,6 +150,7 @@ export const applicationDefaultsFromRegistration = (
   portfolioUrl: registration.portfolioUrl,
   shippedProject: registration.shippedProject,
   githubUrl: registration.githubUrl,
+  tangledUrl: registration.tangledUrl,
   linkedInUrl: registration.linkedInUrl,
   codeOfConductAccepted: registration.codeOfConductAccepted ? true : undefined,
 });
@@ -243,6 +244,11 @@ const applicationPrompts = (defaults: Partial<ApplicationInput>) =>
       linkedInProfilePrefix,
       applicationInputFields.linkedInUrl,
       defaults.linkedInUrl,
+    ),
+    tangledUrl: optionalText(
+      "URL de Tangled (opcional)",
+      applicationInputFields.tangledUrl,
+      defaults.tangledUrl,
     ),
     githubUrl: profileUrlPrompt(
       "GitHub username (optional)",
@@ -573,6 +579,7 @@ export const badgeProfileInput = (
   pictures: {
     readonly clerkPictureUrl?: string;
     readonly githubUrl?: string;
+    readonly tangledUrl?: string;
   },
 ): Effect.Effect<
   BadgeRegenerationInput,
@@ -596,6 +603,11 @@ export const badgeProfileInput = (
           ),
           defaults.oneLiner,
         ),
+        tangledUrl: optionalText(
+          "URL de Tangled para tu perfil y rankings (opcional)",
+          applicationInputFields.tangledUrl,
+          pictures.tangledUrl,
+        ).pipe(Prompt.map((value) => value || null)),
         linkUrl: requiredText(
           "Destino del QR",
           Schema.Trim.pipe(

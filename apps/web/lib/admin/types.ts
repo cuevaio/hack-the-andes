@@ -76,6 +76,7 @@ export interface Candidate {
   readonly hackathonProject?: string;
   readonly bio?: string;
   readonly githubUrl?: string;
+  readonly tangledUrl?: string;
   readonly linkedInUrl?: string;
   readonly portfolioUrl?: string;
   readonly badgeUrl?: string;

@@ -76,11 +76,16 @@ assert.equal(
 assert.deepEqual(await names(), [{ name: "Clerk Default", legal_name: null }]);
 const registration = await createRegistration(identity, {
   fullName: "Application Person",
+  tangledUrl: "tangled.org/dante.tngl.sh",
   role: "Builder",
   countryCode: "PE",
   codeOfConductAccepted: true,
 });
 assert.deepEqual(await names(), [{ name: "Clerk Default", legal_name: null }]);
+assert.equal(
+  registration.registration.tangledUrl,
+  "https://tangled.org/dante.tngl.sh",
+);
 const applicationId = registration.registration.id;
 await client.query(
   "update applications set status = 'accepted' where id = $1",
@@ -89,6 +94,10 @@ await client.query(
 assert.equal(
   (await getParticipantBadge(identity.clerkUserId)).profile?.fullName,
   "Clerk Default",
+);
+assert.equal(
+  (await getParticipantBadge(identity.clerkUserId)).profile?.linkUrl,
+  "https://tangled.org/dante.tngl.sh",
 );
 const legalDetails = {
   fullName: "Legal Document Name",
@@ -275,6 +284,74 @@ assert.deepEqual(
     )
   ).rows,
   [{ first_completion_recorded: true }],
+);
+const historicalApplication = (
+  await client.query("select * from applications where id = $1", [
+    applicationId,
+  ])
+).rows;
+const tangledEdit = {
+  fullName: "Dante",
+  oneLiner: "Builder",
+  linkUrl: "tangled.org/dante.tngl.sh",
+  tangledUrl: "tangled.org/@dante.tngl.sh",
+};
+assert.equal(
+  (await editBadge(request("badge", tangledEdit, "PATCH"))).status,
+  200,
+);
+assert.equal(
+  (await getRegistration(identity.clerkUserId)).registration.tangledUrl,
+  "https://tangled.org/@dante.tngl.sh",
+);
+assert.equal(
+  (await getParticipantBadge(identity.clerkUserId)).profile?.linkUrl,
+  "https://tangled.org/dante.tngl.sh",
+);
+const { tangledUrl: omitted, ...badgeWithoutTangled } = tangledEdit;
+assert.equal(
+  (await editBadge(request("badge", badgeWithoutTangled, "PATCH"))).status,
+  200,
+);
+assert.equal(
+  (await getRegistration(identity.clerkUserId)).registration.tangledUrl,
+  "https://tangled.org/@dante.tngl.sh",
+);
+assert.equal(
+  (
+    await editBadge(
+      request(
+        "badge",
+        { ...tangledEdit, tangledUrl: "https://evil.test/dante.tngl.sh" },
+        "PATCH",
+      ),
+    )
+  ).status,
+  422,
+);
+assert.equal(
+  (await getRegistration(identity.clerkUserId)).registration.tangledUrl,
+  "https://tangled.org/@dante.tngl.sh",
+);
+assert.equal(
+  (
+    await editBadge(
+      request("badge", { ...badgeWithoutTangled, tangledUrl: null }, "PATCH"),
+    )
+  ).status,
+  200,
+);
+assert.equal(
+  (await getRegistration(identity.clerkUserId)).registration.tangledUrl,
+  undefined,
+);
+assert.deepEqual(
+  (
+    await client.query("select * from applications where id = $1", [
+      applicationId,
+    ])
+  ).rows,
+  historicalApplication,
 );
 await client.close();
 process.stdout.write("participant name lifecycle passed\n");

@@ -55,6 +55,7 @@ describe("CLI registration input", () => {
       portfolioUrl: "https://cueva.io",
       shippedProject: "A collaborative coding environment.",
       githubUrl: "https://github.com/cuevaio",
+      tangledUrl: "https://tangled.org/dante.tngl.sh",
       linkedInUrl: "https://linkedin.com/in/cuevaio",
       codeOfConductAccepted: true,
       privacyPolicyAccepted: true,
@@ -77,6 +78,7 @@ describe("CLI registration input", () => {
       portfolioUrl: "https://cueva.io",
       shippedProject: "A collaborative coding environment.",
       githubUrl: "https://github.com/cuevaio",
+      tangledUrl: "https://tangled.org/dante.tngl.sh",
       linkedInUrl: "https://linkedin.com/in/cuevaio",
       codeOfConductAccepted: true,
     });

@@ -12,6 +12,7 @@ interface AcceptanceBadgeCandidate {
   readonly badgePictureUrl?: string;
   readonly portfolioUrl?: string;
   readonly githubUrl?: string;
+  readonly tangledUrl?: string;
   readonly linkedInUrl?: string;
 }
 
@@ -28,6 +29,7 @@ export const storeAcceptanceBadgeProfile = async (
     avatarUrl: candidate.badgePictureUrl,
     websiteUrl: candidate.portfolioUrl,
     githubUrl: candidate.githubUrl,
+    tangledUrl: candidate.tangledUrl,
     linkedInUrl: candidate.linkedInUrl,
   });
 

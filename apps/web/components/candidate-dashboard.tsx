@@ -792,6 +792,11 @@ const CandidateDrawer = ({
                 )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <CandidateLink
+                    href={candidate.tangledUrl}
+                    label="Tangled"
+                    icon={<SquareCodeIcon className="size-3.5" />}
+                  />
+                  <CandidateLink
                     href={candidate.githubUrl}
                     label="GitHub"
                     icon={<SquareCodeIcon className="size-3.5" />}

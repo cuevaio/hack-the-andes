@@ -57,7 +57,7 @@ npm o la red no están disponibles temporalmente, se continúa con la versión
 actual. Usa `CHOFEX_AUTO_UPDATE=0` para desactivar esta comprobación.
 
 `andes register` collects and submits an application with full name, role,
-optional phone number, bio, portfolio URL, shipped project, LinkedIn and GitHub
+optional phone number, bio, portfolio URL, shipped project, LinkedIn, GitHub and Tangled
 URLs, and Terms and Conditions. Use `--input` to submit a completed JSON
 application.
 Acceptance creates a default badge from the Clerk profile visible to reviewers.
@@ -65,6 +65,13 @@ Acceptance creates a default badge from the Clerk profile visible to reviewers.
 while separately collecting the legal full name and venue details required for attendance. After confirmation,
 `andes badge regenerate` can also update those public fields and the QR
 destination without changing the submitted application.
+El enlace de Tangled aparece en tu perfil y en los rankings. Después de
+confirmar tu asistencia, puedes actualizarlo con `andes badge regenerate`.
+Ingresa `https://tangled.org/dante.tngl.sh` en el campo de Tangled. Para que
+el QR también abra ese perfil, usa la misma URL como destino del QR.
+Con `--input`, el campo opcional `tangledUrl` conserva el valor actual si se
+omite y lo elimina si se envía `null`.
+
 The technical challenges do not block application submission, but they are
 mandatory for admission. An application does not reserve a seat; organizers
 select the strongest engineers from challenge rankings. Broken Agent requires a

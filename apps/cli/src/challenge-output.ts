@@ -755,7 +755,11 @@ export const challengeRankingText = (
         11,
         " ",
       );
-      const profileLinks = [entry.githubUrl, entry.linkedInUrl].filter(Boolean);
+      const profileLinks = [
+        entry.githubUrl,
+        entry.tangledUrl,
+        entry.linkedInUrl,
+      ].filter(Boolean);
       const participant = [entry.displayName, ...profileLinks].join(" ");
       lines.push(`${rank}  ${accuracy}  ${points}  ${participant}`);
     }
@@ -784,7 +788,11 @@ export const challengeRankingText = (
     const accuracy = percent(entry.accuracy).padStart(8, " ");
     const exact = `${entry.exactCount}/${entry.sampleSize}`.padStart(11, " ");
     const queries = String(entry.queriesUsed).padStart(7, " ");
-    const profileLinks = [entry.githubUrl, entry.linkedInUrl].filter(Boolean);
+    const profileLinks = [
+      entry.githubUrl,
+      entry.tangledUrl,
+      entry.linkedInUrl,
+    ].filter(Boolean);
     const participant = [entry.displayName, ...profileLinks].join(" ");
     lines.push(`${rank}  ${accuracy}  ${exact}  ${queries}  ${participant}`);
   }

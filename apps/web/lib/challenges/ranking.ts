@@ -179,6 +179,7 @@ export const getChallengeRanking = async (
       firstName: string | null;
       lastName: string | null;
       name: string | null;
+      tangledUrl: string | null;
       githubUrl: string | null;
       linkedInUrl: string | null;
     }
@@ -191,6 +192,7 @@ export const getChallengeRanking = async (
         firstName: applications.firstName,
         lastName: applications.lastName,
         name: participants.name,
+        tangledUrl: participants.tangledUrl,
         githubUrl: applications.githubUrl,
         linkedInUrl: applications.linkedInUrl,
       })
@@ -205,6 +207,7 @@ export const getChallengeRanking = async (
         firstName: application.firstName,
         lastName: application.lastName,
         name: application.name,
+        tangledUrl: application.tangledUrl,
         githubUrl: application.githubUrl,
         linkedInUrl: application.linkedInUrl,
       });
@@ -217,6 +220,7 @@ export const getChallengeRanking = async (
       const identity = identityByParticipant.get(row.participantId);
       const profileLinks = publicProfileLinksFor({
         githubUrl: identity?.githubUrl,
+        tangledUrl: identity?.tangledUrl,
         linkedInUrl: identity?.linkedInUrl,
       });
       return {

@@ -303,6 +303,7 @@ const badgeRegenerateCommand = Command.make(
       const body = yield* badgeProfileInput(inputPath, badge.data.profile, {
         clerkPictureUrl: currentUser.data.clerkPictureUrl,
         githubUrl: current.data.registration.githubUrl,
+        tangledUrl: current.data.registration.tangledUrl,
       });
       const picturePath = Option.getOrUndefined(picture);
       if (body.pictureSource === "upload") {
@@ -668,6 +669,7 @@ const applicationTemplate = {
   portfolioUrl: "https://ada.example.com",
   shippedProject: "An open-source analytical engine simulator.",
   githubUrl: "https://github.com/ada-lovelace",
+  tangledUrl: "https://tangled.org/dante.tngl.sh",
   linkedInUrl: "https://linkedin.com/in/ada-lovelace",
   codeOfConductAccepted: true,
 };

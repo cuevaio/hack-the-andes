@@ -99,6 +99,35 @@ const url = normalizedString((value) => {
   ),
 );
 
+export const isTangledProfileUrl = (value: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname === "tangled.org" &&
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.port &&
+      !parsed.search &&
+      !parsed.hash &&
+      /^\/@?(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}\/?$/i.test(
+        parsed.pathname,
+      )
+    );
+  } catch {
+    return false;
+  }
+};
+
+export const tangledProfileUrl = url.pipe(
+  Schema.check(
+    Schema.makeFilter(isTangledProfileUrl, {
+      message:
+        "Ingresa un perfil de Tangled, por ejemplo tangled.org/dante.tngl.sh",
+    }),
+  ),
+);
+
 export const RegistrationStatus = Schema.Literals([
   "draft",
   "submitted",
@@ -206,6 +235,7 @@ export const applicationInputFields = {
   portfolioUrl: Schema.optional(url),
   shippedProject: optionalText(2_000),
   githubUrl: Schema.optional(url),
+  tangledUrl: Schema.optional(tangledProfileUrl),
   linkedInUrl: Schema.optional(url),
   codeOfConductAccepted: Schema.Literal(true),
 };
@@ -225,6 +255,7 @@ export const applicationDraftInputFields = {
   portfolioUrl: Schema.optional(Schema.NullOr(url)),
   shippedProject: nullableOptionalText(2_000),
   githubUrl: Schema.optional(Schema.NullOr(url)),
+  tangledUrl: Schema.optional(Schema.NullOr(tangledProfileUrl)),
   linkedInUrl: Schema.optional(Schema.NullOr(url)),
   codeOfConductAccepted: Schema.optional(Schema.Boolean),
 };
@@ -399,6 +430,7 @@ export const RegistrationViewSchema = Schema.Struct({
   hackathonProject: Schema.optional(Schema.String),
   bio: Schema.optional(Schema.String),
   githubUrl: Schema.optional(Schema.String),
+  tangledUrl: Schema.optional(Schema.String),
   linkedInUrl: Schema.optional(Schema.String),
   portfolioUrl: Schema.optional(Schema.String),
   teamPreference: Schema.optional(TeamPreference),
@@ -703,6 +735,7 @@ export const badgeRegenerationInputFields = {
   oneLiner: nonBlank(30),
   linkUrl: url,
   pictureSource: Schema.optional(PictureSource),
+  tangledUrl: Schema.optional(Schema.NullOr(tangledProfileUrl)),
 };
 
 export const BadgeRegenerationInput = Schema.Struct(

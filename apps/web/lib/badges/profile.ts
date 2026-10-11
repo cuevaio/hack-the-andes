@@ -104,9 +104,15 @@ export const updateBadgeProfile = async (
       target: participantBadges.applicationId,
       set: updates,
     });
+  const participantValues: Partial<typeof participants.$inferInsert> = {
+    name: input.fullName,
+    updatedAt: new Date(),
+  };
+  if (input.tangledUrl !== undefined)
+    participantValues.tangledUrl = input.tangledUrl;
   const participantUpdate = db
     .update(participants)
-    .set({ name: input.fullName, updatedAt: new Date() })
+    .set(participantValues)
     .where(eq(participants.id, record.application.participantId));
   await db.batch([participantUpdate, badgeUpdate]);
 

@@ -248,6 +248,7 @@ describe("challenge output", () => {
             displayName: "Winner",
             shareCode: "ABCD",
             githubUrl: "https://github.com/winner",
+            tangledUrl: "https://tangled.org/dante.tngl.sh",
             linkedInUrl: "https://linkedin.com/in/winner",
             accuracy: 1,
             exactCount: 1_000,
@@ -265,6 +266,7 @@ describe("challenge output", () => {
 
     expect(text).toContain("Winner");
     expect(text).toContain("https://github.com/winner");
+    expect(text).toContain("https://tangled.org/dante.tngl.sh");
     expect(text).toContain("https://linkedin.com/in/winner");
     expect(text).not.toContain("#ABCD");
     expect(text).not.toContain("58 official evaluations");

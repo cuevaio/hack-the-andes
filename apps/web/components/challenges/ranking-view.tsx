@@ -113,8 +113,19 @@ const RankingResults = ({
               </td>
               <td className="px-4 py-3">
                 <div>{entry.displayName}</div>
-                {(entry.githubUrl || entry.linkedInUrl) && (
+                {(entry.githubUrl || entry.tangledUrl || entry.linkedInUrl) && (
                   <div className="landing-type-meta mt-1 flex gap-3 text-[var(--hud-muted)]">
+                    {entry.tangledUrl && (
+                      <a
+                        aria-label={`Tangled de ${entry.displayName}`}
+                        className="hover:text-[var(--hud-ink)]"
+                        href={entry.tangledUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Tangled
+                      </a>
+                    )}
                     {entry.githubUrl && (
                       <a
                         aria-label={`GitHub de ${entry.displayName}`}

@@ -69,6 +69,7 @@ export const generateParticipantBadge = task<
         details: acceptanceDetails,
         badge: participantBadges,
         participantName: participants.name,
+        tangledUrl: participants.tangledUrl,
       })
       .from(applications)
       .innerJoin(participants, eq(participants.id, applications.participantId))
@@ -90,6 +91,7 @@ export const generateParticipantBadge = task<
       {
         ...record.application,
         name: record.participantName,
+        tangledUrl: record.tangledUrl,
         websiteUrl: record.application.portfolioUrl,
       },
       record.badge,

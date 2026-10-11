@@ -83,3 +83,22 @@ describe("ranking display names", () => {
     ).toEqual({});
   });
 });
+
+test("publishes Tangled profiles and rejects invalid stored links", () => {
+  expect(
+    publicProfileLinksFor({ tangledUrl: "https://tangled.org/dante.tngl.sh" }),
+  ).toEqual({
+    tangledUrl: "https://tangled.org/dante.tngl.sh",
+  });
+  expect(
+    publicProfileLinksFor({ tangledUrl: "https://tangled.org/@dante.tngl.sh" })
+      .tangledUrl,
+  ).toBe("https://tangled.org/@dante.tngl.sh");
+  for (const tangledUrl of [
+    "javascript:alert(1)",
+    "https://tangled.org.evil.test/dante.tngl.sh",
+    "https://tangled.org/dante.tngl.sh/repo",
+  ]) {
+    expect(publicProfileLinksFor({ tangledUrl })).toEqual({});
+  }
+});
