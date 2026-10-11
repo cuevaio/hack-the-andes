@@ -68,7 +68,12 @@ export function PortraitPicker({
       setStage("preview");
     } catch (error) {
       pending.current = null;
-      setMessage(error instanceof CutoutError ? FAILURE : FAILURE);
+      let failure =
+        "No pudimos cargar el recortador de fotos. Inténtalo otra vez en unos minutos.";
+      if (error instanceof CutoutError) {
+        failure = FAILURE;
+      }
+      setMessage(failure);
       setStage("failed");
     }
   };

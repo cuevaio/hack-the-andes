@@ -42,6 +42,7 @@ COPY --from=pruner /app/out/full/ ./
 
 RUN test -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
 WORKDIR /app/apps/web
+RUN node scripts/vendor-vision.mjs
 RUN NEW_DATABASE_URL=postgresql://build:build@localhost/build \
     node ../../node_modules/next/dist/bin/next build
 
