@@ -72,6 +72,25 @@ const games = [
       },
     ],
   },
+  {
+    slug: "software-engineer-life",
+    title: "Software Engineer LIFE",
+    creator: "Binni Cordova",
+    description:
+      "Decide el rumbo de una vida de dev en Lima, de 2019 a 2026. Negocia, toma riesgos y cuida tu salud en un simulador de cuatro minutos pensado para juniors y estudiantes.",
+    gameUrl: "https://binnicordova.github.io/software-engineer-life/",
+    links: [
+      { label: "Ver en TikTok", url: "https://vt.tiktok.com/ZSbT6maFb/" },
+      {
+        label: "Ver en X",
+        url: "https://x.com/binnicordova/status/2109418794842312800?s=46",
+      },
+      {
+        label: "Perfil en LinkedIn",
+        url: "https://www.linkedin.com/in/binnicordova",
+      },
+    ],
+  },
 ];
 
 export function GameGallery() {
