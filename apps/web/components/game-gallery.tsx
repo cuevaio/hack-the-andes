@@ -91,6 +91,24 @@ const games = [
       },
     ],
   },
+  {
+    slug: "lgtm-no-rompas-produccion",
+    title: "LGTM? No rompas producción",
+    creator: "David Rodriguez",
+    description:
+      "Revisa diez pull requests con veinte segundos para decidir si mergear o bloquear. Evita daños ficticios y descubre tu arquetipo de revisor en una partida sin registro.",
+    gameUrl: "https://lgtm-no-rompas-produccion.vercel.app/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/dehPd2r4" }],
+  },
+  {
+    slug: "llamisueltas",
+    title: "Llamisueltas",
+    creator: "Christian Frisancho",
+    description:
+      "Haz parkour entre azoteas y deslízate por cables en un juego multijugador de combate urbano. Consigue comida para evolucionar tu llama, desbloquea habilidades y esquiva la combi.",
+    gameUrl: "https://llamisueltas.onrender.com/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/d4CRUJ-H" }],
+  },
 ];
 
 export function GameGallery() {
