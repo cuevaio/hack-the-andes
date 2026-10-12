@@ -10,6 +10,7 @@ import { buttonVariants } from "@chofex/ui/components/button";
 import { ArrowUpRight, Gamepad2, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GameGallery } from "@/components/game-gallery";
 import { LandingFooter } from "@/components/landing/footer";
 import { LandingSkipLinks } from "@/components/landing/skip-links";
 
@@ -103,6 +104,13 @@ export default function GamePage() {
               <p className="mt-3 text-sm text-muted-foreground">
                 Publica tu juego y comparte los enlaces en Discord.
               </p>
+              <a
+                className="mt-5 inline-flex items-center gap-2 text-sm underline underline-offset-4 hover:text-[var(--hud-accent)]"
+                href="#games"
+              >
+                Ver los juegos de la comunidad
+                <ArrowUpRight aria-hidden="true" className="size-4" />
+              </a>
             </div>
             <aside
               aria-label="Premio del reto"
@@ -133,6 +141,7 @@ export default function GamePage() {
             </aside>
           </BrandContainer>
         </section>
+        <GameGallery />
         <section aria-labelledby="participate-title">
           <BrandContainer className="py-16 sm:py-20">
             <BrandKicker className="mb-4">
