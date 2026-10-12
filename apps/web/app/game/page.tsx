@@ -10,6 +10,7 @@ import { buttonVariants } from "@chofex/ui/components/button";
 import { ArrowUpRight, Gamepad2, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GameCountdown } from "@/components/game-countdown";
 import { GameGallery } from "@/components/game-gallery";
 import { LandingFooter } from "@/components/landing/footer";
 import { LandingSkipLinks } from "@/components/landing/skip-links";
@@ -83,7 +84,7 @@ export default function GamePage() {
           <BrandContainer className="relative grid gap-12 py-16 sm:py-24 lg:grid-cols-[1.4fr_1fr] lg:items-center">
             <div>
               <BrandKicker className="mb-6 text-[var(--hud-accent)]">
-                Reto de juegos / 17 de octubre de 2026 / Lima
+                Reto de juegos / Lima
               </BrandKicker>
               <BrandTitle as="h1" className="max-w-3xl text-6xl sm:text-8xl">
                 Vibecodea
@@ -94,6 +95,7 @@ export default function GamePage() {
                 Una nueva forma de ganarte tu lugar en Hack the Andes. Construye
                 un juego que podamos jugar el día del evento.
               </p>
+              <GameCountdown />
               <Link
                 className={`${buttonVariants()} mt-8 whitespace-nowrap`}
                 href="/discord"
