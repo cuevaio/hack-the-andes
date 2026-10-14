@@ -11,7 +11,7 @@ import { ArrowUpRight, Gamepad2, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GameCountdown } from "@/components/game-countdown";
-import { GameGallery } from "@/components/game-gallery";
+import { GameGallery, GameRanking } from "@/components/game-gallery";
 import { LandingFooter } from "@/components/landing/footer";
 import { LandingSkipLinks } from "@/components/landing/skip-links";
 
@@ -96,6 +96,7 @@ export default function GamePage() {
                 un juego que podamos jugar el día del evento.
               </p>
               <GameCountdown />
+              <GameRanking />
               <Link
                 className={`${buttonVariants()} mt-8 whitespace-nowrap`}
                 href="/discord"

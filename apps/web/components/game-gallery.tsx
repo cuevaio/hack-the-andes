@@ -2,6 +2,11 @@ import { BrandContainer, BrandKicker } from "@chofex/ui/components/brand";
 import { buttonVariants } from "@chofex/ui/components/button";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
+import {
+  gameLikesCheckedAt,
+  gamePostLikes,
+  rankGames,
+} from "@/lib/game-post-likes";
 
 const games = [
   {
@@ -86,8 +91,8 @@ const games = [
         url: "https://x.com/binnicordova/status/2109418794842312800?s=46",
       },
       {
-        label: "Perfil en LinkedIn",
-        url: "https://www.linkedin.com/in/binnicordova",
+        label: "Ver en LinkedIn",
+        url: "https://lnkd.in/p/devXPAmv",
       },
     ],
   },
@@ -159,6 +164,66 @@ const games = [
   },
 ];
 
+const rankedGames = rankGames(games);
+const checkedAtLabel = new Intl.DateTimeFormat("es-PE", {
+  dateStyle: "long",
+  timeStyle: "short",
+  timeZone: "America/Lima",
+}).format(new Date(gameLikesCheckedAt));
+
+export function GameRanking() {
+  return (
+    <section aria-labelledby="game-ranking-title" className="mt-8 max-w-xl">
+      <h2 id="game-ranking-title" className="text-xl font-medium">
+        Ranking provisional
+      </h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        La publicación con más likes de cada juego. En LinkedIn contamos todas
+        las reacciones.
+      </p>
+      <table className="mt-4 w-full text-left text-sm">
+        <caption className="caption-bottom pt-3 text-left text-xs text-muted-foreground">
+          Conteo manual del{" "}
+          <time dateTime={gameLikesCheckedAt}>{checkedAtLabel}</time> (Lima).
+        </caption>
+        <thead className="border-b border-border text-xs text-muted-foreground">
+          <tr>
+            <th scope="col" className="pb-2 pr-3 font-normal">
+              Puesto
+            </th>
+            <th scope="col" className="pb-2 pr-3 font-normal">
+              Juego
+            </th>
+            <th scope="col" className="pb-2 text-right font-normal">
+              Likes / reacciones
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {rankedGames.map((game) => (
+            <tr key={game.slug}>
+              <td className="py-2 pr-3 font-mono text-[var(--hud-accent)]">
+                {game.rank ?? "Pendiente"}
+              </td>
+              <th scope="row" className="py-2 pr-3 font-normal">
+                <a
+                  href={`#game-${game.slug}`}
+                  className="underline underline-offset-4 hover:text-[var(--hud-accent)]"
+                >
+                  {game.title}
+                </a>
+              </th>
+              <td className="py-2 text-right font-mono tabular-nums">
+                {game.likes ?? "Sin publicación"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
 export function GameGallery() {
   return (
     <section
@@ -174,69 +239,114 @@ export function GameGallery() {
           className="font-display text-4xl uppercase sm:text-5xl"
           id="games-title"
         >
-          Juega lo que estamos creando
+          Ranking de juegos
         </h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
-          Prueba los juegos del reto y apoya a sus creadores en sus
-          publicaciones. Todos se juegan desde el navegador.
+          Ordenados por la publicación con más likes verificados de cada juego.
+          En LinkedIn contamos todas las reacciones. Los empates comparten
+          puesto. Prueba los juegos y apoya a sus creadores.
         </p>
-        <ul className="mt-10 grid gap-6 md:grid-cols-2">
-          {games.map((game) => (
-            <li
-              key={game.slug}
-              className="flex flex-col border border-border bg-card"
-            >
-              <a
-                aria-label={`Jugar ${game.title} (abre en una nueva pestaña)`}
-                className="relative block aspect-[16/10] overflow-hidden border-b border-border"
-                href={game.gameUrl}
-                rel="noreferrer"
-                target="_blank"
+        <p className="mt-3 text-sm text-muted-foreground">
+          Conteo manual del{" "}
+          <time dateTime={gameLikesCheckedAt}>{checkedAtLabel}</time> (hora de
+          Lima). Ranking provisional, sin actualización automática. Los conteos
+          pendientes no equivalen a cero.
+        </p>
+        <ol className="mt-10 grid gap-6 md:grid-cols-2">
+          {rankedGames.map((game) => {
+            let rankLabel = "Sin puesto · conteo pendiente";
+            if (game.rank !== null) {
+              rankLabel = `#${game.rank} · ${game.likes} likes / reacciones`;
+            }
+            if (game.links.length === 0)
+              rankLabel = "Sin puesto · sin publicación";
+            return (
+              <li
+                key={game.slug}
+                id={`game-${game.slug}`}
+                className="flex scroll-mt-6 flex-col border border-border bg-card"
               >
-                <Image
-                  alt={`Vista previa de ${game.title}`}
-                  className="object-cover transition-transform duration-200 motion-safe:hover:scale-105"
-                  fill
-                  sizes="(max-width: 767px) 100vw, 50vw"
-                  src={`/game/previews/${game.slug}.webp`}
-                />
-              </a>
-              <div className="flex flex-1 flex-col p-6 sm:p-8">
-                <h3 className="text-2xl font-medium">{game.title}</h3>
-                <p className="mt-2 text-sm text-[var(--hud-accent)]">
-                  {game.creator}
+                <p className="border-b border-border px-6 py-3 font-mono text-sm text-[var(--hud-accent)]">
+                  {rankLabel}
                 </p>
-                <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">
-                  {game.description}
-                </p>
-                <div className="mt-6 flex flex-wrap items-center gap-4">
-                  <a
-                    aria-label={`Jugar ${game.title} (abre en una nueva pestaña)`}
-                    className={`${buttonVariants()} whitespace-nowrap`}
-                    href={game.gameUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Jugar <ArrowUpRight aria-hidden="true" className="size-4" />
-                  </a>
-                  {game.links.map((link) => (
+                <a
+                  aria-label={`Jugar ${game.title} (abre en una nueva pestaña)`}
+                  className="relative block aspect-[16/10] overflow-hidden border-b border-border"
+                  href={game.gameUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <Image
+                    alt={`Vista previa de ${game.title}`}
+                    className="object-cover transition-transform duration-200 motion-safe:hover:scale-105"
+                    fill
+                    sizes="(max-width: 767px) 100vw, 50vw"
+                    src={`/game/previews/${game.slug}.webp`}
+                  />
+                </a>
+                <div className="flex flex-1 flex-col p-6 sm:p-8">
+                  <h3 className="text-2xl font-medium">{game.title}</h3>
+                  <p className="mt-2 text-sm text-[var(--hud-accent)]">
+                    {game.creator}
+                  </p>
+                  <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">
+                    {game.description}
+                  </p>
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
                     <a
-                      key={link.url}
-                      aria-label={`${link.label}: ${game.title} (abre en una nueva pestaña)`}
-                      className="inline-flex items-center gap-1 whitespace-nowrap text-sm underline underline-offset-4 hover:text-[var(--hud-accent)]"
-                      href={link.url}
+                      aria-label={`Jugar ${game.title} (abre en una nueva pestaña)`}
+                      className={`${buttonVariants()} whitespace-nowrap`}
+                      href={game.gameUrl}
                       rel="noreferrer"
                       target="_blank"
                     >
-                      {link.label}
+                      Jugar{" "}
                       <ArrowUpRight aria-hidden="true" className="size-4" />
                     </a>
-                  ))}
+                    {game.links.map((link) => {
+                      const likes = gamePostLikes.get(link.url);
+                      let countLabel = null;
+                      if (likes !== undefined) {
+                        let metric = likes === 1 ? "like" : "likes";
+                        if (link.label === "Ver en LinkedIn") {
+                          metric = likes === 1 ? "reacción" : "reacciones";
+                        }
+                        countLabel = `${likes} ${metric}`;
+                      } else if (link.label === "Ver en TikTok") {
+                        countLabel = "Conteo pendiente";
+                      }
+                      return (
+                        <span
+                          key={link.url}
+                          className="inline-flex flex-col gap-1"
+                        >
+                          <a
+                            aria-label={`${link.label}: ${game.title} (abre en una nueva pestaña)`}
+                            className="inline-flex items-center gap-1 whitespace-nowrap text-sm underline underline-offset-4 hover:text-[var(--hud-accent)]"
+                            href={link.url}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            {link.label}
+                            <ArrowUpRight
+                              aria-hidden="true"
+                              className="size-4"
+                            />
+                          </a>
+                          {countLabel !== null && (
+                            <span className="text-xs text-muted-foreground">
+                              {countLabel}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            );
+          })}
+        </ol>
       </BrandContainer>
     </section>
   );
