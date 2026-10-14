@@ -109,6 +109,54 @@ const games = [
     gameUrl: "https://llamisueltas.onrender.com/",
     links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/d4CRUJ-H" }],
   },
+  {
+    slug: "fighterverse",
+    title: "Fighterverse",
+    creator: "Luis Angelo Rodriguez",
+    description:
+      "Un juego de peleas 2D para jugar online con amigos. Convierte una foto en tu propio luchador con IA y entra a la arena con sus animaciones.",
+    gameUrl: "https://fighterverse.cuisangelo.com/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/eaqtGx2C" }],
+  },
+  {
+    slug: "combi-loca",
+    title: "Combi Loca",
+    creator: "Jorge Laban",
+    description:
+      "Maneja tu combi por Lima, esquiva el tráfico y recoge pasajeros. Recauda sin chocar y compite por llegar al ranking de los mejores cobradores.",
+    gameUrl: "https://combi-loca.pages.dev/",
+    links: [],
+  },
+  {
+    slug: "andes-arena",
+    title: "Andes Arena",
+    creator: "Th3Kum4",
+    description:
+      "Una arena de plataformas y acción con tres oleadas y el Espíritu Ancestral como jefe. La semilla diaria permite competir por el mejor tiempo en el mismo escenario.",
+    gameUrl: "https://cleverjohann.github.io/andes-arena/",
+    links: [],
+  },
+  {
+    slug: "volt-mates",
+    title: "Volt-Mates",
+    creator: "Yofer Corne Flores",
+    description:
+      "Dos jugadores unidos por un rayo de energía deben coordinarse para eliminar enemigos. Coopera en local u online, supera seis oleadas y enfrenta al jefe final.",
+    gameUrl: "https://volt-mates.vercel.app/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/dVytzWnu" }],
+  },
+  {
+    slug: "ichu",
+    title: "Ichu",
+    creator: "Luis Cardenas / Alej0",
+    description:
+      "Sal, guarda el celular y descubre animales andinos. Al volver, completa un reto de foto verificado por IA, colecciona cartas y reta a tus amigos a tocar pasto.",
+    gameUrl: "https://ichu-app.vercel.app/",
+    links: [
+      { label: "Ver en LinkedIn", url: "https://lnkd.in/p/ectUqxsp" },
+      { label: "Ver en TikTok", url: "https://vt.tiktok.com/ZSgJNjfLV" },
+    ],
+  },
 ];
 
 export function GameGallery() {
