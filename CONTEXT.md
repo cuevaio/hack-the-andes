@@ -50,6 +50,18 @@ The public presentation of an accepted participant's badge: display name, one-li
 
 A participant's best exact rank across the latest playable challenge versions. Challenge rankings are the engineering selection mechanism for seats: only participants with a ranked result from a latest challenge version are eligible for acceptance, and organizers select the strongest results. Attempts from superseded versions remain historical and do not confer eligibility. The best placement is also printed on the participant's badge.
 
+## Hackathon teams and tracks
+
+Teams are event entities, separate from the historical team preference/name on an application. Accepted participants with completed attendance confirmation may create and join teams before event check-in. A participant belongs to at most one team; teams have 1–4 members and there are at most 36 teams. There is no captain role. Invitations target an account resolved from its verified primary email; pending invitations reserve neither membership nor capacity. Accepting an invitation atomically leaves the previous team and joins the destination. Empty teams are immediately deleted, cancelling their pending invitations and releasing any track slot.
+
+Participants may leave voluntarily. A checked-in member may remove an unchecked teammate, including the creator, but cannot remove a checked-in teammate. Removal does not change application or attendance eligibility. Commands that change an existing membership confirm the expected current team, so stale CLI prompts cannot operate on a different team.
+
+Track selection defaults closed and is manually opened/closed by organizers. Environmental, security and transport each have 12 team slots. Any member may select or change the team's track while selection is open, but all current members must be accepted, confirmed and checked in. Failed switches preserve the old slot. Joining an already tracked team requires check-in even while selection is closed; closing selection does not freeze membership.
+
+## Event check-in
+
+`andes checkin` issues a five-minute opaque QR; only its hash is stored. An authenticated organizer scans it with their phone camera (or enters its alternate code), verifies the participant's public name and confirmed photo, then explicitly confirms physical arrival. Previewing/scanning alone does not check anyone in. Confirmation writes `acceptance_details.checked_in_at` for the current accepted application and retains the first confirmation and verifying organizer. Existing funnel triggers record the attendance milestone. QR tokens rotate on reissue and are never exposed in query parameters; the staff page uses a URL fragment and a POST body.
+
 ## Funnel milestone dates
 
 `participant_funnel_milestones` records the first known date each participant reached a funnel stage. Database triggers capture signup, application creation and submission, challenge start and evaluation, review, waitlist, acceptance, rejection, withdrawal, confirmation, and check-in in the same transaction as the change. Repeated updates and new application or challenge attempts preserve the earliest date. Challenge milestones include all versions; they do not establish eligibility under current challenge rules.

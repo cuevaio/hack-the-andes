@@ -21,6 +21,7 @@ import {
   type BadgeResult,
   BadgeResultSchema,
   type CampaignAttributionHandoff,
+  CheckinSchema,
   type CreatedRegistration,
   CreatedRegistrationSchema,
   type CurrentUser,
@@ -32,6 +33,9 @@ import {
   PictureUploadSchema,
   type RegistrationResult,
   RegistrationResultSchema,
+  type TeamAction,
+  TeamDashboardSchema,
+  TeamStateSchema,
 } from "@chofex/registration-contract";
 import { Effect, Result, Schema } from "effect";
 
@@ -222,6 +226,43 @@ const decodeCreatedRegistration = Schema.decodeUnknownEffect(
 const decodeBadgeResult = Schema.decodeUnknownEffect(
   ApiSuccessSchema(BadgeResultSchema),
 );
+
+export const getTeam = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/team",
+    { method: "GET" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(TeamStateSchema)),
+  );
+
+export const listTeams = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/teams",
+    { method: "GET" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(TeamDashboardSchema)),
+  );
+export const changeTeam = (options: ApiClientOptions, action: TeamAction) =>
+  request(
+    options,
+    "/api/v1/team",
+    { method: "POST", body: JSON.stringify(action) },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(TeamStateSchema)),
+  );
+export const getCheckin = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/checkin",
+    { method: "GET" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(CheckinSchema)),
+  );
+export const createCheckin = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/checkin",
+    { method: "POST" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(CheckinSchema)),
+  );
 const decodeCurrentUser = Schema.decodeUnknownEffect(
   ApiSuccessSchema(CurrentUserSchema),
 );

@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { requestPolicies } from "@chofex/request-limits";
+import { limiterTargetFor } from "@chofex/request-limits";
 import {
   type Bucket,
   type BucketStore,
@@ -54,15 +54,9 @@ export class RateLimits extends DurableObject<Env> {
   }
 
   async fetch(request: Request): Promise<Response> {
-    const [, route, name, clientKey] = new URL(request.url).pathname.split("/");
-    const policy = requestPolicies.find((candidate) => candidate.name === name);
-    if (
-      route !== "consume" ||
-      !policy ||
-      !clientKey ||
-      !/^[a-f0-9]{64}$/.test(clientKey)
-    )
-      return new Response(null, { status: 400 });
+    const target = limiterTargetFor(new URL(request.url).pathname);
+    if (!target) return new Response(null, { status: 400 });
+    const { policy, clientKey } = target;
     const now = Date.now();
     const retryAfter = this.ctx.storage.transactionSync(() => {
       if (now - this.sweptAt >= 60_000) {
@@ -94,15 +88,12 @@ export default {
         `Bearer ${env.RATE_LIMIT_SERVICE_TOKEN}`
     )
       return new Response(null, { status: 401 });
-    if (
-      request.method !== "POST" ||
-      !/^\/consume\/(read|write|execution|webhook|image|page)\/[a-f0-9]{64}$/.test(
-        new URL(request.url).pathname,
-      )
-    )
+    const target = limiterTargetFor(new URL(request.url).pathname);
+    if (request.method !== "POST" || !target)
       return new Response(null, { status: 400 });
-    const name = new URL(request.url).pathname.split("/")[2];
-    const object = env.LIMITS.get(env.LIMITS.idFromName(`v1:${name}`));
+    const object = env.LIMITS.get(
+      env.LIMITS.idFromName(`v1:${target.policy.name}`),
+    );
     return object.fetch(request);
   },
 } satisfies ExportedHandler<Env>;

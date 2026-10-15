@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "imports": {
-    "#countries": "./src/countries.ts"
+    "#countries": "./src/countries.ts",
+    "#teams": "./src/teams.ts"
   },
   "exports": {
     ".": "./src/index.ts"

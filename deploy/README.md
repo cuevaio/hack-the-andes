@@ -100,6 +100,8 @@ is the maximum immediately available budget.
 | Clerk webhooks | 60 | 600 | 120 | 1200 |
 | Image optimization | 30 | 120 | 100 | 600 |
 | Page requests | 60 | 240 | 300 | 6000 |
+| Event team/check-in reads | 300 | 1800 | 600 | 3600 |
+| Event team/check-in writes | 150 | 600 | 300 | 1200 |
 
 Excess requests receive HTTP 429, `Retry-After`, and a versioned error envelope.
 IPv6 addresses share a budget within their /64 prefix. Local tracking is capped
@@ -179,6 +181,8 @@ them for manual deployments.
 Run `bun --env-file=.env.production.local scripts/verify-shared-limiter.ts`
 after deploying the Worker. This sends a bounded burst with a fresh test
 identity and verifies authentication, denial, and isolation between clients.
+It also probes every current policy, including `event-read` and `event-write`,
+so an older Worker cannot pass verification for a newer web release.
 The service uses one fixed object per request class, so incoming client IDs
 cannot create unlimited objects. Deploy Worker policy changes before a web
 version that depends on them. Keep budgets unchanged during routine deployments

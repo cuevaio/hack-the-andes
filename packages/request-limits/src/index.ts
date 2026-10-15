@@ -49,6 +49,23 @@ const pagePolicy: Policy = {
   globalPerMinute: 6000,
 };
 
+// Venue Wi-Fi can put all 100 participants behind one address. Keep event
+// traffic isolated from general API budgets without removing aggregate limits.
+export const eventReadPolicy: Policy = {
+  name: "event-read",
+  burst: 300,
+  perMinute: 1800,
+  globalBurst: 600,
+  globalPerMinute: 3600,
+};
+export const eventWritePolicy: Policy = {
+  name: "event-write",
+  burst: 150,
+  perMinute: 600,
+  globalBurst: 300,
+  globalPerMinute: 1200,
+};
+
 export const requestPolicies = [
   readPolicy,
   writePolicy,
@@ -56,4 +73,17 @@ export const requestPolicies = [
   webhookPolicy,
   imagePolicy,
   pagePolicy,
+  eventReadPolicy,
+  eventWritePolicy,
 ] as const;
+
+export function limiterTargetFor(pathname: string) {
+  const match = /^\/consume\/([^/]+)\/([a-f0-9]{64})$/.exec(pathname);
+  if (!match) return;
+  const policy = requestPolicies.find(
+    (candidate) => candidate.name === match[1],
+  );
+  const clientKey = match[2];
+  if (!policy || !clientKey) return;
+  return { policy, clientKey };
+}

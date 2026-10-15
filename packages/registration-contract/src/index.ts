@@ -3,6 +3,7 @@ import { DateTime, Option, Schema, SchemaGetter } from "effect";
 import { CountryCode } from "#countries";
 
 export * from "#countries";
+export * from "#teams";
 
 export const campaignAttributionHandoffHeader =
   "x-chofex-campaign-attribution" as const;

@@ -299,11 +299,11 @@ export function ParticipantHistory({
                   Llegadas registradas: {current.recordedCheckIns}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  No hay un proceso de check-in conectado en esta aplicación. La
-                  ausencia de registros no prueba ausencia de asistentes. Hay{" "}
-                  {current.remoteAccepted} aceptados remotos y{" "}
-                  {current.unknownModeAccepted} sin modalidad; no cuentan hacia
-                  la meta presencial.
+                  El check-in se registra cuando la organización verifica el QR
+                  del CLI y confirma la llegada. La ausencia de registros no
+                  prueba ausencia de asistentes. Hay {current.remoteAccepted}{" "}
+                  aceptados remotos y {current.unknownModeAccepted} sin
+                  modalidad; no cuentan hacia la meta presencial.
                 </p>
               </div>
             </div>

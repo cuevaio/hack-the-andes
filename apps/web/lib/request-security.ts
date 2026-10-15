@@ -1,5 +1,9 @@
 import { isIP } from "node:net";
-import { requestPolicies } from "@chofex/request-limits";
+import {
+  eventReadPolicy,
+  eventWritePolicy,
+  requestPolicies,
+} from "@chofex/request-limits";
 import { publicRequestOrigin } from "./public-origin";
 
 export const policyFor = (request: Request) => {
@@ -15,6 +19,15 @@ export const policyFor = (request: Request) => {
   if (pathname === "/api/health") return;
   if (pathname === "/api/webhooks/clerk") return webhookPolicy;
   if (pathname === "/_next/image") return imagePolicy;
+  if (
+    /^\/api\/(?:v1\/(?:team|teams|checkin)|admin\/(?:teams|checkin))$/.test(
+      pathname,
+    )
+  ) {
+    if (["GET", "HEAD", "OPTIONS"].includes(request.method))
+      return eventReadPolicy;
+    return eventWritePolicy;
+  }
   if (/^\/api\/v1\/challenges\/[^/]+\/(?:test|evaluate|query)$/.test(pathname))
     return executionPolicy;
   if (pathname.startsWith("/api/")) {

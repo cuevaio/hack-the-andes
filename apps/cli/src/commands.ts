@@ -17,6 +17,7 @@ import {
 import { login as oauthLogin, logout as oauthLogout } from "./auth.js";
 import { challengeCommand } from "./challenge-commands.js";
 import { registrationPartsText } from "./challenge-output.js";
+import { checkinCommand } from "./checkin-command.js";
 import { root } from "./cli-root.js";
 import { config } from "./config.js";
 import { cliError } from "./errors.js";
@@ -45,6 +46,7 @@ import {
   withRegistrationNextStep,
 } from "./participant-guidance.js";
 import { uploadPicture } from "./picture-upload.js";
+import { teamCommand } from "./team-commands.js";
 import {
   cliPackageName,
   skillName,
@@ -751,5 +753,7 @@ export const command = root.pipe(
     confirmCommand,
     schemaCommand,
     challengeCommand,
+    teamCommand,
+    checkinCommand,
   ]),
 );

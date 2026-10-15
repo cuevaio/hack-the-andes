@@ -1452,6 +1452,12 @@ export function CandidateDashboard({
             aria-label="Vistas de selección"
             className="mt-6 flex flex-wrap gap-2"
           >
+            <ButtonLink variant="outline" href="/admin/event">
+              Control del evento
+            </ButtonLink>
+            <ButtonLink variant="outline" href="/teams">
+              Equipos
+            </ButtonLink>
             <ButtonLink
               variant={isRankingView ? "outline" : "default"}
               href={pageHref({

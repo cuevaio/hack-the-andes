@@ -56,6 +56,39 @@ test("applies stricter shared execution budgets across challenges", () => {
   ).toBe(2);
 });
 
+test("event budgets support 100 attendees sharing venue Wi-Fi without relaxing other endpoints", () => {
+  let clock = 0;
+  const limit = createRequestLimiter({ now: () => clock });
+  for (let round = 0; round < 12; round++) {
+    clock = round * 10_000;
+    for (let attendee = 0; attendee < 100; attendee++) {
+      expect(limit(requestFor("/api/v1/checkin"))).toBeUndefined();
+      expect(limit(requestFor("/api/v1/teams"))).toBeUndefined();
+    }
+  }
+  for (let attendee = 0; attendee < 100; attendee++)
+    expect(
+      limit(requestFor("/api/v1/team", undefined, "POST")),
+    ).toBeUndefined();
+  for (let index = 0; index < 60; index++)
+    expect(limit(requestFor("/api/v1/me"))).toBeUndefined();
+  expect(limit(requestFor("/api/v1/me"))).toBe(1);
+});
+
+test("event read and mutation budgets still reject floods", () => {
+  const limit = createRequestLimiter({ now: () => 0 });
+  for (let index = 0; index < 300; index++)
+    expect(limit(requestFor("/api/v1/checkin"))).toBeUndefined();
+  expect(limit(requestFor("/api/v1/teams"))).toBeGreaterThan(0);
+  for (let index = 0; index < 150; index++)
+    expect(
+      limit(requestFor("/api/admin/checkin", undefined, "POST")),
+    ).toBeUndefined();
+  expect(limit(requestFor("/api/v1/team", undefined, "POST"))).toBeGreaterThan(
+    0,
+  );
+});
+
 test("aggregate limits survive arbitrary address rotation while health remains available", () => {
   const limit = createRequestLimiter({ now: () => 0 });
   for (let count = 0; count < 300; count += 1)
