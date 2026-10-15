@@ -1,4 +1,4 @@
-export const gameLikesCheckedAt = "2026-10-15T03:24:32Z";
+export const gameLikesCheckedAt = "2026-10-15T03:56:57Z";
 
 export const previousGameLikesCheckedAt = "2026-10-14T16:19:00Z";
 export const gamePostLikesNeedRecheck = new Set([
@@ -43,8 +43,11 @@ export const gamePostLikes = new Map<string, number>([
   ],
   [
     "https://www.linkedin.com/feed/update/urn:li:activity:7516319431329804289/",
-    1,
+    4,
   ],
+  ["https://lnkd.in/p/eq2zWU38", 6],
+  ["https://lnkd.in/p/e3dWzHRF", 0],
+  ["https://x.com/_moonliit_/status/2110568623454474444", 1],
 ]);
 
 export function rankGames<T extends { links: { url: string }[] }>(

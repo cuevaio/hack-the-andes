@@ -271,6 +271,32 @@ const games = [
       },
     ],
   },
+  {
+    slug: "marco-y-la-llama",
+    previewUrl: null,
+    title: "Marco y la llama",
+    creator: "Jose Alfredo Pizarro Rabanal / Parzival",
+    description:
+      "Ponte el chullo, monta tu llama y recorre cuatro niveles entre montañas, puentes y ruinas hasta enfrentarte al Apu de Piedra. Al completar la aventura puedes descargar una insignia con tu nombre. Se juega en computadora y celular.",
+    gameUrl: "https://marco-y-la-llama.vercel.app/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/eq2zWU38" }],
+  },
+  {
+    slug: "el-ciclo-abisal",
+    previewUrl: null,
+    title: "El Ciclo Abisal",
+    creator: "Alejandro Joel Ore Garcia / moony",
+    description:
+      "Una novela visual corta sobre un universitario y su amiga de la infancia, donde aparentemente no pasa nada fuera de lo común. Creada en siete horas para el reto.",
+    gameUrl: "https://moonliiit.itch.io/el-ciclo-abisal",
+    links: [
+      { label: "Ver en LinkedIn", url: "https://lnkd.in/p/e3dWzHRF" },
+      {
+        label: "Ver en X",
+        url: "https://x.com/_moonliit_/status/2110568623454474444",
+      },
+    ],
+  },
 ];
 
 const rankedGames = rankGames(games);

@@ -42,3 +42,19 @@ test("ranks by the strongest verified post, shares tied places and leaves unknow
   ]);
   expect(games[0]?.name).toBe("No post");
 });
+
+test("a verified zero stays ranked ahead of an unavailable count", () => {
+  const games = [
+    { name: "Unavailable", links: [{ url: "unavailable" }] },
+    { name: "Zero", links: [{ url: "verified" }] },
+  ];
+  expect(rankGames(games, new Map([["verified", 0]]))).toEqual([
+    { name: "Zero", links: [{ url: "verified" }], likes: 0, rank: 1 },
+    {
+      name: "Unavailable",
+      links: [{ url: "unavailable" }],
+      likes: null,
+      rank: null,
+    },
+  ]);
+});
