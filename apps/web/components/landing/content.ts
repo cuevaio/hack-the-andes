@@ -493,8 +493,72 @@ export const participantDevtoolPartners = [
   },
 ] as const;
 
+export const sponsors = [
+  {
+    id: "zavu",
+    name: "Zavu",
+    logoSrc: "/sponsors/zavu.svg",
+  },
+  {
+    id: "apify",
+    name: "Apify",
+    logoSrc: "/sponsors/apify.svg",
+  },
+  {
+    id: "start-upc",
+    name: "Start UPC",
+    logoSrc: "/sponsors/start-upc.png",
+  },
+  {
+    id: "tavily",
+    name: "Tavily",
+    logoSrc: "/sponsors/tavily.png",
+  },
+  {
+    id: "3devs",
+    name: "3DEV Labs",
+    logoSrc: "/sponsors/3devs.png",
+  },
+  {
+    id: "nucleo-labs",
+    name: "Nucleo Labs",
+    logoSrc: "/sponsors/nucleo-labs.png",
+  },
+  {
+    id: "n8n",
+    name: "n8n",
+    logoSrc: "/sponsors/n8n.png",
+  },
+  {
+    id: "qatom",
+    name: "Qatom",
+    logoSrc: "/sponsors/qatom.png",
+  },
+  {
+    id: "atomic-strata",
+    name: "Atomic Strata",
+    logoSrc: "/sponsors/atomic-strata.png",
+  },
+  {
+    id: "lovable",
+    name: "Lovable",
+    logoSrc: "/sponsors/lovable.svg",
+  },
+  {
+    id: "gdg",
+    name: "Google Developer Group Open",
+    logoSrc: "/sponsors/gdg.svg",
+  },
+  {
+    id: "maritime",
+    name: "Maritime",
+    logoSrc: "/sponsors/maritime.png",
+  },
+] as const;
+
 export const sponsorsCopy = {
   kicker: "quiénes lo hacen",
+  sponsorsHeading: "Sponsors y aliados",
   title: "Chofex",
   lede: "Hack the Andes se realiza con el respaldo de Chofex, la producción de Crafter Station y el apoyo de Peru Tech Week.",
   organizer: "Organiza: Crafter Station",

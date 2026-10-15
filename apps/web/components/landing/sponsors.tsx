@@ -4,7 +4,7 @@ import {
   brandSectionClassName,
 } from "@chofex/ui/components/brand";
 import Image from "next/image";
-import { partners, sponsorsCopy } from "@/components/landing/content";
+import { partners, sponsors, sponsorsCopy } from "@/components/landing/content";
 
 export function LandingSponsors() {
   return (
@@ -48,6 +48,30 @@ export function LandingSponsors() {
                   width={partner.logoWidth}
                 />
               </a>
+            </li>
+          ))}
+        </ul>
+        <h3 className="mt-16 mb-8 font-mono text-sm uppercase tracking-[0.16em] text-[var(--hud-muted)]">
+          {sponsorsCopy.sponsorsHeading}
+        </h3>
+        <ul className="grid grid-cols-2 gap-px border-[var(--hud-ink)]/15 border-y bg-[var(--hud-ink)]/10 sm:grid-cols-3 lg:grid-cols-4">
+          {sponsors.map((sponsor) => (
+            <li
+              className="grid content-center gap-5 bg-[var(--hud-paper)] px-5 py-8 sm:px-8"
+              key={sponsor.id}
+            >
+              <div className="relative mx-auto h-16 w-full max-w-48">
+                <Image
+                  alt=""
+                  className="object-contain"
+                  fill
+                  sizes="(max-width: 639px) 40vw, 192px"
+                  src={sponsor.logoSrc}
+                />
+              </div>
+              <p className="text-center text-sm text-[var(--hud-muted)]">
+                {sponsor.name}
+              </p>
             </li>
           ))}
         </ul>
