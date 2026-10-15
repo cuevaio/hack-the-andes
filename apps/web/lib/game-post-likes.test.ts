@@ -2,6 +2,12 @@ import { expect, test } from "bun:test";
 import { rankGames } from "./game-post-likes";
 
 test("ranks by the strongest verified post, shares tied places and leaves unknowns unranked", () => {
+  const postLikes = new Map([
+    ["https://lnkd.in/p/eu8-2dYF", 15],
+    ["https://x.com/AlexanderO73639/status/2108345937550544979", 2],
+    ["https://lnkd.in/p/d4CRUJ-H", 86],
+    ["https://lnkd.in/p/dVytzWnu", 4],
+  ]);
   const games = [
     { name: "No post", links: [] },
     {
@@ -21,7 +27,11 @@ test("ranks by the strongest verified post, shares tied places and leaves unknow
   ];
 
   expect(
-    rankGames(games).map(({ name, likes, rank }) => ({ name, likes, rank })),
+    rankGames(games, postLikes).map(({ name, likes, rank }) => ({
+      name,
+      likes,
+      rank,
+    })),
   ).toEqual([
     { name: "Leader", likes: 86, rank: 1 },
     { name: "Multiple posts", likes: 15, rank: 2 },

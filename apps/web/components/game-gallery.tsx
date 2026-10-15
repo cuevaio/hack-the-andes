@@ -1,16 +1,19 @@
 import { BrandContainer, BrandKicker } from "@chofex/ui/components/brand";
 import { buttonVariants } from "@chofex/ui/components/button";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Gamepad2 } from "lucide-react";
 import Image from "next/image";
 import {
   gameLikesCheckedAt,
   gamePostLikes,
+  gamePostLikesNeedRecheck,
+  previousGameLikesCheckedAt,
   rankGames,
 } from "@/lib/game-post-likes";
 
 const games = [
   {
     slug: "rocket-andes",
+    previewUrl: "/game/previews/rocket-andes.webp",
     title: "The Rocket Andes",
     creator: "Gondar / KeoIT",
     description:
@@ -22,6 +25,7 @@ const games = [
   },
   {
     slug: "llama-roguelike",
+    previewUrl: "/game/previews/llama-roguelike.webp",
     title: "Llama Roguelike",
     creator: "Alexander Ortega / aovks23",
     description:
@@ -41,6 +45,7 @@ const games = [
   },
   {
     slug: "cuy-del-caos",
+    previewUrl: "/game/previews/cuy-del-caos.webp",
     title: "El Cuy del Caos",
     creator: "Cristopher Bazan y Elva Anni Diaz Regalado",
     description:
@@ -50,6 +55,7 @@ const games = [
   },
   {
     slug: "cuy-invaders",
+    previewUrl: "/game/previews/cuy-invaders.webp",
     title: "Cuy Invaders",
     creator: "YordanSM",
     description:
@@ -64,6 +70,7 @@ const games = [
   },
   {
     slug: "condor-andes",
+    previewUrl: "/game/previews/condor-andes.webp",
     title: "Cóndor de los Andes",
     creator: "Roberto Zuñiga / Robertzu43",
     description:
@@ -79,6 +86,7 @@ const games = [
   },
   {
     slug: "software-engineer-life",
+    previewUrl: "/game/previews/software-engineer-life.webp",
     title: "Software Engineer LIFE",
     creator: "Binni Cordova",
     description:
@@ -98,6 +106,7 @@ const games = [
   },
   {
     slug: "lgtm-no-rompas-produccion",
+    previewUrl: "/game/previews/lgtm-no-rompas-produccion.webp",
     title: "LGTM? No rompas producción",
     creator: "David Rodriguez",
     description:
@@ -107,6 +116,7 @@ const games = [
   },
   {
     slug: "llamisueltas",
+    previewUrl: "/game/previews/llamisueltas.webp",
     title: "Llamisueltas",
     creator: "Christian Frisancho",
     description:
@@ -116,6 +126,7 @@ const games = [
   },
   {
     slug: "fighterverse",
+    previewUrl: "/game/previews/fighterverse.webp",
     title: "Fighterverse",
     creator: "Luis Angelo Rodriguez",
     description:
@@ -125,6 +136,7 @@ const games = [
   },
   {
     slug: "combi-loca",
+    previewUrl: "/game/previews/combi-loca.webp",
     title: "Combi Loca",
     creator: "Jorge Laban",
     description:
@@ -134,6 +146,7 @@ const games = [
   },
   {
     slug: "andes-arena",
+    previewUrl: "/game/previews/andes-arena.webp",
     title: "Andes Arena",
     creator: "Th3Kum4",
     description:
@@ -143,6 +156,7 @@ const games = [
   },
   {
     slug: "volt-mates",
+    previewUrl: "/game/previews/volt-mates.webp",
     title: "Volt-Mates",
     creator: "Yofer Corne Flores",
     description:
@@ -152,6 +166,7 @@ const games = [
   },
   {
     slug: "ichu",
+    previewUrl: "/game/previews/ichu.webp",
     title: "Ichu",
     creator: "Luis Cardenas / Alej0",
     description:
@@ -162,6 +177,100 @@ const games = [
       { label: "Ver en TikTok", url: "https://vt.tiktok.com/ZSgJNjfLV" },
     ],
   },
+  {
+    slug: "vibecoder-latam",
+    previewUrl: null,
+    title: "VIBECODER: LATAM",
+    creator: "Jorge Nureña / Georsh",
+    description:
+      "Un RPG de pixel art donde eres un founder peruano. Programa de madrugada en Lima, consigue tu primera laptop, convence inversionistas y llega al Demo Day en San Francisco. Se juega en PC con teclado.",
+    gameUrl: "https://vibecoder-latam-web.vercel.app/",
+    links: [
+      {
+        label: "Ver en LinkedIn",
+        url: "https://www.linkedin.com/feed/update/urn:li:activity:7516041882490142720/",
+      },
+      {
+        label: "Ver en Instagram",
+        url: "https://www.instagram.com/p/DeecQ9vG2Ct/",
+      },
+    ],
+  },
+  {
+    slug: "ultimo-deploy",
+    previewUrl: null,
+    title: "Último Deploy",
+    creator: "Luis.T",
+    description:
+      "Elige un cuy o una llama hacker con chullo y salva la demo antes del deadline. Recorre los talleres de la comunidad, escolta la combi y lanza un mototaxi contra los bugs. Al ganar recibes una credencial con tu tiempo.",
+    gameUrl: "https://ultimo-deploy.vercel.app/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/e4VDQCrU" }],
+  },
+  {
+    slug: "kuntur",
+    previewUrl: null,
+    title: "KUNTUR: Guardianes del Perú",
+    creator: "Edwin Soto",
+    description:
+      "Rescata animales del Perú usando tu cuerpo y tu cámara. Aletea para volar como un cóndor y abre la boca para morder como un zorro. Las imágenes se procesan en tu equipo.",
+    gameUrl: "https://kuntur.vigiaperu.workers.dev/jugar/",
+    links: [
+      {
+        label: "Ver en LinkedIn",
+        url: "https://www.linkedin.com/feed/update/urn:li:activity:7516185183210037248/",
+      },
+    ],
+  },
+  {
+    slug: "pachabyte",
+    previewUrl: null,
+    title: "PachaByte",
+    creator: "AndrewMechDev",
+    description:
+      "Un arcade de pixel art inspirado en Space Impact. Guía a Kipu por las regiones del Perú, ralentiza el tiempo con PachaShift y devuelve los proyectiles de las criaturas digitales que amenazan su mundo.",
+    gameUrl: "https://andrewmechdev.github.io/pachabyte/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/eakSQ98F" }],
+  },
+  {
+    slug: "maraton-andes",
+    previewUrl: null,
+    title: "La Maratón de los Andes",
+    creator: "Harold Medrano y Héctor Zerrillo",
+    description:
+      "Llega al colegio antes de las ocho en una aventura de pixel art por los Andes, Lima, Machu Picchu y la Amazonía. Cuatro capítulos con jergas, voces y música peruana.",
+    gameUrl: "https://maraton-andes.haroldmedrano33.workers.dev/",
+    links: [
+      {
+        label: "Ver en LinkedIn",
+        url: "https://www.linkedin.com/posts/hector-zerrillo_hacktheandes-gamedev-pixelart-share-7515546680428027904-lBgS/",
+      },
+    ],
+  },
+  {
+    slug: "kill-can-a-cuna",
+    previewUrl: null,
+    title: "Kill can a cuna, one tank and a cuy",
+    creator: "Dante / Minimum Viable Slop",
+    description:
+      "Un juego de lapiceros por turnos inspirado en la vida escolar peruana. Enfréntate a tus amigos con arte inspirado en el indigenismo, escenarios andinos y rivales coleccionables.",
+    gameUrl: "https://mivis-lapices.pages.dev/",
+    links: [{ label: "Ver en LinkedIn", url: "https://lnkd.in/p/dF6-DPhp" }],
+  },
+  {
+    slug: "mimix-cuy",
+    previewUrl: null,
+    title: "Mimix Cuy",
+    creator: "Edwar Silva",
+    description:
+      "Un cuy con chullo corre por el espacio. Esquiva obstáculos, salta y recoge monedas con el teclado o moviéndote frente a la cámara. Se juega desde PC.",
+    gameUrl: "https://mimix-cuy.vercel.app/",
+    links: [
+      {
+        label: "Ver en LinkedIn",
+        url: "https://www.linkedin.com/feed/update/urn:li:activity:7516319431329804289/",
+      },
+    ],
+  },
 ];
 
 const rankedGames = rankGames(games);
@@ -170,6 +279,22 @@ const checkedAtLabel = new Intl.DateTimeFormat("es-PE", {
   timeStyle: "short",
   timeZone: "America/Lima",
 }).format(new Date(gameLikesCheckedAt));
+const previousCheckedAtLabel = new Intl.DateTimeFormat("es-PE", {
+  dateStyle: "long",
+  timeStyle: "short",
+  timeZone: "America/Lima",
+}).format(new Date(previousGameLikesCheckedAt));
+
+function TikTokCountNote() {
+  return (
+    <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+      TikTok no permitió confirmar los likes en esta revisión. Sus conteos
+      visibles son del {previousCheckedAtLabel} (Lima). El TikTok de Software
+      Engineer LIFE y la publicación de LinkedIn del juego de lapiceros quedan
+      sin conteo verificable.
+    </p>
+  );
+}
 
 export function GameRanking() {
   return (
@@ -214,12 +339,20 @@ export function GameRanking() {
                 </a>
               </th>
               <td className="py-2 text-right font-mono tabular-nums">
-                {game.likes ?? "Sin publicación"}
+                {game.likes ?? "Sin conteo"}
+                {game.links.some(({ url }) =>
+                  gamePostLikesNeedRecheck.has(url),
+                ) && (
+                  <span className="block text-xs text-muted-foreground">
+                    TikTok pendiente
+                  </span>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <TikTokCountNote />
     </section>
   );
 }
@@ -252,11 +385,19 @@ export function GameGallery() {
           Lima). Ranking provisional, sin actualización automática. Los conteos
           pendientes no equivalen a cero.
         </p>
+        <TikTokCountNote />
         <ol className="mt-10 grid gap-6 md:grid-cols-2">
           {rankedGames.map((game) => {
             let rankLabel = "Sin puesto · conteo pendiente";
             if (game.rank !== null) {
-              rankLabel = `#${game.rank} · ${game.likes} likes / reacciones`;
+              let metricLabel = "likes / reacciones";
+              if (game.likes === 1) metricLabel = "like / reacción";
+              rankLabel = `#${game.rank} · ${game.likes} ${metricLabel}`;
+              if (
+                game.links.some(({ url }) => gamePostLikesNeedRecheck.has(url))
+              ) {
+                rankLabel += " · TikTok pendiente";
+              }
             }
             if (game.links.length === 0)
               rankLabel = "Sin puesto · sin publicación";
@@ -276,13 +417,30 @@ export function GameGallery() {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <Image
-                    alt={`Vista previa de ${game.title}`}
-                    className="object-cover transition-transform duration-200 motion-safe:hover:scale-105"
-                    fill
-                    sizes="(max-width: 767px) 100vw, 50vw"
-                    src={`/game/previews/${game.slug}.webp`}
-                  />
+                  {game.previewUrl !== null && (
+                    <Image
+                      alt={`Vista previa de ${game.title}`}
+                      className="object-cover transition-transform duration-200 motion-safe:hover:scale-105"
+                      fill
+                      sizes="(max-width: 767px) 100vw, 50vw"
+                      src={game.previewUrl}
+                    />
+                  )}
+                  {game.previewUrl === null && (
+                    <div className="flex h-full flex-col items-center justify-center gap-5 bg-[radial-gradient(ellipse_at_top,rgba(111,155,255,0.16),transparent_75%)] px-8 text-center">
+                      <Gamepad2
+                        aria-hidden="true"
+                        className="size-12 text-[var(--hud-accent)]"
+                        strokeWidth={1}
+                      />
+                      <span className="font-display text-4xl uppercase">
+                        {game.title}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        Jugar en el navegador
+                      </span>
+                    </div>
+                  )}
                 </a>
                 <div className="flex flex-1 flex-col p-6 sm:p-8">
                   <h3 className="text-2xl font-medium">{game.title}</h3>
@@ -312,8 +470,11 @@ export function GameGallery() {
                           metric = likes === 1 ? "reacción" : "reacciones";
                         }
                         countLabel = `${likes} ${metric}`;
-                      } else if (link.label === "Ver en TikTok") {
-                        countLabel = "Conteo pendiente";
+                        if (gamePostLikesNeedRecheck.has(link.url)) {
+                          countLabel = `Último conteo: ${likes} ${metric} · pendiente de reconfirmar`;
+                        }
+                      } else if (link.label !== "Ver código") {
+                        countLabel = "Conteo no disponible";
                       }
                       return (
                         <span
