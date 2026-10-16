@@ -406,7 +406,7 @@ export const devtoolPartners = [
   {
     id: "atomic-memory",
     name: "AtomicMemory Cloud",
-    href: "https://andes.atomicstrata.ai/",
+    href: "https://lp.atomicstrata.ai/andes",
     logoSrc: "/devtools/atomic-memory.svg",
     logoWidth: 1280,
     logoHeight: 185.34,
