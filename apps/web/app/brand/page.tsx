@@ -262,7 +262,7 @@ export default function BrandAssetsPage() {
                   AI, product y software engineers. Reúne a 100 participantes
                   durante 30 horas para construir y entregar un producto
                   funcionando. Se realiza el 17 y 18 de octubre de 2026, con
-                  equipos de 1 a 4 personas y 3 tracks que se revelan al iniciar
+                  equipos de 1 a 4 personas y 4 tracks que se revelan al iniciar
                   la hackathon.
                 </p>
                 <p className="mt-5 leading-relaxed text-muted-foreground">

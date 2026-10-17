@@ -1,10 +1,16 @@
 import { Schema } from "effect";
 
-export const tracks = ["environmental", "security", "transport"] as const;
+export const tracks = [
+  "environmental",
+  "transport",
+  "education",
+  "security",
+] as const;
 export const trackNames = {
-  environmental: "Medio ambiente",
+  environmental: "Clima y Territorio",
   security: "Seguridad",
-  transport: "Transporte",
+  transport: "Movilidad y Transporte",
+  education: "Educación Escolar",
 } as const;
 export const TrackSchema = Schema.Literals(tracks);
 export type Track = typeof TrackSchema.Type;

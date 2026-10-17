@@ -10,7 +10,7 @@ import { ContourSeal } from "@/components/landing/illustrations";
 /**
  * Formation parameters for each sealed track card.
  * Each index gets a distinct topographic signature — different ridge shape —
- * so the three cards read as genuinely separate sealed formations.
+ * so the four cards read as genuinely separate sealed formations.
  *
  *   01 — broad E-W ridge (elongated, low): wide challenge space
  *   02 — steep symmetric peak (nearly circular): concentrated, intense
@@ -20,6 +20,7 @@ const TRACK_FORMATIONS = [
   { rxOuter: 98, ryOuter: 66, rotateDeg: 0 },
   { rxOuter: 80, ryOuter: 78, rotateDeg: 0 },
   { rxOuter: 94, ryOuter: 58, rotateDeg: -8 },
+  { rxOuter: 88, ryOuter: 72, rotateDeg: 12 },
 ] as const;
 
 export function LandingTracks() {
@@ -40,7 +41,7 @@ export function LandingTracks() {
           </p>
         </BrandSectionHeader>
 
-        <ol className="grid gap-4 md:grid-cols-3">
+        <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {trackSeats.map((track, index) => {
             const formation = TRACK_FORMATIONS[index] ?? {
               rxOuter: 96,

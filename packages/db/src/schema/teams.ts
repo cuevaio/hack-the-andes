@@ -44,7 +44,7 @@ export const teams = pgTable(
     uniqueIndex("teams_track_slot_unique").on(t.track, t.trackSlot),
     check(
       "teams_track_valid",
-      sql`(${t.track} is null and ${t.trackSlot} is null) or (${t.track} is not null and ${t.track} in ('environmental','security','transport') and ${t.trackSlot} is not null and ${t.trackSlot} between 1 and 12)`,
+      sql`(${t.track} is null and ${t.trackSlot} is null) or (${t.track} is not null and ${t.track} in ('environmental','transport','education','security') and ${t.trackSlot} is not null and ${t.trackSlot} between 1 and 12)`,
     ),
   ],
 );

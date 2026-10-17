@@ -446,3 +446,28 @@ test("expired, rotated and no-longer-eligible QR codes cannot check someone in",
     ),
   ).toBe("CHECKIN_TOKEN_EXPIRED");
 });
+
+test("all four tracks are selectable and education enforces its own twelve slots", async () => {
+  await open();
+  for (let n = 1; n <= 13; n++) {
+    await seed(n, true);
+    await create(n);
+  }
+  expect((await state(1)).tracks.map((track) => track.id)).toEqual([
+    "environmental",
+    "transport",
+    "education",
+    "security",
+  ]);
+  await select(13, "transport");
+  for (let n = 1; n <= 12; n++)
+    expect(error(await select(n, "education"))).toBeUndefined();
+  expect(error(await select(13, "education"))).toBe("TRACK_FULL");
+  expect((await state(13)).team?.track).toBe("transport");
+  expect(
+    (await state(13)).tracks.find((track) => track.id === "education"),
+  ).toEqual({ id: "education", teams: 12, capacity: 12 });
+  expect(error(await select(1, "security"))).toBeUndefined();
+  expect(error(await select(13, "education"))).toBeUndefined();
+  expect(error(await select(1, "environmental"))).toBeUndefined();
+});

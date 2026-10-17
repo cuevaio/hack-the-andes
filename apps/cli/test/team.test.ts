@@ -35,7 +35,7 @@ test("team output shows roster, invitation ids, availability and safe terminal n
   const text = teamText(state);
   expect(text).toContain("Cóndores · Sin track · 1/4");
   expect(text).toContain("Ana · Check-in confirmado");
-  expect(text).toContain("Medio ambiente · 0/12");
+  expect(text).toContain("Clima y Territorio · 0/12");
   expect(invitationsText(state)).toContain(invitationId);
   if (!state.team) throw new Error("Team fixture required");
   expect(

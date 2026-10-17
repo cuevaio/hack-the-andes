@@ -426,6 +426,13 @@ Read the success envelope and verify the saved content before claiming it was
 published. If a write times out, inspect the history before retrying so that you
 do not append the same update twice.
 
+The four event tracks are Clima y Territorio (`environmental`), Movilidad y
+Transporte (`transport`), Educación Escolar (`education`), and Seguridad
+(`security`). Mobility includes public transport within Lima and passenger
+transport, regional connections, freight and distribution in other regions.
+Each track has 12 team slots; the event has at most 36 teams overall. Use
+`andes team` to read current availability and `andes team track` to select.
+
 ## Submit and maintain the event project
 
 Read the participant guide at `https://hacktheandes.com/guide` and the delivery

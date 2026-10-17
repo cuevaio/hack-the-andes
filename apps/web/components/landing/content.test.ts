@@ -355,12 +355,12 @@ test("keeps panel brand marks light on transparent for the black page", async ()
   }
 });
 
-test("publishes a hundred-seat, three-track event", () => {
+test("publishes a hundred-seat, four-track event", () => {
   expect(seatCount).toBe(100);
-  expect(trackCount).toBe(3);
-  expect(tracksCopy.title).toBe("3 Tracks centrales");
+  expect(trackCount).toBe(4);
+  expect(tracksCopy.title).toBe("4 Tracks centrales");
   expect(tracksCopy.subtitle).toBe("∞ Posibilidades de soluciones");
-  expect(trackSeats).toHaveLength(3);
+  expect(trackSeats).toHaveLength(4);
   expect(trackSeats.every((track) => track.hint.length > 0)).toBe(true);
   expect(qualifierChallengeCount).toBe(5);
   expect(tracksCopy.lede).toMatch(/día del evento/i);

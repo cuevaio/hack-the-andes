@@ -56,7 +56,7 @@ Teams are event entities, separate from the historical team preference/name on a
 
 Participants may leave voluntarily. A checked-in member may remove an unchecked teammate, including the creator, but cannot remove a checked-in teammate. Removal does not change application or attendance eligibility. Commands that change an existing membership confirm the expected current team, so stale CLI prompts cannot operate on a different team.
 
-Track selection defaults closed and is manually opened/closed by organizers. Environmental, security and transport each have 12 team slots. Any member may select or change the team's track while selection is open, but all current members must be accepted, confirmed and checked in. Failed switches preserve the old slot. Joining an already tracked team requires check-in even while selection is closed; closing selection does not freeze membership.
+Track selection defaults closed and is manually opened/closed by organizers. The four tracks are Clima y Territorio (`environmental`), Movilidad y Transporte (`transport`), Educación Escolar (`education`) and Seguridad (`security`), each with 12 team slots. The global maximum remains 36 teams. Mobility covers public transport in Lima, and passenger transport, regional connections, freight and distribution elsewhere. Existing track IDs and team assignments remain unchanged. Any member may select or change the team's track while selection is open, but all current members must be accepted, confirmed and checked in. Failed switches preserve the old slot. Joining an already tracked team requires check-in even while selection is closed; closing selection does not freeze membership.
 
 ## Team project updates and submissions
 

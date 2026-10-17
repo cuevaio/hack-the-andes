@@ -23,6 +23,15 @@ andes credits
 
 Si aparece `CHECKIN_REQUIRED`, pide a un organizador que confirme tu llegada y vuelve a consultar. Puedes pedirle a tu agente que ejecute `andes --output json credits`. No publiques los códigos en tu bitácora ni en la descripción del proyecto.
 
+## Elige uno de los cuatro tracks
+
+- **Clima y Territorio** (`environmental`): agua, heladas, huaicos, lluvias, agricultura y alertas de plagas.
+- **Movilidad y Transporte** (`transport`): transporte público dentro de Lima, con rutas, conexiones, tiempos y accesibilidad. En regiones: transporte de pasajeros, conectividad entre localidades, carga y distribución.
+- **Educación Escolar** (`education`): herramientas docentes, aprendizaje, prevención de la deserción y seguimiento de infraestructura y servicios escolares.
+- **Seguridad** (`security`): extorsión, estafas, seguridad de comercios y transportistas, suplantación y desinformación.
+
+Elige el track según el problema principal que resuelve tu equipo. Consulta los cupos con `andes team`; cuando la organización habilite la selección, usa `andes team track`. Cada track admite hasta doce equipos y el evento mantiene un máximo total de 36 equipos.
+
 ## Mantén el foco
 
 Antes de ampliar el alcance, conversa con tu equipo:
@@ -149,7 +158,7 @@ andes team track
 
 `team` muestra tu equipo, integrantes, invitaciones y cupos. `invites` muestra las invitaciones recibidas. `accept` acepta una y cambia de equipo en una sola operación; `decline` la rechaza. `leave` abandona tu equipo. `remove` permite a un integrante con check-in retirar a otro que todavía no lo tiene. `list` muestra todos los equipos y `tracks` los agrupa por track.
 
-Para crear o unirte a un equipo necesitas una postulación aceptada y asistencia confirmada. La organización abre la selección de tracks desde su panel. Para elegir o cambiar track, todos los integrantes actuales necesitan check-in. Los valores de `--track` son `environmental`, `security` y `transport`. Hay doce cupos por track, equipos de una a cuatro personas y hasta 36 equipos activos.
+Para crear o unirte a un equipo necesitas una postulación aceptada y asistencia confirmada. La organización abre la selección de tracks desde su panel. Para elegir o cambiar track, todos los integrantes actuales necesitan check-in. Los valores de `--track` son `environmental`, `transport`, `education` y `security`. Hay doce cupos por track, equipos de una a cuatro personas y hasta 36 equipos activos.
 
 Para compartir el trabajo y entregar:
 

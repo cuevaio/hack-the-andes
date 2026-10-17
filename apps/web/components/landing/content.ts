@@ -37,7 +37,7 @@ export const formatSoles = (amount: number): string =>
 export const brandName = "Hack the Andes";
 
 export const seatCount = onSiteGoal;
-export const trackCount = 3;
+export const trackCount = 4;
 export const qualifierChallengeCount = 5;
 
 export const metadataCopy = {
@@ -143,22 +143,26 @@ export const eventItems = [
 export const tracksCopy = {
   title: `${trackCount} Tracks centrales`,
   subtitle: "∞ Posibilidades de soluciones",
-  lede: `Los tracks son los temas de trabajo del día del evento. Las personas aceptadas conocerán los ${trackCount} briefs en Lima, elegirán en cuál quieren trabajar y tendrán 30 horas para entregar un producto funcionando.`,
-  reveal: "Se revela en Lima, 17 oct",
+  lede: `Los tracks son los temas de trabajo del día del evento. Puedes elegir entre los ${trackCount} temas y construir en equipo durante 30 horas para entregar un producto funcionando.`,
+  reveal: "12 cupos de equipo por track",
 } as const;
 
 export const trackSeats = [
   {
     index: "01",
-    hint: "Una señal cambia. Tu sistema tiene que entenderla y responder.",
+    hint: "Clima y Territorio: agua, agricultura y alertas ante riesgos naturales.",
   },
   {
     index: "02",
-    hint: "Hay nodos que todavía no se encuentran. Construye el puente.",
+    hint: "Movilidad y Transporte: transporte público en Lima y conectividad, pasajeros y carga en regiones.",
   },
   {
     index: "03",
-    hint: "La interfaz es parte del problema. El producto también es la respuesta.",
+    hint: "Educación Escolar: aprendizaje, herramientas docentes y prevención de la deserción.",
+  },
+  {
+    index: "04",
+    hint: "Seguridad: extorsión, estafas, suplantación y desinformación.",
   },
 ] as const;
 
