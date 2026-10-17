@@ -271,6 +271,7 @@ export function DeckPager({
               <div className="deck-slide-inner">
                 <div className="deck-slide-content">
                   <DeckMediaLoadProvider
+                    active={index === activeIndex}
                     shouldLoad={
                       index === activeIndex || index === activeIndex + 1
                     }
