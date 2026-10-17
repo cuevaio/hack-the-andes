@@ -14,10 +14,10 @@ test("formats the accessible prize amount without counting up", () => {
 
 test("formats first and second place as the final amounts, not zero", () => {
   expect(formatPrizeAmount(prizeAmountsPen.first, "number")).toBe(
-    formatPrizeAmount(6_700, "number"),
+    formatPrizeAmount(6_000, "number"),
   );
   expect(formatPrizeAmount(prizeAmountsPen.second, "soles")).toBe(
-    formatSoles(1_675),
+    formatSoles(2_000),
   );
   expect(formatPrizeAmount(prizeAmountsPen.first, "number")).not.toBe(
     formatPrizeAmount(0, "number"),
@@ -38,9 +38,9 @@ test("server markup paints final prize amounts, not zero", () => {
     createElement(PrizeCounter, { amount: prizeAmountsPen.second }),
   );
 
-  expect(first).toContain(formatPrizeAmount(6_700, "number"));
+  expect(first).toContain(formatPrizeAmount(6_000, "number"));
   expect(first).not.toBe(formatPrizeAmount(0, "number"));
   expect(first).not.toContain(`>${formatPrizeAmount(0, "number")}<`);
-  expect(second).toContain(formatSoles(1_675));
+  expect(second).toContain(formatSoles(2_000));
   expect(second).not.toContain(formatSoles(0));
 });

@@ -96,8 +96,8 @@ test("publishes the 17–18 octubre 2026 weekend in participant-facing copy", ()
 test("publishes the confirmed prizes directly in soles", () => {
   expect(prizeAmountsUsd.first).toBe(2_000);
   expect(prizeAmountsUsd.second).toBe(500);
-  expect(prizeAmountsPen.first).toBe(6_700);
-  expect(prizeAmountsPen.second).toBe(1_675);
+  expect(prizeAmountsPen.first).toBe(6_000);
+  expect(prizeAmountsPen.second).toBe(2_000);
   expect(facts.find((fact) => fact.label === "Premios")?.value).toContain(
     "8,000",
   );

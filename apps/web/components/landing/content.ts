@@ -19,8 +19,8 @@ export const prizeAmountsUsd = {
 } as const;
 
 export const prizeAmountsPen = {
-  first: 6_700,
-  second: 1_675,
+  first: 6_000,
+  second: 2_000,
 } as const;
 
 export const prizePoolHeadlinePen = 8_000;
