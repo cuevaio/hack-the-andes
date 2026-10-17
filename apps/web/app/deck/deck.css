@@ -643,6 +643,16 @@
   font-size: clamp(1.75rem, 5.37cqmin, 3.5rem);
 }
 
+/* A countdown is one glyph. It should fill the plate, not sit at title size. */
+.deck-count {
+  font-family: var(--deck-display);
+  font-size: clamp(7rem, 38cqmin, 18rem);
+  font-weight: 700;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
 .deck-lead {
   max-width: 62ch;
   font-size: clamp(1rem, 2.34cqmin, 1.7rem);
@@ -1381,6 +1391,10 @@
 
   .deck-title-sm {
     font-size: 1.5rem;
+  }
+
+  .deck-count {
+    font-size: clamp(5.5rem, 42cqmin, 9rem);
   }
 }
 

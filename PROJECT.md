@@ -4,7 +4,7 @@ This file is public. Do not include personal context, private goals, names of
 people from the vault, health information, private decisions, or local vault
 paths.
 
-**Last updated:** 2026-09-14  
+**Last updated:** 2026-10-17  
 **Status:** active  
 **Type:** landing
 
@@ -27,7 +27,8 @@ registration, and a preselection path that is not invite-only.
 The registration API and Effect CLI are implemented. The landing now presents
 a shorter WebGL Sacred Valley opening, a hundred-seat senior event, three
 sealed event challenges, five judge seats, five mentor seats, direct prize
-amounts, participant logistics, and Chofex as principal sponsor.
+amounts, participant logistics, and Chofex as principal sponsor. The closing
+ceremony deck is at `/deck/closing`.
 
 ## Next action
 

@@ -4,6 +4,7 @@ import {
   BulletList,
   ChipGrid,
   ContrastGrid,
+  Count,
   DataCell,
   DataGrid,
   FlowMap,
@@ -72,6 +73,7 @@ export function mdxComponentsFor(lang: DeckLang) {
     // data and numbers
     Stat,
     StatRow,
+    Count,
     DataGrid,
     DataCell,
     MiniMatrix,

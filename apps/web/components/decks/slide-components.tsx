@@ -132,6 +132,14 @@ export function Rule() {
   return <hr className="deck-rule" />;
 }
 
+/**
+ * One numeral, set to fill the slide. The closing deck counts 3, 2, 1 before
+ * the winners; a title caps at a reading size and a countdown is not a title.
+ */
+export function Count({ children }: { children: ReactNode }) {
+  return <div className="deck-count">{children}</div>;
+}
+
 /* ---------- data and numbers ---------- */
 
 export function Stat({
