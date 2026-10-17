@@ -438,6 +438,8 @@ name:
 
 - A live deployment URL for the working application.
 - A presentation URL, such as Canva, Google Slides or a coded presentation.
+- A GitHub repository URL, such as `https://github.com/team/project`. Read the
+  Git remote to find it; confirm with the participant if the remote is ambiguous.
 - A Markdown description explaining the problem, intended users, working
   solution and known limitations.
 
@@ -448,7 +450,7 @@ are no access requests, personal login dependencies or local files. Do not
 claim a link is accessible unless you checked it. If access cannot be verified,
 tell the participant what remains to check.
 
-Encourage an early submission once the three deliverables are ready. The same
+Encourage an early submission once the four deliverables are ready. The same
 submission can be edited later, including one field at a time. Ask only for
 missing deliverables. Inspect the repository and current deployment to prepare
 an accurate Markdown description. Do not invent deployment or presentation URLs.
@@ -456,7 +458,7 @@ An explicit request to submit or update the project authorizes that action;
 otherwise show the prepared submission and ask whether to submit it.
 
 ```sh
-andes --output json project submit --deployment-url https://app.example --presentation-url https://slides.example --file /path/to/project.md
+andes --output json project submit --deployment-url https://app.example --presentation-url https://slides.example --github-url https://github.com/equipo/proyecto --file /path/to/project.md
 andes --output json project
 andes --output json project submit --presentation-url https://new-slides.example
 ```

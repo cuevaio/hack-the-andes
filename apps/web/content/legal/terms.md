@@ -40,7 +40,7 @@ Conservas la titularidad de lo que crees, sujeto a los derechos de tu equipo y a
 
 ## Entrega y presentación de proyectos
 
-Cada equipo entrega la URL de su aplicación desplegada, la URL de su presentación y una descripción en Markdown. Cualquier integrante puede publicar avances y actualizar la entrega. El nombre del equipo identifica el proyecto.
+Cada equipo entrega la URL de su aplicación desplegada, la URL de su presentación, la URL del repositorio de GitHub y una descripción en Markdown. Cualquier integrante puede publicar avances y actualizar la entrega. El nombre del equipo identifica el proyecto.
 
 No podrás conectar tu laptop al equipo de presentación del evento. La organización abrirá los enlaces entregados desde su propio equipo. Comprueba que sean accesibles sin tu sesión personal ni permisos pendientes.
 

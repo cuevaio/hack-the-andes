@@ -8,7 +8,7 @@ Estas condiciones describen la entrega de proyectos en Hack the Andes. Complemen
 
 El nombre del equipo identifica el proyecto. Cualquier integrante puede cambiar ese nombre, publicar avances y actualizar la entrega compartida. Acuerda los cambios con tus compañeros. No existe un permiso exclusivo de capitán para estas acciones.
 
-Para entregar necesitas una URL de la aplicación desplegada, una URL de la presentación y una descripción del proyecto en Markdown. Puedes entregar temprano y actualizar los datos después. La organización comunica los horarios operativos y cualquier indicación adicional por los canales del evento.
+Para entregar necesitas una URL de la aplicación desplegada, una URL de la presentación, la URL del repositorio de GitHub y una descripción del proyecto en Markdown. Puedes entregar temprano y actualizar los datos después. La organización comunica los horarios operativos y cualquier indicación adicional por los canales del evento.
 
 ## Presentación desde los enlaces
 

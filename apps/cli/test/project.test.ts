@@ -131,6 +131,7 @@ test("project submit preserves previously submitted fields during partial edits"
       submission: {
         deploymentUrl: "https://demo.example.com",
         presentationUrl: "https://slides.example.com",
+        githubUrl: "https://github.com/example/project",
         description: "Original",
         submittedAt: "2026-10-16T12:00:00.000Z",
         updatedAt: "2026-10-16T12:00:00.000Z",
@@ -153,6 +154,7 @@ test("project submit preserves previously submitted fields during partial edits"
       expectedTeamId: teamId,
       deploymentUrl: "https://demo.example.com",
       presentationUrl: "https://slides.example.com",
+      githubUrl: "https://github.com/example/project",
       description: "## Nueva descripción",
     },
   ]);
@@ -207,7 +209,7 @@ test("project human output preserves Markdown newlines and removes terminal esca
   expect(updatesText(unsafe)).toContain("## Avance\nDemo");
 });
 
-test("first submission sends all three required details and a null revision", async () => {
+test("first submission sends all four required details and a null revision", async () => {
   const writes: unknown[] = [];
   const result = await cli(
     [
@@ -217,6 +219,8 @@ test("first submission sends all three required details and a null revision", as
       "https://demo.example.com",
       "--presentation-url",
       "https://slides.example.com",
+      "--github-url",
+      "https://github.com/example/project",
       "--description",
       "## Producto",
     ],
@@ -233,6 +237,7 @@ test("first submission sends all three required details and a null revision", as
       expectedUpdatedAt: null,
       deploymentUrl: "https://demo.example.com",
       presentationUrl: "https://slides.example.com",
+      githubUrl: "https://github.com/example/project",
       description: "## Producto",
     },
   ]);
@@ -248,6 +253,8 @@ test("stale submission conflict preserves the server error without retrying the 
       "https://demo.example.com",
       "--presentation-url",
       "https://slides.example.com",
+      "--github-url",
+      "https://github.com/example/project",
       "--description",
       "## Producto",
     ],
@@ -312,4 +319,28 @@ test("direct updates preserve long text, quotes and shell characters without ret
     "update",
     "updateCount",
   ]);
+});
+
+test("submission without GitHub returns an input error and never writes", async () => {
+  let writes = 0;
+  const result = await cli(
+    [
+      "project",
+      "submit",
+      "--deployment-url",
+      "https://demo.example.com",
+      "--presentation-url",
+      "https://slides.example.com",
+      "--description",
+      "Proyecto",
+    ],
+    (request) => {
+      if (request.method !== "GET") writes++;
+      return success(state);
+    },
+  );
+  expect(result.code).not.toBe(0);
+  expect(result.result.error.code).toBe("INPUT_REQUIRED");
+  expect(JSON.stringify(result.result)).toContain("--github-url");
+  expect(writes).toBe(0);
 });

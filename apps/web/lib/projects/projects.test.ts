@@ -120,8 +120,20 @@ test("any eligible member can publish, edit submission, rename; public visibilit
     expectedUpdatedAt: null,
     deploymentUrl: "https://demo.example.com",
     presentationUrl: "https://slides.example.com",
+    githubUrl: "https://github.com/example/project",
     description: "# Proyecto",
   };
+  for (const githubUrl of [
+    undefined,
+    "",
+    "https://gitlab.com/example/project",
+    "https://github.com/example",
+    "https://github.com/example/project/issues",
+  ]) {
+    expect(await project(1, { ...data, githubUrl })).toMatchObject({
+      error: { code: "VALIDATION_ERROR" },
+    });
+  }
   const submitted = Schema.decodeUnknownSync(ProjectStateSchema)(
     await project(1, data),
   );
@@ -136,6 +148,9 @@ test("any eligible member can publish, edit submission, rename; public visibilit
     submitted.project?.submission?.submittedAt,
   );
   expect(revised.project?.submission?.description).toBe("# Proyecto revisado");
+  expect(revised.project?.submission?.githubUrl).toBe(
+    "https://github.com/example/project",
+  );
   await action(2, { action: "rename", expectedTeamId, name: "Nuevo equipo" });
   expect((await state(1)).team?.name).toBe("Nuevo equipo");
   await project(
@@ -170,6 +185,7 @@ test("stale team, ineligible participant and incomplete submissions cannot write
       expectedTeamId,
       deploymentUrl: "javascript:alert(1)",
       presentationUrl: "https://example.com",
+      githubUrl: "https://github.com/example/project",
       description: "x",
     }),
   ).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
@@ -207,6 +223,7 @@ test("author departure preserves attributed logs; dissolved teams preserve their
     expectedUpdatedAt: null,
     deploymentUrl: "https://demo.example.com",
     presentationUrl: "https://slides.example.com",
+    githubUrl: "https://github.com/example/project",
     description: "Entrega conservada",
   });
   await action(2, { action: "leave", expectedTeamId });
@@ -247,6 +264,7 @@ test("competing initial submissions and stale revisions cannot overwrite the acc
     expectedUpdatedAt: null,
     deploymentUrl: "https://demo.example.com",
     presentationUrl: "https://slides.example.com",
+    githubUrl: "https://github.com/example/project",
     description: "Primera entrega",
   };
   const results = await Promise.all([
@@ -306,6 +324,7 @@ test("joining another team archives the solo team's history and submission witho
     expectedUpdatedAt: null,
     deploymentUrl: "https://demo.example.com",
     presentationUrl: "https://slides.example.com",
+    githubUrl: "https://github.com/example/project",
     description: "Proyecto original",
   });
   const joined = Schema.decodeUnknownSync(TeamStateSchema)(await join(2, 1));

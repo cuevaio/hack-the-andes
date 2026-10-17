@@ -12,7 +12,7 @@ Durante la postulación y la participación, Chofex puede recopilar:
 - Detalles de la postulación, como teléfono, ciudad, proyectos que hayas enviado, planes para la hackathon, biografía, enlaces y preferencia de equipo.
 - Tus decisiones sobre el Código de conducta, esta Política de privacidad y el consentimiento opcional para medios del evento.
 - Si eres aceptado, datos de asistencia como teléfono confirmado, fecha de nacimiento, número de identificación, talla de polo, necesidades alimentarias o de accesibilidad y contacto de emergencia.
-- Nombre del equipo, enlaces de despliegue y presentación, descripción del proyecto y avances con autor y fecha.
+- Nombre del equipo, enlaces de despliegue, presentación y repositorio de GitHub, descripción del proyecto y avances con autor y fecha.
 - Información técnica necesaria para autenticar solicitudes, proteger el servicio, diagnosticar errores y prevenir abusos.
 
 ## Cómo se usa la información

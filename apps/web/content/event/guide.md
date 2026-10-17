@@ -40,6 +40,7 @@ La entrega necesita estos datos:
 
 - La URL del despliegue de la aplicación funcionando.
 - La URL de la presentación. Puede ser Canva, Google Slides o una presentación hecha con código.
+- La URL del repositorio de GitHub, por ejemplo `https://github.com/equipo/proyecto`.
 - Una descripción del proyecto en Markdown. Explica el problema, para quién es, cómo funciona y qué limitaciones tiene.
 
 No conectarás tu laptop al equipo de presentación del evento. La organización abrirá los enlaces entregados desde su propio equipo. Comprueba que ambos enlaces funcionen en una ventana privada, sin tu sesión iniciada, sin permisos pendientes y sin depender de archivos locales. Prepara un recorrido que se pueda mostrar desde esos enlaces.
@@ -47,11 +48,11 @@ No conectarás tu laptop al equipo de presentación del evento. La organización
 Escribe la descripción directamente al entregar. También puedes usar `--file ./proyecto.md` en lugar de `--description` si prefieres un archivo Markdown:
 
 ```sh
-andes project submit --deployment-url https://tu-app.example --presentation-url https://tu-presentacion.example --description "Resolvemos este problema para estas personas. La demo permite probar el flujo principal."
+andes project submit --deployment-url https://tu-app.example --presentation-url https://tu-presentacion.example --github-url https://github.com/equipo/proyecto --description "Resolvemos este problema para estas personas. La demo permite probar el flujo principal."
 andes project
 ```
 
-Puedes entregar cuando tengas los tres datos y corregirlos después. No esperes al último momento. Por ejemplo, cambia solamente el enlace de la presentación:
+Puedes entregar cuando tengas los cuatro datos y corregirlos después. No esperes al último momento. Por ejemplo, cambia solamente el enlace de la presentación:
 
 ```sh
 andes project submit --presentation-url https://tu-presentacion-final.example
@@ -116,8 +117,8 @@ andes project
 andes project update --message "Terminamos el flujo, corregimos el error y desplegamos la demo."
 andes project update --file ./avance.md
 andes project updates
-andes project submit --deployment-url https://app.example --presentation-url https://slides.example --description "Qué construimos, para quién y cómo funciona."
-andes project submit --deployment-url https://app.example --presentation-url https://slides.example --file ./proyecto.md
+andes project submit --deployment-url https://app.example --presentation-url https://slides.example --github-url https://github.com/equipo/proyecto --description "Qué construimos, para quién y cómo funciona."
+andes project submit --deployment-url https://app.example --presentation-url https://slides.example --github-url https://github.com/equipo/proyecto --file ./proyecto.md
 andes project submit --presentation-url https://slides-final.example
 ```
 

@@ -93,9 +93,15 @@ test("project routes enforce membership, validate URLs, and gate public reads wh
     const renamed=await call(team,"POST","user-1",{action:"rename",expectedTeamId,name:"Cóndores nuevos"});
     assert.equal(renamed.data.team.name,"Cóndores nuevos");
     assert.equal((await call(team,"POST","user-1",{action:"rename",expectedTeamId:"00000000-0000-4000-8000-000000000099",name:"Obsoleto"})).error.code,"TEAM_CHANGED");
-    const data={action:"submit",expectedTeamId,expectedUpdatedAt:null,deploymentUrl:"https://demo.example.com",presentationUrl:"https://slides.example.com",description:"# Proyecto"};
+    const data={action:"submit",expectedTeamId,expectedUpdatedAt:null,deploymentUrl:"https://demo.example.com",presentationUrl:"https://slides.example.com",githubUrl:"https://github.com/example/project",description:"# Proyecto"};
+    for (const githubUrl of [undefined, "", "https://github.com/example", "https://gitlab.com/example/project", "https://github.com/example/project/issues", "https://github.com.evil.test/example/project", "http://github.com/example/project", "https://github.com/example/project?token=secret"]) {
+      const invalidGithub=await call(project,"POST","user-1",{...data,githubUrl});
+      assert.equal(invalidGithub.status,422);
+      assert(invalidGithub.error.details.issues.some(issue=>issue.field==="githubUrl"));
+    }
     const submitted=await call(project,"POST","user-1",data);
     assert.equal(submitted.status,200);
+    assert.equal(submitted.data.project.submission.githubUrl,data.githubUrl);
     assert.equal(submitted.data.project.updateCount,1);
     assert.deepEqual(submitted.data.project.updates,[]);
     assert.equal((await call(project,"POST","user-1",{...data,deploymentUrl:"https://user:secret@site.example.com"})).status,422);

@@ -27,9 +27,30 @@ const url = Schema.Trim.pipe(
     ),
   ),
 );
+const githubRepositoryUrl = url.pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (value: string) => {
+        const repository =
+          /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/?$/.exec(
+            value,
+          );
+        if (!repository) return false;
+        return repository
+          .slice(1)
+          .every((segment) => segment !== "." && segment !== "..");
+      },
+      {
+        message:
+          "Ingresa la URL del repositorio: https://github.com/organizacion/repositorio.",
+      },
+    ),
+  ),
+);
 export const ProjectSubmissionSchema = Schema.Struct({
   deploymentUrl: Schema.String,
   presentationUrl: Schema.String,
+  githubUrl: Schema.NullOr(Schema.String),
   description: Schema.String,
   submittedAt: Schema.String,
   updatedAt: Schema.String,
@@ -84,6 +105,7 @@ export const ProjectActionSchema = Schema.Union([
     expectedTeamId: id,
     deploymentUrl: url,
     presentationUrl: url,
+    githubUrl: githubRepositoryUrl,
     description: markdown,
   }),
 ]);

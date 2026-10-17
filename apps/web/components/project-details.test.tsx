@@ -12,6 +12,7 @@ const project: TeamProject = {
   submission: {
     deploymentUrl: "https://app.example.com",
     presentationUrl: "https://slides.example.com",
+    githubUrl: "https://github.com/example/project",
     description:
       "## Solución\n\n**Búsqueda accesible**\n\n<script>alert(1)</script>\n\n[Enlace inseguro](javascript:alert(1))",
     submittedAt: "2026-10-17T18:00:00Z",
@@ -32,6 +33,7 @@ test("project pages render deliverables and attributed Markdown safely", () => {
   const html = renderToStaticMarkup(<ProjectDetails project={project} />);
   expect(html).toContain('href="https://app.example.com"');
   expect(html).toContain('href="https://slides.example.com"');
+  expect(html).toContain('href="https://github.com/example/project"');
   expect(html).toContain("<h2>Solución</h2>");
   expect(html).toContain("<strong>Búsqueda accesible</strong>");
   expect(html).toContain("Ana &lt;equipo&gt;");
@@ -64,4 +66,18 @@ test("organizer review displays privately archived team submissions and logs", (
   } finally {
     client.clear();
   }
+});
+
+test("legacy submissions without a GitHub URL remain readable", () => {
+  if (!project.submission) throw new Error("Missing submission fixture");
+  const html = renderToStaticMarkup(
+    <ProjectDetails
+      project={{
+        ...project,
+        submission: { ...project.submission, githubUrl: null },
+      }}
+    />,
+  );
+  expect(html).toContain('href="https://app.example.com"');
+  expect(html).not.toContain("Ver repositorio en GitHub");
 });

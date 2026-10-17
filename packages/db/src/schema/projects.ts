@@ -14,6 +14,7 @@ export const projectSubmissions = pgTable("project_submissions", {
     .references(() => teams.id, { onDelete: "cascade" }),
   deploymentUrl: text("deployment_url").notNull(),
   presentationUrl: text("presentation_url").notNull(),
+  githubUrl: text("github_url"),
   description: text("description").notNull(),
   submittedAt: timestamp("submitted_at", { withTimezone: true })
     .notNull()

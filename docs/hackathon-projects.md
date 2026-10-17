@@ -17,14 +17,14 @@ andes project
 andes project update --message "Decidimos priorizar el flujo de búsqueda. Necesitamos validar los datos."
 andes project update --file ./avance.md
 andes project updates
-andes project submit --deployment-url https://app.example --presentation-url https://slides.example --file ./proyecto.md
+andes project submit --deployment-url https://app.example --presentation-url https://slides.example --github-url https://github.com/equipo/proyecto --file ./proyecto.md
 andes project submit --presentation-url https://slides-final.example
 andes team rename --name "Nuevo nombre"
 ```
 
 Publicar un avance devuelve únicamente la nueva entrada y el total. `project` consulta un resumen sin el contenido de los avances; `project updates` carga el historial completo. El cambio de nombre usa la acción de equipos y devuelve `TeamState`. Los errores de validación incluyen `error.details.issues` con el campo y su motivo. Los servicios comparten la validación y el acceso a datos del evento en `lib/event/database.ts`.
 
-Los agentes usan `andes --output json project ...`. La primera entrega requiere despliegue, presentación y descripción Markdown. Las ediciones posteriores pueden cambiar campos individuales. Ante `PROJECT_CHANGED`, consulta de nuevo y decide qué cambios conservar antes de reintentar. Ante un error de red al publicar un avance, consulta la bitácora antes de repetirlo.
+Los agentes usan `andes --output json project ...`. La primera entrega requiere despliegue, presentación, repositorio de GitHub y descripción Markdown. Las ediciones posteriores pueden cambiar campos individuales. Ante `PROJECT_CHANGED`, consulta de nuevo y decide qué cambios conservar antes de reintentar. Ante un error de red al publicar un avance, consulta la bitácora antes de repetirlo.
 
 La [guía para equipos](/guide) y las [condiciones de entrega](/participation-terms) explican que los participantes no conectarán sus laptops. La organización abrirá la presentación y aplicación desde las URLs entregadas.
 

@@ -32,11 +32,12 @@ export const projectText = ({ project }: ProjectState): string => {
       "Proyecto enviado. Puedes actualizarlo con andes project submit.",
       `Aplicación: ${terminalName(project.submission.deploymentUrl)}`,
       `Presentación: ${terminalName(project.submission.presentationUrl)}`,
+      `GitHub: ${terminalName(project.submission.githubUrl ?? "Pendiente; agrega --github-url al actualizar")}`,
       safeMarkdown(project.submission.description),
     );
   } else
     lines.push(
-      "Proyecto pendiente. Envía la aplicación, presentación y descripción con andes project submit.",
+      "Proyecto pendiente. Envía la aplicación, presentación, repositorio de GitHub y descripción con andes project submit.",
     );
   lines.push(`${project.updateCount} avances. Ver: andes project updates`);
   return lines.join("\n\n");
@@ -128,6 +129,7 @@ const submit = Command.make(
   {
     deploymentUrl: optional("deployment-url"),
     presentationUrl: optional("presentation-url"),
+    githubUrl: optional("github-url"),
     description: optional("description"),
     file: optional("file"),
   },
@@ -162,6 +164,14 @@ const submit = Command.make(
             options.output,
             "--presentation-url",
           );
+          const githubUrl = yield* inputText(
+            Option.getOrUndefined(flags.githubUrl) ??
+              project.submission?.githubUrl ??
+              undefined,
+            "URL del repositorio de GitHub",
+            options.output,
+            "--github-url",
+          );
           const description = yield* inputText(
             descriptionInput ?? project.submission?.description,
             "Descripción del proyecto en Markdown",
@@ -174,6 +184,7 @@ const submit = Command.make(
             expectedTeamId: project.teamId,
             deploymentUrl,
             presentationUrl,
+            githubUrl,
             description,
           });
         }),

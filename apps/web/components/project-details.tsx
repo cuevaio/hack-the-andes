@@ -41,6 +41,16 @@ export function ProjectDetails({ project }: { project: TeamProject }) {
             >
               Ver presentación
             </a>
+            {submission.githubUrl && (
+              <a
+                className="underline"
+                href={submission.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver repositorio en GitHub
+              </a>
+            )}
           </div>
           <LegalDocument>{submission.description}</LegalDocument>
           <p className="text-sm text-muted-foreground">
