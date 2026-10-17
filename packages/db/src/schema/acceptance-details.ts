@@ -37,11 +37,21 @@ export const acceptanceDetails = pgTable(
     firstCompletedAt: timestamp("first_completed_at", { withTimezone: true }),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     checkedInBy: text("checked_in_by"),
+    checkinExceptionReason: text("checkin_exception_reason"),
     ...auditTimestamps(),
   },
   (table) => [
     uniqueIndex("acceptance_details_application_id_unique").on(
       table.applicationId,
+    ),
+    check(
+      "acceptance_details_checkin_exception_audited",
+      sql`${table.checkinExceptionReason} is null or (
+        length(trim(${table.checkinExceptionReason})) > 0 and
+        ${table.checkedInAt} is not null and
+        length(trim(${table.checkedInBy})) > 0 and
+        ${table.checkedInBy} is not null
+      )`,
     ),
     check(
       "acceptance_details_completed_fields_required",

@@ -288,6 +288,13 @@
       "when": 1792251975280,
       "tag": "0040_dynamic_track_capacity",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792262795958,
+      "tag": "0041_organizer_checkin_exception",
+      "breakpoints": true
     }
   ]
 }
