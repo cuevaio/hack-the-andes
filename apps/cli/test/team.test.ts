@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import type { TeamState } from "@chofex/registration-contract";
-import { invitationsText, teamText } from "../src/team-output.js";
+import type { TeamDashboard, TeamState } from "@chofex/registration-contract";
+import { invitationsText, teamsText, teamText } from "../src/team-output.js";
 
 const participantId = "00000000-0000-4000-8000-000000000001";
 const teamId = "00000000-0000-4000-8000-000000000002";
@@ -195,3 +195,37 @@ test("team rename keeps the team response shape and uses the team endpoint", asy
     { action: "rename", expectedTeamId: teamId, name: "Nuevo nombre" },
   ]);
 });
+
+test.each([
+  [0, 0],
+  [1, 1],
+  [4, 1],
+  [5, 2],
+  [14, 4],
+  [17, 5],
+  [36, 9],
+])(
+  "track dashboard for %i total teams displays a capacity of %i",
+  (total, capacity) => {
+    if (!state.team) throw new Error("Team fixture required");
+    const team = state.team;
+    const dashboard: TeamDashboard = {
+      selectionOpen: true,
+      unassigned: [],
+      teams: Array.from({ length: total }, (_, index) => ({
+        ...team,
+        id: `team-${index}`,
+        track: index === 0 ? "environmental" : null,
+      })),
+    };
+    const output = teamsText(dashboard, true);
+    let assigned = 0;
+    if (total > 0) assigned = 1;
+    expect(output).toContain(
+      `Clima y Territorio · ${assigned}/${capacity} equipos`,
+    );
+    expect(output).toContain(`Movilidad y Transporte · 0/${capacity} equipos`);
+    expect(output).toContain(`Educación Escolar · 0/${capacity} equipos`);
+    expect(output).toContain(`Seguridad · 0/${capacity} equipos`);
+  },
+);

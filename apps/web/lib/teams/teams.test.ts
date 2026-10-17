@@ -308,14 +308,17 @@ test("unverified arrivals cannot join a tracked team even when selection is clos
   expect((await state(2)).team?.name).toBe("Equipo 2");
 });
 
-test("track capacity is twelve, failed switch retains old slot, and leaving releases a slot", async () => {
+test("track capacity rounds up 25 percent, failed switch retains old slot, and leaving releases a slot", async () => {
   await open();
   for (let n = 1; n <= 14; n++) {
     await seed(n, true);
     await create(n);
   }
+  expect((await state(1)).tracks.map((track) => track.capacity)).toEqual([
+    4, 4, 4, 4,
+  ]);
   const claims = await Promise.all(
-    Array.from({ length: 13 }, (_, i) => select(i + 1)),
+    Array.from({ length: 5 }, (_, i) => select(i + 1)),
   );
   expect(claims.filter((r) => error(r) === "TRACK_FULL")).toHaveLength(1);
   await select(14, "security");
@@ -447,7 +450,7 @@ test("expired, rotated and no-longer-eligible QR codes cannot check someone in",
   ).toBe("CHECKIN_TOKEN_EXPIRED");
 });
 
-test("all four tracks are selectable and education enforces its own twelve slots", async () => {
+test("all four tracks are selectable and education enforces its own proportional capacity", async () => {
   await open();
   for (let n = 1; n <= 13; n++) {
     await seed(n, true);
@@ -460,14 +463,71 @@ test("all four tracks are selectable and education enforces its own twelve slots
     "security",
   ]);
   await select(13, "transport");
-  for (let n = 1; n <= 12; n++)
+  for (let n = 1; n <= 4; n++)
     expect(error(await select(n, "education"))).toBeUndefined();
   expect(error(await select(13, "education"))).toBe("TRACK_FULL");
   expect((await state(13)).team?.track).toBe("transport");
   expect(
     (await state(13)).tracks.find((track) => track.id === "education"),
-  ).toEqual({ id: "education", teams: 12, capacity: 12 });
+  ).toEqual({ id: "education", teams: 4, capacity: 4 });
   expect(error(await select(1, "security"))).toBeUndefined();
   expect(error(await select(13, "education"))).toBeUndefined();
   expect(error(await select(1, "environmental"))).toBeUndefined();
 });
+
+test("track capacity grows and shrinks with current teams without removing existing selections", async () => {
+  await open();
+  for (let n = 1; n <= 16; n++) {
+    await seed(n, true);
+    await create(n);
+  }
+  for (let n = 1; n <= 4; n++) await select(n);
+  expect(error(await select(5))).toBe("TRACK_FULL");
+  await seed(17, true);
+  await create(17);
+  expect((await state(5)).tracks.map((track) => track.capacity)).toEqual([
+    5, 5, 5, 5,
+  ]);
+  await select(5);
+  expect((await state(5)).team?.track).toBe("environmental");
+  await action(17, {
+    action: "leave",
+    expectedTeamId: (await state(17)).team?.id,
+  });
+  expect(
+    (await state(5)).tracks.find((track) => track.id === "environmental"),
+  ).toEqual({ id: "environmental", teams: 5, capacity: 4 });
+  expect((await state(5)).team?.track).toBe("environmental");
+  expect(error(await select(5))).toBeUndefined();
+  expect(error(await select(6))).toBe("TRACK_FULL");
+  await select(5, "security");
+  expect(error(await select(6))).toBe("TRACK_FULL");
+  await select(4, "security");
+  await select(6);
+  expect((await state(6)).team?.track).toBe("environmental");
+});
+
+test.each([
+  [0, 0],
+  [1, 1],
+  [4, 1],
+  [5, 2],
+  [36, 9],
+])(
+  "team state reports capacity %i teams -> %i slots per track",
+  async (total, capacity) => {
+    await seed(1, true);
+    for (let n = 1; n <= total; n++) {
+      if (n > 1) await seed(n, true);
+      await create(n);
+    }
+    const result = await state(1);
+    expect(result.tracks.map((track) => track.capacity)).toEqual([
+      capacity,
+      capacity,
+      capacity,
+      capacity,
+    ]);
+    expect(result.team?.name ?? null).toBe(total > 0 ? "Equipo 1" : null);
+  },
+);

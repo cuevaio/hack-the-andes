@@ -281,6 +281,13 @@
       "when": 1792240542092,
       "tag": "0039_opposite_ulik",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792251975280,
+      "tag": "0040_dynamic_track_capacity",
+      "breakpoints": true
     }
   ]
 }

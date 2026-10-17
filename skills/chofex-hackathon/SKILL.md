@@ -430,7 +430,7 @@ The four event tracks are Clima y Territorio (`environmental`), Movilidad y
 Transporte (`transport`), Educación Escolar (`education`), and Seguridad
 (`security`). Mobility includes public transport within Lima and passenger
 transport, regional connections, freight and distribution in other regions.
-Each track has 12 team slots; the event has at most 36 teams overall. Use
+Each track allows 25% of the current team count, rounded up; the event has at most 36 teams overall. Existing track selections survive capacity reductions. Use
 `andes team` to read current availability and `andes team track` to select.
 
 ## Submit and maintain the event project

@@ -4,6 +4,7 @@ import {
   type Team,
   type TeamDashboard,
   TeamDashboardSchema,
+  trackCapacity,
   trackNames,
   tracks,
 } from "@chofex/registration-contract";
@@ -187,7 +188,7 @@ export function TeamDashboardView({
                 <section key={track} className="space-y-4">
                   <h2 className="text-xl font-semibold">{trackNames[track]}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {all.length}/12 equipos ·{" "}
+                    {all.length}/{trackCapacity(data.teams.length)} equipos ·{" "}
                     {all.reduce((sum, t) => sum + t.members.length, 0)}{" "}
                     participantes
                   </p>

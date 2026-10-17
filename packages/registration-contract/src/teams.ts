@@ -12,6 +12,9 @@ export const trackNames = {
   transport: "Movilidad y Transporte",
   education: "Educación Escolar",
 } as const;
+export const trackCapacity = (totalTeams: number): number =>
+  Math.ceil(totalTeams / 4);
+
 export const TrackSchema = Schema.Literals(tracks);
 export type Track = typeof TrackSchema.Type;
 const id = Schema.String.pipe(Schema.check(Schema.isUUID()));

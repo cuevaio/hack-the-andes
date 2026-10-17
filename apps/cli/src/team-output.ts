@@ -1,6 +1,7 @@
 import {
   type TeamDashboard,
   type TeamState,
+  trackCapacity,
   trackNames,
   tracks,
 } from "@chofex/registration-contract";
@@ -27,7 +28,7 @@ export const teamsText = (
   for (const track of tracks) {
     const teams = dashboard.teams.filter((team) => team.track === track);
     lines.push(
-      `${trackNames[track]} · ${teams.length}/12 equipos`,
+      `${trackNames[track]} · ${teams.length}/${trackCapacity(dashboard.teams.length)} equipos`,
       ...teams.map(teamLine),
       "",
     );
