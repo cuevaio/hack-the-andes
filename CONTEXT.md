@@ -58,6 +58,14 @@ Participants may leave voluntarily. A checked-in member may remove an unchecked 
 
 Track selection defaults closed and is manually opened/closed by organizers. Environmental, security and transport each have 12 team slots. Any member may select or change the team's track while selection is open, but all current members must be accepted, confirmed and checked in. Failed switches preserve the old slot. Joining an already tracked team requires check-in even while selection is closed; closing selection does not freeze membership.
 
+## Team project updates and submissions
+
+The team name is the project name. Any accepted, confirmed current member can rename the team, publish attributed Markdown updates, and submit or edit its single project submission. A complete submission has a deployment URL, presentation URL and Markdown description. Updates can precede submission. Submission edits compare the observed update timestamp under the event transaction lock; stale edits fail without overwriting the teammate's changes. Writes also confirm the expected team.
+
+Updates snapshot the author's public name and survive the author's departure or account deletion while the team exists. Before the existing empty-team deletion runs, a trigger archives the team name, track, submission and complete update history. Dissolved teams release capacity and remain available in the private organizer archive. Archived projects are excluded from the public gallery and cannot be edited or transferred. The gallery defaults hidden and opens or closes manually through organizer controls; the public service exposes only submitted teams while open, including their full update history. Organizers can review every team's updates before publication. No email notification or separate mentor/judge access role is implied.
+
+Participants present through the deployment and presentation URLs from the organizer's computer. They cannot connect their own laptops. The participant guide and delivery conditions explain these requirements.
+
 ## Event check-in
 
 `andes checkin` issues a five-minute opaque QR; only its hash is stored. An authenticated organizer scans it with their phone camera (or enters its alternate code), verifies the participant's public name and confirmed photo, then explicitly confirms physical arrival. Previewing/scanning alone does not check anyone in. Confirmation writes `acceptance_details.checked_in_at` for the current accepted application and retains the first confirmation and verifying organizer. Existing funnel triggers record the attendance milestone. QR tokens rotate on reissue and are never exposed in query parameters; the staff page uses a URL fragment and a POST body.

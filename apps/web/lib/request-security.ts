@@ -20,7 +20,7 @@ export const policyFor = (request: Request) => {
   if (pathname === "/api/webhooks/clerk") return webhookPolicy;
   if (pathname === "/_next/image") return imagePolicy;
   if (
-    /^\/api\/(?:v1\/(?:team|teams|checkin)|admin\/(?:teams|checkin))$/.test(
+    /^\/api\/(?:v1\/(?:team|teams|checkin|project)|admin\/(?:teams|checkin|projects))$/.test(
       pathname,
     )
   ) {

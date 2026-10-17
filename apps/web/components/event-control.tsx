@@ -1,11 +1,21 @@
 "use client";
 
-import type { TeamDashboard } from "@chofex/registration-contract";
+import type {
+  ProjectDashboard,
+  TeamDashboard,
+} from "@chofex/registration-contract";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { ProjectControl } from "./project-control";
 import { dashboardRequest } from "./team-dashboard";
 
-export function EventControl({ initialData }: { initialData: TeamDashboard }) {
+export function EventControl({
+  initialData,
+  initialProjects,
+}: {
+  initialData: TeamDashboard;
+  initialProjects: ProjectDashboard;
+}) {
   const query = useQuery({
     queryKey: ["event-teams", "/api/admin/teams"],
     queryFn: () => dashboardRequest("/api/admin/teams"),
@@ -66,6 +76,7 @@ export function EventControl({ initialData }: { initialData: TeamDashboard }) {
           </p>
         )}
       </section>
+      <ProjectControl initialData={initialProjects} />
     </main>
   );
 }

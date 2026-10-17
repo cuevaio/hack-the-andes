@@ -1,6 +1,6 @@
 # Términos y Condiciones
 
-**Última actualización: 21 de septiembre de 2026**
+**Última actualización: 16 de octubre de 2026**
 
 Estos términos rigen la participación en Hack the Andes, el evento presencial de Chofex en Lima, Perú, el 17 y 18 de octubre de 2026. Debes aceptarlos para enviar tu postulación.
 
@@ -37,6 +37,16 @@ El equipo organizador puede investigar las denuncias y tomar las medidas razonab
 ## Proyectos y servicios de terceros
 
 Conservas la titularidad de lo que crees, sujeto a los derechos de tu equipo y a las licencias de las herramientas, conjuntos de datos u otros materiales que uses. Eres responsable de cumplir las leyes aplicables y los términos de terceros.
+
+## Entrega y presentación de proyectos
+
+Cada equipo entrega la URL de su aplicación desplegada, la URL de su presentación y una descripción en Markdown. Cualquier integrante puede publicar avances y actualizar la entrega. El nombre del equipo identifica el proyecto.
+
+No podrás conectar tu laptop al equipo de presentación del evento. La organización abrirá los enlaces entregados desde su propio equipo. Comprueba que sean accesibles sin tu sesión personal ni permisos pendientes.
+
+La organización puede consultar las entregas y sus bitácoras durante el evento. Cuando habilite la galería, los proyectos entregados mostrarán públicamente su descripción, enlaces y avances con el nombre público del autor y la fecha. No incluyas secretos ni datos personales de terceros.
+
+Consulta las [condiciones de entrega y presentación](/participation-terms) y la [guía para equipos](/guide).
 
 ## Cambios en el evento
 

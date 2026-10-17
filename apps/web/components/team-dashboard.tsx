@@ -96,6 +96,12 @@ export function TeamDashboardView({
     <main className="mx-auto max-w-7xl space-y-8 px-5 py-10">
       <header className="space-y-4">
         <nav className="flex flex-wrap gap-5 text-sm">
+          <Link className="underline" href="/projects">
+            Proyectos
+          </Link>
+          <Link className="underline" href="/guide">
+            Guía
+          </Link>
           <Link className="underline" href="/teams">
             Equipos
           </Link>

@@ -168,3 +168,25 @@ test("check-in status reads existing attendance without rotating a token", async
   expect(result.result.data.checkedIn).toBe(true);
   expect(requests).toEqual(["GET"]);
 });
+
+test("team rename keeps the team response shape and uses the team endpoint", async () => {
+  if (!state.team) throw new Error("Missing fixture");
+  const renamed = { ...state, team: { ...state.team, name: "Nuevo nombre" } };
+  const writes: unknown[] = [];
+  const result = await cli(
+    ["team", "rename", "--name", "Nuevo nombre"],
+    async (request) => {
+      expect(new URL(request.url).pathname).toBe("/api/v1/team");
+      if (request.method === "POST") {
+        writes.push(await request.json());
+        return success(renamed);
+      }
+      return success(state);
+    },
+  );
+  expect(result.code).toBe(0);
+  expect(result.result.data.team.name).toBe("Nuevo nombre");
+  expect(writes).toEqual([
+    { action: "rename", expectedTeamId: teamId, name: "Nuevo nombre" },
+  ]);
+});

@@ -67,6 +67,24 @@ export function LandingFooter({
         </nav>
       </div>
 
+      <nav
+        aria-label="Participación en el evento"
+        className="flex flex-wrap gap-5 py-5 text-sm"
+      >
+        <Link className="underline underline-offset-4" href="/guide">
+          Guía para equipos
+        </Link>
+        <Link
+          className="underline underline-offset-4"
+          href="/participation-terms"
+        >
+          Entrega y presentación
+        </Link>
+        <Link className="underline underline-offset-4" href="/projects">
+          Proyectos
+        </Link>
+      </nav>
+
       <div className="flex flex-col gap-5 py-2 text-sm text-[var(--hud-type)]/60 md:flex-row md:items-center md:justify-between">
         <a
           className="inline-flex w-fit items-center gap-2 border border-[var(--hud-type)]/20 px-3 py-2 text-xs whitespace-nowrap text-[var(--hud-type)]/75 underline-offset-4 transition-colors hover:border-[var(--hud-type)]/35 hover:text-[var(--hud-type)] hover:underline"

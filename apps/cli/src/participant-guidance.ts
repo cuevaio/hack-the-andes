@@ -53,7 +53,7 @@ export const nextStepFor = (result?: RegistrationResult): NextStep => {
       return {
         kind: "badge",
         message:
-          "Tu asistencia está confirmada. Generaremos tu carnet automáticamente. Consulta el resultado y comparte tu carnet. Ya puedes crear o gestionar tu equipo con andes team. En el ingreso, muestra el QR de andes checkin.",
+          "Tu asistencia está confirmada. Generaremos tu carnet automáticamente. Consulta el resultado y comparte tu carnet. Ya puedes crear o gestionar tu equipo con andes team. En el ingreso, muestra el QR de andes checkin. Durante el evento, comparte avances y entrega el proyecto con andes project. Guía: https://hacktheandes.com/guide.",
         command: "andes badge",
       };
     }

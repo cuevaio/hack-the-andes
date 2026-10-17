@@ -19,6 +19,7 @@ const name = Schema.Trim.pipe(
 
 export const TeamActionSchema = Schema.Union([
   Schema.Struct({ action: Schema.Literal("create"), name }),
+  Schema.Struct({ action: Schema.Literal("rename"), name, expectedTeamId: id }),
   Schema.Struct({
     action: Schema.Literal("invite"),
     email: Schema.Trim.pipe(

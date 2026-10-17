@@ -3,6 +3,7 @@ import { expect, test } from "bun:test";
 import {
   createRequestLimiter,
   mutationOriginAllowed,
+  policyFor,
   requestClientAddress,
   requestRejection,
 } from "./request-security";
@@ -211,4 +212,13 @@ test("limits image optimization independently of ordinary pages", () => {
     expect(limit(requestFor("/_next/image"))).toBeUndefined();
   expect(limit(requestFor("/_next/image"))).toBe(1);
   expect(limit(requestFor("/"))).toBeUndefined();
+});
+
+test("project endpoints share event budgets for participants and organizers", () => {
+  for (const route of ["/api/v1/project", "/api/admin/projects"]) {
+    expect(policyFor(requestFor(route))?.name).toBe("event-read");
+    expect(policyFor(requestFor(route, undefined, "POST"))?.name).toBe(
+      "event-write",
+    );
+  }
 });

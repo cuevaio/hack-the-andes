@@ -6,4 +6,5 @@ export * from "./funnel-email-deliveries";
 export * from "./participant-badges";
 export * from "./participant-funnel-milestones";
 export * from "./participants";
+export * from "./projects";
 export * from "./teams";

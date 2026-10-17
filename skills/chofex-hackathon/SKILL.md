@@ -1,6 +1,6 @@
 ---
 name: chofex-hackathon
-description: Apply to Hack the Andes for a human with the andes CLI, work through a challenge with them, check an existing application, or guide accepted-participant next steps. Use when a person wants an agent to apply, solve a Hack the Andes challenge, check status, understand requirements, reapply after rejection, or confirm attendance.
+description: Apply to Hack the Andes for a human with the andes CLI, work through a challenge with them, check an existing application, or guide accepted-participant next steps. Use when a person wants an agent to apply, solve a Hack the Andes challenge, check status, understand requirements, reapply after rejection, confirm attendance, manage an event team, publish project updates, or submit and maintain the team project.
 ---
 
 # Hack the Andes
@@ -20,7 +20,7 @@ Batch participant questions into the fewest practical turns. Pause only for:
 - the participant's own consent decisions;
 - challenge experiment selection, continuation checkpoints, evidence review,
   and release judgment;
-- final submission approval; and
+- final admission or challenge submission approval; and
 - private accepted-participant details.
 
 Mechanical formatting is not personal-data invention. Normalize obvious handles
@@ -325,8 +325,8 @@ Interpret the returned state as follows:
   `canSubmitAcceptedDetails` is true.
 - `withdrawn`: report the status and follow only the actions returned by the
   server.
-- requirements stage `complete`: attendance details are complete; report that
-  there is no remaining CLI action.
+- requirements stage `complete`: attendance details are complete. During the event,
+  continue to team setup, progress updates and project submission as relevant.
 
 Return the exact rejection reason, missing-field reasons, and server state.
 The server response is authoritative when it differs from this summary.
@@ -371,14 +371,116 @@ Delete the file immediately after the command completes. Run `status` again
 and verify that the requirements stage is `complete` before reporting that
 attendance confirmation is done.
 
+## Build with your team and publish updates
+
+During the event, read `andes project --help` and `andes team --help` before
+using these commands. Upgrade the CLI if the project commands are unavailable.
+Use `andes --output json team` and `andes --output json project` to learn the
+current team and submission. Use `andes --output json project updates` to
+read the update history. Any member can publish an update
+or edit the shared submission. Use the team name as the project name; rename it
+with `andes --output json team rename --name "New team name"` when requested.
+Never create another project name.
+
+Help the team choose its next useful step. When direction is unclear, ask the
+questions that resolve the uncertainty, rather than running a fixed interview:
+
+- Who has this problem, and what do they do today?
+- What is the most important thing the product needs to do right now?
+- What is blocking the team, and what concrete help would unblock it?
+- Which decision did we make, what evidence supports it, and what did we leave out?
+- What can a person actually try in the next demo?
+
+At a meaningful milestone, a change of direction, a working demo, or a blocker
+that mentors could help with, inspect the latest shared update and suggest
+sending another if there is new information. During an active work session,
+check again after substantial progress or roughly an hour without a useful
+update. Do not send repetitive updates or interrupt every code change. This
+skill runs during active sessions; it does not create a background timer.
+
+If the participant says "send an update to the mentors/judges", that authorizes
+preparing and publishing a factual update. Do not ask for the same permission
+again. If the agent only suggests an update, offer the draft and obtain the
+participant's go-ahead before publishing. Standing authorization from the
+participant in this session to publish progress updates also applies. Base the content on the work inspected and the
+participant's statements. Distinguish verified results from plans and unknowns.
+Never invent user tests, performance numbers, impact, or completed features.
+
+A useful Markdown update says what changed, why the team chose it, what works,
+what is blocked, what help is needed, what was deployed, which tools or services
+the team used, and what comes next. Omit sections that have no useful information. Include relevant public demo links. Exclude secrets,
+tokens, private user data and confidential material. The update is shared with
+the organization and can become public in the project gallery with the author's
+public name and timestamp. Publishing saves a log for review; it does not send
+email or promise an immediate mentor response.
+
+```sh
+andes --output json project update --message "Terminamos el flujo y desplegamos la demo."
+andes --output json project updates
+```
+
+Use direct text by default. For longer Markdown, `project update --file /path/to/update.md`
+is also supported; a file is optional. A successful update returns only the saved
+entry and the total. Use `project updates` to read the full history.
+Read the success envelope and verify the saved content before claiming it was
+published. If a write times out, inspect the history before retrying so that you
+do not append the same update twice.
+
+## Submit and maintain the event project
+
+Read the participant guide at `https://hacktheandes.com/guide` and the delivery
+conditions at `https://hacktheandes.com/participation-terms` for current event
+instructions. These project submissions are separate from admission applications
+and challenge submissions.
+
+A project submission needs exactly these deliverables, using the existing team
+name:
+
+- A live deployment URL for the working application.
+- A presentation URL, such as Canva, Google Slides or a coded presentation.
+- A Markdown description explaining the problem, intended users, working
+  solution and known limitations.
+
+Participants cannot connect their laptops to the event's presentation equipment.
+The organization opens the submitted links on its own computer. Check both URLs
+from a signed-out or private browser session when possible. Verify that there
+are no access requests, personal login dependencies or local files. Do not
+claim a link is accessible unless you checked it. If access cannot be verified,
+tell the participant what remains to check.
+
+Encourage an early submission once the three deliverables are ready. The same
+submission can be edited later, including one field at a time. Ask only for
+missing deliverables. Inspect the repository and current deployment to prepare
+an accurate Markdown description. Do not invent deployment or presentation URLs.
+An explicit request to submit or update the project authorizes that action;
+otherwise show the prepared submission and ask whether to submit it.
+
+```sh
+andes --output json project submit --deployment-url https://app.example --presentation-url https://slides.example --file /path/to/project.md
+andes --output json project
+andes --output json project submit --presentation-url https://new-slides.example
+```
+
+Check the returned saved submission, including every changed field. Any teammate
+can edit it, so read fresh state before acting and coordinate conflicting edits.
+If the last member leaves or joins another team, the old team dissolves and
+releases its track and capacity. The organization retains its submission and
+update history in a private archive. That archive is not part of the public
+gallery and does not transfer to the new team.
+
+The public gallery at `https://hacktheandes.com/projects` starts hidden and opens
+when the organization enables it. Do not promise a Sunday opening time. Once
+published, a submitted project's page includes its description, URLs and update
+history. Remind the team to exclude private data from all of these fields.
+
 ## Failures
 
 On `ok: false`, report `error.code`, `error.message`, and `requestId`. Resolve
 local validation failures before showing the final summary. Correct mechanical
 issues directly when the participant's answers do not change; involve them when
-an answer or consent must change. Any payload change after final approval
+an answer or consent must change. For admission, attendance and challenge submissions, any payload change after final approval
 invalidates that approval: show the updated summary and ask again. Retry an
-unchanged failed request only when `retryable` is true and after fresh submission
-approval. For authentication failures, return to **Authenticate the
+unchanged failed request only when `retryable` is true. For admission, attendance
+and challenge submissions, obtain fresh submission approval before retrying. For authentication failures, return to **Authenticate the
 participant**. Preserve the request ID for support instead of claiming success
 or bypassing a failed state.

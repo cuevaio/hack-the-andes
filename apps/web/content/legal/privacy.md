@@ -1,6 +1,6 @@
 # Privacidad
 
-**Última actualización: 21 de septiembre de 2026**
+**Última actualización: 16 de octubre de 2026**
 
 Esta política explica cómo Chofex trata la información personal que entregas para Hack the Andes, el evento presencial en Lima, Perú, el 17 y 18 de octubre de 2026. Debes aceptarla para enviar tu postulación.
 
@@ -12,6 +12,7 @@ Durante la postulación y la participación, Chofex puede recopilar:
 - Detalles de la postulación, como teléfono, ciudad, proyectos que hayas enviado, planes para la hackathon, biografía, enlaces y preferencia de equipo.
 - Tus decisiones sobre el Código de conducta, esta Política de privacidad y el consentimiento opcional para medios del evento.
 - Si eres aceptado, datos de asistencia como teléfono confirmado, fecha de nacimiento, número de identificación, talla de polo, necesidades alimentarias o de accesibilidad y contacto de emergencia.
+- Nombre del equipo, enlaces de despliegue y presentación, descripción del proyecto y avances con autor y fecha.
 - Información técnica necesaria para autenticar solicitudes, proteger el servicio, diagnosticar errores y prevenir abusos.
 
 ## Cómo se usa la información
@@ -30,7 +31,7 @@ Aparecer en fotografías o grabaciones del evento es opcional. Rechazar ese cons
 
 ## Compartir información
 
-La información solo está disponible para el equipo organizador y para proveedores que la necesiten para los fines anteriores. Chofex no vende información personal. También puede divulgarse cuando lo exija la ley o cuando sea razonablemente necesario para proteger la seguridad, los derechos o la integridad de una persona.
+La información de postulación y asistencia está disponible para el equipo organizador y para proveedores que la necesiten para los fines anteriores. La organización también revisa las entregas y bitácoras durante el evento. Cuando habilite la galería, los proyectos entregados muestran públicamente su nombre de equipo, descripción, enlaces y avances con el nombre público del autor y la fecha. No incluyas secretos ni datos personales de terceros en ese contenido. Chofex no vende información personal. También puede divulgarse cuando lo exija la ley o cuando sea razonablemente necesario para proteger la seguridad, los derechos o la integridad de una persona.
 
 ## Almacenamiento y protección
 

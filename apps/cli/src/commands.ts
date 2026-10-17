@@ -46,6 +46,7 @@ import {
   withRegistrationNextStep,
 } from "./participant-guidance.js";
 import { uploadPicture } from "./picture-upload.js";
+import { projectCommand } from "./project-commands.js";
 import { teamCommand } from "./team-commands.js";
 import {
   cliPackageName,
@@ -754,6 +755,7 @@ export const command = root.pipe(
     schemaCommand,
     challengeCommand,
     teamCommand,
+    projectCommand,
     checkinCommand,
   ]),
 );

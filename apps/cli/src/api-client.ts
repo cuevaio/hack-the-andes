@@ -31,6 +31,9 @@ import {
   type PictureUpload,
   PictureUploadGrantSchema,
   PictureUploadSchema,
+  type ProjectAction,
+  ProjectStateSchema,
+  ProjectUpdateReceiptSchema,
   type RegistrationResult,
   RegistrationResultSchema,
   type TeamAction,
@@ -226,6 +229,44 @@ const decodeCreatedRegistration = Schema.decodeUnknownEffect(
 const decodeBadgeResult = Schema.decodeUnknownEffect(
   ApiSuccessSchema(BadgeResultSchema),
 );
+
+export const getProject = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/project?history=false",
+    { method: "GET" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(ProjectStateSchema)),
+  );
+
+export const changeProject = (
+  options: ApiClientOptions,
+  action: Extract<ProjectAction, { action: "submit" }>,
+) =>
+  request(
+    options,
+    "/api/v1/project",
+    { method: "POST", body: JSON.stringify(action) },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(ProjectStateSchema)),
+  );
+
+export const getProjectUpdates = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/project",
+    { method: "GET" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(ProjectStateSchema)),
+  );
+
+export const publishProjectUpdate = (
+  options: ApiClientOptions,
+  action: Extract<ProjectAction, { action: "update" }>,
+) =>
+  request(
+    options,
+    "/api/v1/project",
+    { method: "POST", body: JSON.stringify(action) },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(ProjectUpdateReceiptSchema)),
+  );
 
 export const getTeam = (options: ApiClientOptions) =>
   request(

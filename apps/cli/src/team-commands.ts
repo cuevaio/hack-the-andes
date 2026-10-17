@@ -118,6 +118,36 @@ const create = Command.make("create", { name: optional("name") }, ({ name }) =>
   }),
 ).pipe(Command.withDescription("Crear un equipo de 1–4 integrantes"));
 
+const rename = Command.make("rename", { name: optional("name") }, ({ name }) =>
+  Effect.gen(function* () {
+    const options = yield* root;
+    const client = {
+      apiUrl: options.apiUrl,
+      token: Option.getOrUndefined(options.token),
+    };
+    yield* execute(
+      options.output,
+      Effect.gen(function* () {
+        const state = (yield* getTeam(client)).data;
+        if (!state.team)
+          return yield* cliError("TEAM_REQUIRED", "No tienes equipo.");
+        const value = yield* text(
+          name,
+          `Nuevo nombre de ${terminalName(state.team.name)}`,
+          options.output,
+          "--name",
+        );
+        return yield* changeTeam(client, {
+          action: "rename",
+          expectedTeamId: state.team.id,
+          name: value,
+        });
+      }),
+      teamText,
+    );
+  }),
+).pipe(Command.withDescription("Cambiar el nombre del equipo y del proyecto"));
+
 const invite = Command.make(
   "invite",
   { email: optional("email") },
@@ -186,7 +216,7 @@ const invitationCommand = (action: "accept" | "decline") =>
                 message += ` Saldrás de “${terminalName(state.team.name)}”.`;
                 if (state.team.members.length === 1)
                   message +=
-                    " Tu equipo actual se eliminará y liberará su track.";
+                    " Tu equipo actual se disolverá y liberará su track. La organización conservará su entrega y avances archivados.";
               }
               message +=
                 " Adoptarás el track del equipo de destino, si ya tiene uno.";
@@ -226,7 +256,7 @@ const leave = Command.make("leave", { yes }, ({ yes }) =>
         let message = `¿Salir de “${terminalName(state.team.name)}”?`;
         if (state.team.members.length === 1)
           message +=
-            " El equipo se eliminará, sus invitaciones se cancelarán y su track quedará libre.";
+            " El equipo se disolverá, sus invitaciones se cancelarán y su track quedará libre. La organización conservará su entrega y avances archivados.";
         yield* confirm(message, yes, options.output);
         return yield* changeTeam(client, {
           action: "leave",
@@ -401,6 +431,7 @@ export const teamCommand = Command.make("team", {}, () =>
     list(false),
     list(true),
     create,
+    rename,
     invite,
     invites,
     invitationCommand("accept"),

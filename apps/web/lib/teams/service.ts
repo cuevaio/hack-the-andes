@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { type SQL, sql } from "@chofex/db/orm";
+import { sql } from "@chofex/db/orm";
 import {
   CheckinPreviewSchema,
   CheckinSchema,
@@ -9,63 +9,23 @@ import {
 } from "@chofex/registration-contract";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Schema } from "effect";
+import {
+  confirmedParticipantId,
+  eventQuery,
+  parseEventInput,
+} from "@/lib/event/database";
 import { HttpError } from "@/lib/registration/http";
 
-export function parseTeamInput<S extends Schema.ConstraintDecoder<unknown>>(
-  schema: S,
-  input: unknown,
-): S["Type"] {
-  try {
-    return Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(
-      input,
-    );
-  } catch {
-    throw new HttpError(
-      422,
-      "VALIDATION_ERROR",
-      "Revisa los datos de la operación.",
-    );
-  }
-}
-
-async function query(statement: SQL): Promise<unknown> {
-  const { db } = await import("@chofex/db");
-  const result = await db.execute(statement);
-  const value = result.rows[0]?.result;
-  if (value && typeof value === "object" && "error" in value) {
-    const error = value.error as { code: string; message: string };
-    let status = 409;
-    if (error.code === "ADMIN_REQUIRED") status = 403;
-    if (error.code === "VALIDATION_ERROR") status = 422;
-    throw new HttpError(status, error.code, error.message);
-  }
-  return value;
-}
-
-async function participantFor(clerkUserId: string): Promise<string> {
-  const result =
-    await query(sql`select participant_id as result from hackathon_confirmed_participants
-    where clerk_user_id=${clerkUserId}`);
-  if (typeof result !== "string") {
-    throw new HttpError(
-      403,
-      "CONFIRMATION_REQUIRED",
-      "Necesitas una postulación aceptada y confirmar tu asistencia con andes confirm.",
-    );
-  }
-  return result;
-}
-
 export async function getTeamState(clerkUserId: string) {
-  const id = await participantFor(clerkUserId);
+  const id = await confirmedParticipantId(clerkUserId);
   return Schema.decodeUnknownSync(TeamStateSchema)(
-    await query(sql`select hackathon_team_state(${id}::uuid) as result`),
+    await eventQuery(sql`select hackathon_team_state(${id}::uuid) as result`),
   );
 }
 
 export async function teamAction(clerkUserId: string, input: unknown) {
-  const command = parseTeamInput(TeamActionSchema, input);
-  const id = await participantFor(clerkUserId);
+  const command = parseEventInput(TeamActionSchema, input);
+  const id = await confirmedParticipantId(clerkUserId);
   let internalCommand: unknown = command;
   if (command.action === "invite") {
     const email = command.email.toLowerCase();
@@ -91,7 +51,7 @@ export async function teamAction(clerkUserId: string, input: unknown) {
     }
     let inviteeId: string;
     try {
-      inviteeId = await participantFor(matches[0].id);
+      inviteeId = await confirmedParticipantId(matches[0].id);
     } catch (error) {
       if (
         !(error instanceof HttpError) ||
@@ -107,7 +67,7 @@ export async function teamAction(clerkUserId: string, input: unknown) {
     internalCommand = { action: "invite", inviteeId };
   }
   return Schema.decodeUnknownSync(TeamStateSchema)(
-    await query(
+    await eventQuery(
       sql`select hackathon_action(${id}::uuid, ${JSON.stringify(internalCommand)}::jsonb) as result`,
     ),
   );
@@ -115,7 +75,7 @@ export async function teamAction(clerkUserId: string, input: unknown) {
 
 export async function getTeamDashboard() {
   return Schema.decodeUnknownSync(TeamDashboardSchema)(
-    await query(sql`select hackathon_team_dashboard() as result`),
+    await eventQuery(sql`select hackathon_team_dashboard() as result`),
   );
 }
 
@@ -125,7 +85,7 @@ export async function setTrackSelection(
 ) {
   const command = JSON.stringify({ action: "settings", selectionOpen });
   return Schema.decodeUnknownSync(TeamDashboardSchema)(
-    await query(
+    await eventQuery(
       sql`select hackathon_action(null, ${command}::jsonb, ${adminId}) as result`,
     ),
   );
@@ -135,14 +95,14 @@ export const checkinTokenHash = (token: string): string =>
   createHash("sha256").update(token).digest("hex");
 
 export async function issueCheckin(clerkUserId: string) {
-  const id = await participantFor(clerkUserId);
+  const id = await confirmedParticipantId(clerkUserId);
   const token = randomBytes(16).toString("hex");
   const command = JSON.stringify({
     action: "checkin",
     tokenHash: checkinTokenHash(token),
   });
   const result = Schema.decodeUnknownSync(CheckinSchema)(
-    await query(
+    await eventQuery(
       sql`select hackathon_action(${id}::uuid, ${command}::jsonb) as result`,
     ),
   );
@@ -169,7 +129,7 @@ export async function adminCheckin(
     tokenHash: checkinTokenHash(normalized),
   });
   return Schema.decodeUnknownSync(CheckinPreviewSchema)(
-    await query(
+    await eventQuery(
       sql`select hackathon_action(null, ${command}::jsonb, ${adminId}) as result`,
     ),
   );
