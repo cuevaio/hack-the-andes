@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +18,47 @@ import {
   updateChofex,
   upgradeCli,
 } from "../src/upgrade.js";
+
+test.skipIf(process.platform !== "win32")(
+  "updates through Windows npm and npx command shims",
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), "andes update & shims-"));
+    const trace = join(directory, "trace.txt");
+    const entry = join(directory, "update.ts");
+    const cacheDirectory = join(directory, "cache with spaces & symbols");
+    const upgradeModule = fileURLToPath(
+      new URL("../src/upgrade.ts", import.meta.url),
+    );
+    try {
+      await mkdir(cacheDirectory);
+      for (const command of ["npm", "npx"]) {
+        await writeFile(
+          join(directory, `${command}.cmd`),
+          `@echo off\r\necho ${command}>>"%ANDES_UPDATE_TRACE%"\r\nexit /b 0\r\n`,
+        );
+      }
+      await writeFile(
+        entry,
+        `import { updateChofex } from ${JSON.stringify(upgradeModule)};\nawait updateChofex({ standalone: false });\n`,
+      );
+      execFileSync(process.execPath, [entry], {
+        env: {
+          ...process.env,
+          PATH: `${directory};${process.env.PATH ?? ""}`,
+          TEMP: cacheDirectory,
+          TMP: cacheDirectory,
+          ANDES_UPDATE_TRACE: trace,
+        },
+      });
+      expect((await readFile(trace, "utf8")).trim().split(/\r?\n/)).toEqual([
+        "npm",
+        "npx",
+      ]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
 
 describe("automatic CLI updates", () => {
   test("restarts a standalone command with its original arguments", async () => {

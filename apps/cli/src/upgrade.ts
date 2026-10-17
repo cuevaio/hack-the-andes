@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
+import crossSpawn from "cross-spawn";
 
 import { rootValueFlagNames } from "./cli-root.js";
 import { cliPackageName, isStandaloneBuild } from "./metadata.js";
@@ -83,7 +84,7 @@ const runProcess = (
 ): Promise<ProcessResult> =>
   new Promise((resolve, reject) => {
     const stdin = input === undefined ? "ignore" : "pipe";
-    const child = spawn(executable, arguments_, {
+    const child = crossSpawn(executable, [...arguments_], {
       stdio: [stdin, "pipe", "pipe"],
     });
     let stdout = "";
