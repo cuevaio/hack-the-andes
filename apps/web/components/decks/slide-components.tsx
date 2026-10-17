@@ -477,6 +477,36 @@ export function PhaseTimeline({
   );
 }
 
+/* ---------- qr ---------- */
+
+/**
+ * A QR code placed like a photograph: beside the type on a split slide, in the
+ * strip below it on narrow ones. It reuses the `Photos` placement classes but
+ * keeps its square, unfiltered, uncropped: a crop or a grey filter is what
+ * stops a phone from reading it.
+ */
+export function Qr({
+  src,
+  alt,
+  caption,
+}: {
+  src: string;
+  alt: string;
+  caption?: string;
+}) {
+  return (
+    <figure className="deck-photos deck-qr" data-count="1">
+      <div className="deck-photo-row">
+        {/* biome-ignore lint/performance/noImgElement: static SVG, sized by CSS */}
+        <img alt={alt} className="deck-qr-img" src={src} />
+      </div>
+      {caption ? (
+        <figcaption className="deck-photo-caption">{caption}</figcaption>
+      ) : null}
+    </figure>
+  );
+}
+
 /* ---------- logos ---------- */
 
 export function Logo({

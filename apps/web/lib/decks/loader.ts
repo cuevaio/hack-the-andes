@@ -63,6 +63,10 @@ export const DECK_BACKDROPS = [
   "peak",
   "canyon",
   "contour",
+  "valley",
+  "crater",
+  "ridge",
+  "terraces",
   "none",
 ] as const;
 

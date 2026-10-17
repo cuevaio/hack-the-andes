@@ -33,6 +33,7 @@ import {
   PhaseTimeline,
   Photos,
   PrizePodium,
+  Qr,
   Ready,
   Rule,
   SlideTitle,
@@ -44,6 +45,7 @@ import {
   TrackCard,
   Wordmark,
 } from "./slide-components";
+import { Video } from "./video";
 
 /**
  * The closed vocabulary injected into every slide. A slide cannot `import`, so
@@ -86,8 +88,10 @@ export function mdxComponentsFor(lang: DeckLang) {
     Timeline,
     TimelineRow,
     PhaseTimeline,
-    // photographs
+    // photographs and video
     Photos,
+    Video,
+    Qr,
     // logos
     Logo,
     LogoRow,

@@ -5,6 +5,18 @@ import { createContext, type ReactNode, useContext } from "react";
 // A standalone `Photos` still renders normally; only the pager opts later
 // slides out through an explicit provider.
 const DeckMediaLoadContext = createContext(true);
+// Media that plays (a video) also needs to know whether its slide is the one on
+// screen: every slide stays mounted, so without this it would keep playing,
+// sound included, after the presenter moves on.
+const DeckSlideActiveContext = createContext(true);
+
+export function useDeckMediaLoad() {
+  return useContext(DeckMediaLoadContext);
+}
+
+export function useDeckSlideActive() {
+  return useContext(DeckSlideActiveContext);
+}
 
 function DeckPhoto({
   src,
@@ -33,12 +45,16 @@ function DeckPhoto({
 export function DeckMediaLoadProvider({
   children,
   shouldLoad,
+  active,
 }: {
   children: ReactNode;
   shouldLoad: boolean;
+  active: boolean;
 }) {
   return (
-    <DeckMediaLoadContext value={shouldLoad}>{children}</DeckMediaLoadContext>
+    <DeckMediaLoadContext value={shouldLoad}>
+      <DeckSlideActiveContext value={active}>{children}</DeckSlideActiveContext>
+    </DeckMediaLoadContext>
   );
 }
 

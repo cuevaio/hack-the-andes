@@ -297,6 +297,25 @@
 }
 
 /*
+ * The kickoff deck's plates: line drawings of the same Andean world, landscape
+ * crops from the event's own asset set, stored in greyscale.
+ */
+.deck-backdrop[data-load-backdrop="true"][data-backdrop="valley"] {
+  --deck-plate: url("/deck/valley.avif");
+}
+.deck-backdrop[data-load-backdrop="true"][data-backdrop="crater"] {
+  --deck-plate: url("/deck/crater.avif");
+  /* The crater's subject is its rim and the rings inside, below centre. */
+  --deck-plate-position: center 70%;
+}
+.deck-backdrop[data-load-backdrop="true"][data-backdrop="ridge"] {
+  --deck-plate: url("/deck/ridge.avif");
+}
+.deck-backdrop[data-load-backdrop="true"][data-backdrop="terraces"] {
+  --deck-plate: url("/deck/terraces.avif");
+}
+
+/*
  * `none` still gets the scrim colour, so a slide without a plate is the same
  * black as one whose plate is fully dimmed rather than a different black.
  */
@@ -1390,4 +1409,45 @@
   .deck-pager .deck-index {
     display: none;
   }
+}
+
+/*
+ * A video, played in the room. It takes the slide's width and the height it
+ * can spare under the title, letterboxed on black so any aspect ratio fits
+ * without cropping what was framed.
+ */
+.deck-video {
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.deck-video-media {
+  display: block;
+  width: 100%;
+  max-height: 72cqh;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #000;
+  border: 1px solid var(--deck-line-strong);
+}
+
+/*
+ * A QR code in the photograph slot. Square and contained, never cropped or
+ * filtered, and capped so it reads as an object beside the type rather than a
+ * second slide. The white plate is part of the code: it is the quiet zone.
+ */
+.deck-qr {
+  align-items: center;
+}
+
+.deck-qr .deck-photo-row {
+  justify-content: center;
+}
+
+.deck-qr-img {
+  display: block;
+  width: min(100%, 34cqh);
+  height: auto;
+  aspect-ratio: 1 / 1;
 }
