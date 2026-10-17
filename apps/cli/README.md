@@ -43,6 +43,8 @@ andes challenge ranking --challenge broken-agent
 andes confirm
 andes badge
 andes badge regenerate
+andes credits
+andes credits --output json
 ```
 
 `andes update` and `andes upgrade` are interchangeable; both update the CLI
@@ -187,3 +189,11 @@ La verificación empaqueta e instala ambos paquetes en directorios temporales.
 Comprueba los dos comandos, la ayuda de registro, la salida JSON y el paquete
 que solicita cada actualización. El workflow de publicación ejecuta estos
 mismos pasos antes de publicar ambos paquetes con la misma versión.
+
+## Créditos de participantes
+
+Ejecuta `andes credits` después de que un organizador confirme tu check-in.
+El comando muestra los beneficios de los patrocinadores, códigos, enlaces y
+condiciones de canje. Usa `andes credits --output json` para obtener el catálogo
+en un único sobre JSON versionado. Antes del check-in, la API devuelve
+`CHECKIN_REQUIRED` sin revelar los códigos.

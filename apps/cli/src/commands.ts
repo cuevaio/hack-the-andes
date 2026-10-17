@@ -20,6 +20,7 @@ import { registrationPartsText } from "./challenge-output.js";
 import { checkinCommand } from "./checkin-command.js";
 import { root } from "./cli-root.js";
 import { config } from "./config.js";
+import { creditsCommand } from "./credits-command.js";
 import { cliError } from "./errors.js";
 import {
   acceptedDetailsInput,
@@ -757,5 +758,6 @@ export const command = root.pipe(
     teamCommand,
     projectCommand,
     checkinCommand,
+    creditsCommand,
   ]),
 );

@@ -808,3 +808,16 @@ export const ApiSuccessSchema = <S extends Schema.Constraint>(data: S) =>
     requestId: Schema.String,
     data,
   });
+
+export const CreditsSchema = Schema.Struct({
+  credits: Schema.Array(
+    Schema.Struct({
+      sponsor: Schema.String,
+      benefit: Schema.String,
+      code: Schema.NullOr(Schema.String),
+      url: Schema.NullOr(Schema.String),
+      instructions: Schema.Array(Schema.String),
+    }),
+  ),
+});
+export type Credits = typeof CreditsSchema.Type;

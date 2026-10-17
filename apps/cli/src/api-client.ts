@@ -24,6 +24,7 @@ import {
   CheckinSchema,
   type CreatedRegistration,
   CreatedRegistrationSchema,
+  CreditsSchema,
   type CurrentUser,
   CurrentUserSchema,
   campaignAttributionHandoffHeader,
@@ -533,4 +534,12 @@ export const getChallengeRanking = (
     `/api/v1/challenges/${slug}/ranking`,
     { method: "GET" },
     decodeChallengeRanking,
+  );
+
+export const getCredits = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/credits",
+    { method: "GET" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(CreditsSchema)),
   );
