@@ -55,6 +55,7 @@ export async function eventQuery(statement: SQL): Promise<unknown> {
     let status = 409;
     if (
       error.code === "ADMIN_REQUIRED" ||
+      error.code === "JUDGE_REQUIRED" ||
       error.code === "CONFIRMATION_REQUIRED"
     )
       status = 403;

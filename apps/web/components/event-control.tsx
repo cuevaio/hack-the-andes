@@ -50,6 +50,9 @@ export function EventControl({
           Check-in
         </Link>
       </nav>
+      <Link className="underline" href="/admin/judging">
+        Presentaciones y jurados
+      </Link>
       <h1 className="text-3xl font-semibold">Control del evento</h1>
       <section className="space-y-4 rounded-xl border p-6">
         <h2 className="text-xl font-semibold">
