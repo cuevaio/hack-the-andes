@@ -1,3 +1,4 @@
+import { EventWifi } from "@/components/event-wifi";
 import type { DeckLang } from "@/lib/decks/loader";
 import {
   BenefitGrid,
@@ -67,6 +68,7 @@ export function mdxComponentsFor(lang: DeckLang) {
   return {
     // structure and text
     SlideTitle,
+    EventWifi,
     Lead,
     Wordmark,
     Ready,

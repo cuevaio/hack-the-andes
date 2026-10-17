@@ -21,6 +21,7 @@ test.each([
   ["/challenges/future-challenge/approve/approval_1", "signed-out"],
   ["/challenges", null],
   ["/game", null],
+  ["/wifi", null],
   ["/brand", null],
   ["/comunal", null],
   ["/deck/comunal", null],

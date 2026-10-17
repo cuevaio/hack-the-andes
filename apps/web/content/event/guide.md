@@ -2,6 +2,8 @@
 
 Hack the Andes se realiza el 17 y 18 de octubre de 2026 en Lima. Esta guía explica cómo formar tu equipo, acceder a créditos, compartir avances, entregar tu proyecto y preparar la evaluación con el CLI, por tu cuenta o con ayuda de un agente.
 
+Conéctate a la red del evento desde [Wi-Fi](/wifi): allí encontrarás la red, la contraseña y el QR.
+
 ## Prepara tu equipo
 
 Completa tu confirmación de asistencia con `andes confirm`. Consulta tu equipo con `andes team`. Todos los integrantes tienen los mismos permisos para publicar avances y actualizar la entrega.

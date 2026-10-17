@@ -22,6 +22,7 @@ function isPublicMarketingPath(pathname: string) {
     pathname === "/_next/image" ||
     pathname === "/terms" ||
     pathname === "/guide" ||
+    pathname === "/wifi" ||
     pathname === "/participation-terms" ||
     pathname === "/projects" ||
     pathname.startsWith("/projects/") ||
