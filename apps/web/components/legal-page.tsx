@@ -29,7 +29,7 @@ export function LegalPage({ children }: LegalPageProps) {
         <BrandWordmarkLink href="/">{brandName}</BrandWordmarkLink>
         <nav
           aria-label={legalCopy.navigationLabel}
-          className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.12em] sm:gap-5"
+          className="flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-[0.12em] sm:gap-5"
         >
           <Link
             className="text-[var(--hud-muted)] underline-offset-4 hover:text-[var(--hud-ink)] hover:underline"
@@ -57,7 +57,7 @@ export function LegalPage({ children }: LegalPageProps) {
             <BrandKicker className="mb-3 text-[var(--hud-kicker)]">
               {legalCopy.eventKicker}
             </BrandKicker>
-            <article className="max-w-3xl">
+            <article className="min-w-0 max-w-3xl">
               <LegalDocument>{children}</LegalDocument>
             </article>
           </BrandContainer>

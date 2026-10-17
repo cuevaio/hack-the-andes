@@ -352,6 +352,28 @@
   transform: none;
 }
 
+.brand-prose {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.brand-prose pre {
+  max-width: 100%;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--hud-muted);
+  border-radius: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.brand-prose code {
+  font-family: var(--font-hta-mono), ui-monospace, monospace;
+}
+
 .brand-prose h1 {
   max-width: 18ch;
   font-family: var(--font-hta-display), ui-sans-serif, system-ui, sans-serif;
