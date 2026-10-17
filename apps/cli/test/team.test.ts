@@ -28,6 +28,7 @@ const state: TeamState = {
     { id: "environmental", teams: 0, capacity: 12 },
     { id: "security", teams: 0, capacity: 12 },
     { id: "transport", teams: 0, capacity: 12 },
+    { id: "education", teams: 0, capacity: 12 },
   ],
 };
 
@@ -36,6 +37,9 @@ test("team output shows roster, invitation ids, availability and safe terminal n
   expect(text).toContain("Cóndores · Sin track · 1/4");
   expect(text).toContain("Ana · Check-in confirmado");
   expect(text).toContain("Clima y Territorio · 0/12");
+  expect(text).toContain("Movilidad y Transporte · 0/12");
+  expect(text).toContain("Educación Escolar · 0/12");
+  expect(text).toContain("Seguridad · 0/12");
   expect(invitationsText(state)).toContain(invitationId);
   if (!state.team) throw new Error("Team fixture required");
   expect(
@@ -128,20 +132,21 @@ test("CLI removal excludes checked-in teammates and blocks the mutation", async 
   expect(writes).toBe(0);
 });
 
-test("CLI track change sends the shared contract's track identifier", async () => {
-  const sent: unknown[] = [];
-  const result = await cli(
-    ["team", "track", "--track", "security", "--yes"],
-    async (request) => {
-      if (request.method === "POST") sent.push(await request.json());
-      return success(state);
-    },
-  );
-  expect(result.code).toBe(0);
-  expect(sent).toEqual([
-    { action: "track", track: "security", expectedTeamId: teamId },
-  ]);
-});
+test.each(["environmental", "transport", "education", "security"])(
+  "CLI selects the %s track",
+  async (track) => {
+    const sent: unknown[] = [];
+    const result = await cli(
+      ["team", "track", "--track", track, "--yes"],
+      async (request) => {
+        if (request.method === "POST") sent.push(await request.json());
+        return success(state);
+      },
+    );
+    expect(result.code).toBe(0);
+    expect(sent).toEqual([{ action: "track", track, expectedTeamId: teamId }]);
+  },
+);
 
 test("check-in JSON mode returns one envelope without QR, polling or prompts", async () => {
   const requests: string[] = [];
