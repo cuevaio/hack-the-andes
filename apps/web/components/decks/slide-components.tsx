@@ -199,17 +199,44 @@ export function DataGrid({
 
 export function DataCell({
   label,
+  value,
   children,
   invert = false,
 }: {
   label?: string;
+  /** The figure in the cell, set larger than the copy under it. */
+  value?: string;
   children: ReactNode;
   invert?: boolean;
 }) {
   return (
     <div className={cx("deck-cell", invert && "deck-cell-invert")}>
       {label ? <p className="deck-label">{label}</p> : null}
-      <div className={cx("deck-copy", label && "mt-2")}>{children}</div>
+      {value ? <span className="deck-figure">{value}</span> : null}
+      <div className={cx("deck-copy", (label || value) && "mt-2")}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Criteria stacked in rows, with the weight set as the large figure. */
+export function Rubric({
+  items,
+}: {
+  items: Array<{ weight: string; label: string; detail: string }>;
+}) {
+  return (
+    <div className="deck-rubric">
+      {items.map((item) => (
+        <div className="deck-rubric-row" key={item.weight}>
+          <span className="deck-rubric-weight">{item.weight}</span>
+          <div className="deck-rubric-body">
+            <p className="deck-label">{item.label}</p>
+            <p className="deck-copy">{item.detail}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

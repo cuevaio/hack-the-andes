@@ -1,6 +1,6 @@
 # Rúbrica del jurado de Hack the Andes
 
-La versión completa de lo que las slides `14-rubric` y `15-score` del deck de kickoff
+La versión completa de lo que las slides `18-rubric` y `19-score` del deck de kickoff
 (`/deck/onboarding`) resumen para los participantes. Si cambia un peso o un
 criterio, cambia en los dos lugares.
 

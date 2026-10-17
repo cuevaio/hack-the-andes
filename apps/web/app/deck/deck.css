@@ -800,6 +800,56 @@
   color: color-mix(in srgb, var(--deck-paper) 70%, transparent);
 }
 
+/* A criterion per row. The weight is the figure; the name and the sentence sit beside it. */
+.deck-rubric {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  border-top: 1px solid var(--deck-line-strong);
+  border-left: 1px solid var(--deck-line-strong);
+  background-color: var(--deck-card);
+}
+
+.deck-rubric-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+.deck-rubric-weight,
+.deck-rubric-body {
+  padding: 0.55rem 1.35rem;
+  border-right: 1px solid var(--deck-line-strong);
+  border-bottom: 1px solid var(--deck-line-strong);
+}
+
+.deck-rubric-weight {
+  font-family: var(--deck-display);
+  font-size: clamp(3.25rem, 9cqmin, 5.25rem);
+  font-weight: 700;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--deck-ink);
+}
+
+.deck-rubric-row .deck-copy {
+  margin-top: 0.2rem;
+}
+
+/* The amount in a credit cell. Larger than the sentence under it, smaller than a stat. */
+.deck-figure {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--deck-display);
+  font-size: clamp(1.85rem, 4.8cqmin, 2.85rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--deck-ink);
+}
+
 .deck-copy {
   font-size: clamp(0.9rem, 1.75cqmin, 1.35rem);
   line-height: 1.5;
@@ -1346,6 +1396,15 @@
   .deck-tier-price,
   .deck-stat-value {
     font-size: 2rem;
+  }
+
+  .deck-rubric-weight,
+  .deck-rubric-body {
+    padding: 0.4rem 0.85rem;
+  }
+
+  .deck-rubric-weight {
+    font-size: 2.35rem;
   }
 
   /*

@@ -36,6 +36,7 @@ import {
   PrizePodium,
   Qr,
   Ready,
+  Rubric,
   Rule,
   SlideTitle,
   SponsorTier,
@@ -76,6 +77,7 @@ export function mdxComponentsFor(lang: DeckLang) {
     Count,
     DataGrid,
     DataCell,
+    Rubric,
     MiniMatrix,
     PrizePodium,
     // the commercial offer
