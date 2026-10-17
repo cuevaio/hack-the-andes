@@ -36,6 +36,7 @@ export const acceptanceDetails = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     firstCompletedAt: timestamp("first_completed_at", { withTimezone: true }),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    checkedInBy: text("checked_in_by"),
     ...auditTimestamps(),
   },
   (table) => [

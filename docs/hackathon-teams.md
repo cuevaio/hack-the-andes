@@ -36,15 +36,16 @@ andes --output json team track --track environmental --yes
 
 ## Organización: sábado
 
-1. Inicia sesión en `/admin/checkin` en cada teléfono de ingreso **antes** de escanear.
-2. El participante ejecuta `andes checkin`. Usa la cámara normal del teléfono para abrir su QR, o ingresa el código alternativo manualmente. El código dura cinco minutos; volver a generarlo invalida el anterior.
-3. Verifica el nombre público y la foto confirmada. Pulsa **Confirmar llegada**. Escanear o previsualizar no registra asistencia. La confirmación persiste aunque el terminal se cierre.
-4. Da los diez minutos de networking. Los equipos ya pueden crearse antes del evento.
-5. Después del briefing, abre `/admin/event` y pulsa **Abrir selección de tracks**. No existe un horario automático. Todos los integrantes deben tener check-in; si alguien no llegó, un compañero presente puede retirarlo. Un equipo de una persona sí puede elegir track.
-6. Medio ambiente (`environmental`), seguridad (`security`) y transporte (`transport`) tienen doce cupos por track. La primera confirmación exitosa obtiene el cupo. Cambiar track solo libera el anterior si el nuevo se obtiene.
-7. Cuando corresponda, pulsa **Cerrar selección de tracks**. Se bloquean elecciones/cambios de track, no los cambios de integrantes. Un integrante nuevo debe tener check-in para entrar en un equipo que ya eligió track.
+1. Inicia sesión en `/admin/checkin` en cada teléfono de ingreso. Busca por nombre público o legal, correo o DNI/documento. Puedes filtrar **Todos**, **Sin check-in** o **Con check-in**, y ordenar por nombre o por hora de llegada. La lista y los contadores se actualizan cada diez segundos.
+2. Para ingresar sin QR, verifica la identidad y foto, pulsa **Registrar llegada** y después **Confirmar llegada**. Solo se muestran los últimos cuatro caracteres del documento. Si falta la confirmación de asistencia, pide al participante que complete `andes confirm`; el ingreso seguirá bloqueado hasta entonces.
+3. Como alternativa, el participante ejecuta `andes checkin`. Usa la cámara normal del teléfono para abrir su QR, o ingresa el código alternativo manualmente. El código dura cinco minutos; volver a generarlo invalida el anterior.
+4. Verifica el nombre público y la foto confirmada. Pulsa **Confirmar llegada**. Escanear o previsualizar no registra asistencia. La confirmación persiste aunque el terminal se cierre. Tanto el ingreso manual como el QR conservan la primera hora de llegada y el admin que la confirmó; repetir la operación no reemplaza esos datos.
+5. Da los diez minutos de networking. Los equipos ya pueden crearse antes del evento.
+6. Después del briefing, abre `/admin/event` y pulsa **Abrir selección de tracks**. No existe un horario automático. Todos los integrantes deben tener check-in; si alguien no llegó, un compañero presente puede retirarlo. Un equipo de una persona sí puede elegir track.
+7. Medio ambiente (`environmental`), seguridad (`security`) y transporte (`transport`) tienen doce cupos por track. La primera confirmación exitosa obtiene el cupo. Cambiar track solo libera el anterior si el nuevo se obtiene.
+8. Cuando corresponda, pulsa **Cerrar selección de tracks**. Se bloquean elecciones/cambios de track, no los cambios de integrantes. Un integrante nuevo debe tener check-in para entrar en un equipo que ya eligió track.
 
-`/teams` y `/tracks` son vistas de solo lectura para participantes confirmados y admins, con actualización cada diez segundos. No muestran emails ni nombres legales. Los controles de organización están separados en `/admin/event` y `/admin/checkin`; requieren los permisos de admin existentes.
+`/teams` es una vista de solo lectura para participantes confirmados y admins, con actualización cada diez segundos. `/tracks` está disponible solo para admins y actualiza los cupos cada tres segundos. No muestran emails ni nombres legales. Los controles de organización están separados en `/admin/event` y `/admin/checkin`; requieren los permisos de admin existentes.
 
 ## Activación técnica
 
@@ -54,4 +55,4 @@ Antes de anunciar disponibilidad hay que aplicar explícitamente las migraciones
 
 La selección de tracks se inicializa cerrada. Los comandos usan funciones transaccionales de PostgreSQL compatibles con el driver HTTP de Neon. Un bloqueo transaccional compartido serializa los cambios del evento; índices únicos y checks refuerzan los límites de cuatro integrantes y doce equipos por track. Solo se guardan hashes de códigos QR, y el admin que confirmó queda registrado.
 
-Los endpoints de equipos y check-in tienen presupuestos propios para soportar a 100 participantes detrás de la misma IP del venue. El resto de endpoints conserva sus límites. El CLI y las vistas web consultan actualizaciones cada diez segundos; los límites globales del evento siguen activos.
+Los endpoints de equipos y check-in tienen presupuestos propios para soportar a 100 participantes detrás de la misma IP del venue. El resto de endpoints conserva sus límites. El CLI y las vistas web consultan actualizaciones cada diez segundos, salvo `/tracks`, que actualiza cada tres segundos; los límites globales del evento siguen activos.

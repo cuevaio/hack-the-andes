@@ -1,8 +1,11 @@
+import { redirect } from "next/navigation";
 import { TeamDashboardView } from "@/components/team-dashboard";
-import { teamDashboardViewer } from "@/lib/teams/viewer";
+import { getAdminIdentity } from "@/lib/admin/auth";
+import { getTeamDashboard } from "@/lib/teams/service";
 
 export const dynamic = "force-dynamic";
 export default async function TracksPage() {
-  const { admin, data } = await teamDashboardViewer("/tracks");
-  return <TeamDashboardView admin={admin} initialData={data} view="tracks" />;
+  if (!(await getAdminIdentity())) redirect("/sign-in?redirect_url=/tracks");
+  const data = await getTeamDashboard();
+  return <TeamDashboardView admin initialData={data} view="tracks" />;
 }

@@ -6,52 +6,63 @@ import {
 } from "@chofex/registration-contract";
 import { Schema } from "effect";
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function CheckinDesk() {
+export function CheckinDesk({
+  onConfirmed,
+  onCodeDetected,
+}: {
+  onConfirmed: () => void;
+  onCodeDetected: () => void;
+}) {
   const [token, setToken] = useState("");
   const [preview, setPreview] = useState<CheckinPreview | null>(null);
   const [previewToken, setPreviewToken] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const latestRequest = useRef(0);
-  const request = useCallback(async (code: string, confirm: boolean) => {
-    const sequence = ++latestRequest.current;
-    setPending(true);
-    setError("");
-    try {
-      const response = await fetch("/api/admin/checkin", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token: code, confirm }),
-        cache: "no-store",
-      });
-      const body = await response.json();
-      if (sequence !== latestRequest.current) return;
-      if (!response.ok || !body.ok)
-        throw new Error(
-          body.error?.message ?? "No se pudo verificar el check-in.",
-        );
-      setPreview(Schema.decodeUnknownSync(CheckinPreviewSchema)(body.data));
-      setPreviewToken(code);
-    } catch (error) {
-      if (sequence !== latestRequest.current) return;
-      setPreview(null);
-      setPreviewToken("");
-      let message = "No se pudo verificar el check-in.";
-      if (error instanceof Error) message = error.message;
-      setError(message);
-    } finally {
-      if (sequence === latestRequest.current) setPending(false);
-    }
-  }, []);
+  const request = useCallback(
+    async (code: string, confirm: boolean) => {
+      const sequence = ++latestRequest.current;
+      setPending(true);
+      setError("");
+      try {
+        const response = await fetch("/api/admin/checkin", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token: code, confirm }),
+          cache: "no-store",
+        });
+        const body = await response.json();
+        if (sequence !== latestRequest.current) return;
+        if (!response.ok || !body.ok)
+          throw new Error(
+            body.error?.message ?? "No se pudo verificar el check-in.",
+          );
+        const saved = Schema.decodeUnknownSync(CheckinPreviewSchema)(body.data);
+        setPreview(saved);
+        if (saved.checkedIn) onConfirmed();
+        setPreviewToken(code);
+      } catch (error) {
+        if (sequence !== latestRequest.current) return;
+        setPreview(null);
+        setPreviewToken("");
+        let message = "No se pudo verificar el check-in.";
+        if (error instanceof Error) message = error.message;
+        setError(message);
+      } finally {
+        if (sequence === latestRequest.current) setPending(false);
+      }
+    },
+    [onConfirmed],
+  );
   useEffect(() => {
     const readCode = () => {
       const code = new URLSearchParams(window.location.hash.slice(1)).get(
         "token",
       );
       if (!code) return;
+      onCodeDetected();
       window.history.replaceState(null, "", window.location.pathname);
       setToken(code);
       setPreview(null);
@@ -61,18 +72,13 @@ export function CheckinDesk() {
     readCode();
     window.addEventListener("hashchange", readCode);
     return () => window.removeEventListener("hashchange", readCode);
-  }, [request]);
+  }, [request, onCodeDetected]);
   return (
-    <main className="mx-auto max-w-lg space-y-7 px-5 py-10">
-      <nav className="flex gap-5 text-sm">
-        <Link className="underline" href="/admin/event">
-          Control del evento
-        </Link>
-        <Link className="underline" href="/teams">
-          Equipos
-        </Link>
-      </nav>
-      <h1 className="text-3xl font-semibold">Check-in de participantes</h1>
+    <section
+      aria-label="Verificar código QR"
+      className="space-y-5 rounded-xl border p-5 sm:p-6"
+    >
+      <h2 className="text-xl font-semibold">Verificar código QR</h2>
       <p className="text-muted-foreground">
         Inicia sesión antes de escanear. Usa la cámara de tu teléfono para abrir
         el QR de <code>andes checkin</code>, o ingresa el código alternativo.
@@ -145,6 +151,6 @@ export function CheckinDesk() {
           )}
         </section>
       )}
-    </main>
+    </section>
   );
 }

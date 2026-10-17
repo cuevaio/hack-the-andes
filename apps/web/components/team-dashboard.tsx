@@ -63,11 +63,12 @@ export function TeamDashboardView({
   const [trackFilter, setTrackFilter] = useState("all");
   let endpoint = "/api/v1/teams";
   if (admin) endpoint = "/api/admin/teams";
+  const refreshInterval = view === "tracks" ? 3_000 : 10_000;
   const query = useQuery({
     queryKey: ["event-teams", endpoint],
     queryFn: () => dashboardRequest(endpoint),
     initialData,
-    refetchInterval: 10_000,
+    refetchInterval: refreshInterval,
   });
   const data = query.data;
   const teams = data.teams.filter((team) => {
@@ -87,7 +88,7 @@ export function TeamDashboardView({
     (total, team) => total + team.members.length,
     0,
   );
-  let updateStatus = "Actualización automática cada 10 segundos.";
+  let updateStatus = `Actualización automática cada ${refreshInterval / 1_000} segundos.`;
   if (query.isError) {
     updateStatus =
       "No se pudo actualizar. Los datos mostrados pueden estar desactualizados.";
@@ -105,9 +106,11 @@ export function TeamDashboardView({
           <Link className="underline" href="/teams">
             Equipos
           </Link>
-          <Link className="underline" href="/tracks">
-            Tracks
-          </Link>
+          {admin && (
+            <Link className="underline" href="/tracks">
+              Tracks
+            </Link>
+          )}
           {admin && (
             <Link className="underline" href="/admin/event">
               Control del evento
