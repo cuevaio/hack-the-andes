@@ -40,15 +40,17 @@ export function ProjectControl({
     refetchInterval: 15_000,
   });
   const mutation = useMutation({
-    mutationFn: (galleryVisible: boolean) =>
+    mutationFn: (
+      settings: { galleryVisible: boolean } | { submissionsOpen: boolean },
+    ) =>
       projectRequest({
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ galleryVisible }),
+        body: JSON.stringify(settings),
       }),
     onSuccess: (data) => client.setQueryData(["event-projects"], data),
   });
-  const { visible, projects, archives } = query.data;
+  const { visible, submissionsOpen, projects, archives } = query.data;
   const filtered = projects.filter((project) =>
     project.teamName
       .toLocaleLowerCase("es")
@@ -60,19 +62,35 @@ export function ProjectControl({
     <section className="space-y-6">
       <div className="space-y-4 rounded-xl border p-6">
         <h2 className="text-xl font-semibold">
+          Entregas de proyectos: {submissionsOpen ? "abiertas" : "cerradas"}
+        </h2>
+        <p className="text-muted-foreground">
+          Al cerrar, los equipos no podrán enviar ni editar sus entregas. Las
+          bitácoras seguirán disponibles.
+        </p>
+        <button
+          className="whitespace-nowrap rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+          type="button"
+          disabled={mutation.isPending || query.isError}
+          onClick={() => mutation.mutate({ submissionsOpen: !submissionsOpen })}
+        >
+          {submissionsOpen ? "Cerrar entregas" : "Abrir entregas"}
+        </button>
+      </div>
+      <div className="space-y-4 rounded-xl border p-6">
+        <h2 className="text-xl font-semibold">
           Galería de proyectos: {visible ? "pública" : "oculta"}
         </h2>
         <p className="text-muted-foreground">
           La apertura es manual, sin horario programado. Al publicar, cualquier
-          persona podrá ver los proyectos enviados y sus bitácoras. Los equipos
-          pueden seguir actualizando sus entregas.
+          persona podrá ver los proyectos enviados y sus bitácoras.
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <button
             className="whitespace-nowrap rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
             type="button"
             disabled={mutation.isPending || query.isError}
-            onClick={() => mutation.mutate(!visible)}
+            onClick={() => mutation.mutate({ galleryVisible: !visible })}
           >
             {label}
           </button>

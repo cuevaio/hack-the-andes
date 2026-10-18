@@ -17,6 +17,7 @@ export const hackathonSettings = pgTable(
   "hackathon_settings",
   {
     id: text("id").primaryKey().default("event"),
+    submissionsOpen: boolean("submissions_open").notNull().default(true),
     galleryVisible: boolean("gallery_visible").notNull().default(false),
     selectionOpen: boolean("selection_open").notNull().default(false),
     changedBy: text("changed_by"),

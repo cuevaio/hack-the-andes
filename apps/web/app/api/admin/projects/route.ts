@@ -4,6 +4,7 @@ import { parseEventInput } from "@/lib/event/database";
 import {
   getProjectDashboard,
   setProjectGalleryVisibility,
+  setProjectSubmissionsOpen,
 } from "@/lib/projects/service";
 import { jsonSuccess, readJson, withApiHandler } from "@/lib/registration/http";
 
@@ -17,9 +18,21 @@ export const PATCH = (request: Request) =>
   withApiHandler(request, async (requestId) => {
     const admin = await requireAdminIdentity();
     const input = parseEventInput(
-      Schema.Struct({ galleryVisible: Schema.Boolean }),
+      Schema.Union([
+        Schema.Struct({ galleryVisible: Schema.Boolean }),
+        Schema.Struct({ submissionsOpen: Schema.Boolean }),
+      ]),
       await readJson(request),
     );
+    if ("submissionsOpen" in input) {
+      return jsonSuccess(
+        requestId,
+        await setProjectSubmissionsOpen(
+          admin.clerkUserId,
+          input.submissionsOpen,
+        ),
+      );
+    }
     return jsonSuccess(
       requestId,
       await setProjectGalleryVisibility(

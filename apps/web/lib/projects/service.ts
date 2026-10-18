@@ -60,3 +60,15 @@ export async function setProjectGalleryVisibility(
     ),
   );
 }
+
+export async function setProjectSubmissionsOpen(
+  adminId: string,
+  submissionsOpen: boolean,
+) {
+  const command = JSON.stringify({ action: "submissions", submissionsOpen });
+  return Schema.decodeUnknownSync(ProjectDashboardSchema)(
+    await eventQuery(
+      sql`select hackathon_project_action(null,${command}::jsonb,${adminId}) as result`,
+    ),
+  );
+}

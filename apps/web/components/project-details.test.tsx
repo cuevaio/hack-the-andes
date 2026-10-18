@@ -51,6 +51,7 @@ test("organizer review displays privately archived team submissions and logs", (
       <QueryClientProvider client={client}>
         <ProjectControl
           initialData={{
+            submissionsOpen: true,
             visible: false,
             projects: [],
             archives: [{ archivedAt: "2026-10-18T14:00:00Z", project }],
@@ -62,6 +63,7 @@ test("organizer review displays privately archived team submissions and logs", (
     expect(html).toContain("Cóndores");
     expect(html).toContain("<strong>dos personas</strong>");
     expect(html).toContain("Publicar galería");
+    expect(html).toContain("Cerrar entregas");
     expect(html).toContain("No aparece en la galería pública.");
   } finally {
     client.clear();

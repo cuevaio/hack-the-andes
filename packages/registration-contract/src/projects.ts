@@ -119,6 +119,7 @@ export const ProjectUpdateReceiptSchema = Schema.Struct({
 });
 export type ProjectUpdateReceipt = typeof ProjectUpdateReceiptSchema.Type;
 export const ProjectDashboardSchema = Schema.Struct({
+  submissionsOpen: Schema.Boolean,
   visible: Schema.Boolean,
   projects: Schema.Array(TeamProjectSchema),
   archives: Schema.Array(

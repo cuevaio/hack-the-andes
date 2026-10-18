@@ -25,7 +25,7 @@ beforeAll(async () => {
 afterAll(() => db.close());
 beforeEach(async () => {
   await db.exec(
-    "truncate participants cascade; update hackathon_settings set selection_open=false,gallery_visible=false",
+    "truncate participants cascade; update hackathon_settings set selection_open=false,gallery_visible=false,submissions_open=true",
   );
   // Teams have no owner; clear them explicitly after fixture cascade removals.
   await db.exec("truncate teams cascade; truncate project_archives");
@@ -347,4 +347,76 @@ test("joining another team archives the solo team's history and submission witho
   expect(dashboard.archives[0]?.project.submission?.description).toBe(
     "Proyecto original",
   );
+});
+
+test("organizers close and reopen submissions, blocking new submissions and edits while preserving updates", async () => {
+  await seed(1);
+  const team = await create(1);
+  const command = {
+    action: "submit",
+    expectedTeamId: team.team?.id,
+    expectedUpdatedAt: null,
+    deploymentUrl: "https://example.com/demo",
+    presentationUrl: "https://example.com/slides",
+    githubUrl: "https://github.com/example/project",
+    description: "Entrega original",
+  };
+  expect(
+    await project(null, { action: "submissions", submissionsOpen: false }),
+  ).toMatchObject({ error: { code: "ADMIN_REQUIRED" } });
+  const closed = await project(
+    null,
+    { action: "submissions", submissionsOpen: false },
+    "admin",
+  );
+  expect(
+    Schema.decodeUnknownSync(ProjectDashboardSchema)(closed).submissionsOpen,
+  ).toBe(false);
+  expect(await project(1, command)).toMatchObject({
+    error: { code: "SUBMISSIONS_CLOSED" },
+  });
+  expect(
+    await project(1, {
+      action: "update",
+      expectedTeamId: team.team?.id,
+      body: "Seguimos trabajando",
+    }),
+  ).toMatchObject({ update: { body: "Seguimos trabajando" } });
+  const opened = await project(
+    null,
+    { action: "submissions", submissionsOpen: true },
+    "admin",
+  );
+  expect(
+    Schema.decodeUnknownSync(ProjectDashboardSchema)(opened).submissionsOpen,
+  ).toBe(true);
+  const submitted = Schema.decodeUnknownSync(ProjectStateSchema)(
+    await project(1, command),
+  );
+  expect(submitted.project?.submission?.description).toBe("Entrega original");
+  await project(
+    null,
+    { action: "submissions", submissionsOpen: false },
+    "admin",
+  );
+  expect(
+    await project(1, {
+      ...command,
+      expectedUpdatedAt: submitted.project?.submission?.updatedAt,
+      description: "Cambio bloqueado",
+    }),
+  ).toMatchObject({ error: { code: "SUBMISSIONS_CLOSED" } });
+  await project(
+    null,
+    { action: "submissions", submissionsOpen: true },
+    "admin",
+  );
+  const edited = Schema.decodeUnknownSync(ProjectStateSchema)(
+    await project(1, {
+      ...command,
+      expectedUpdatedAt: submitted.project?.submission?.updatedAt,
+      description: "Cambio permitido",
+    }),
+  );
+  expect(edited.project?.submission?.description).toBe("Cambio permitido");
 });

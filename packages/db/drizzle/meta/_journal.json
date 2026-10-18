@@ -295,6 +295,13 @@
       "when": 1792262795958,
       "tag": "0041_organizer_checkin_exception",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1792332753262,
+      "tag": "0042_bored_namora",
+      "breakpoints": true
     }
   ]
 }
