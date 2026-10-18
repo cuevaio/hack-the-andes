@@ -114,6 +114,41 @@ const initialized = Schema.decodeUnknownSync(
 ).data;
 const presentation = initialized.presentations[0];
 assert.ok(presentation);
+const repositoryAnalysis = {
+  repositoryUrl: "https://github.com/example/project",
+  commitSha: "a".repeat(40),
+  analyzedAt: "2026-10-18T15:00:00Z",
+  model: "Claude Code CLI",
+  status: "completed",
+  summary: "Hallazgo exclusivo del equipo de prueba",
+  architecture: "API y base de datos",
+  implementedFeatures: ["Registro persistente"],
+  strengths: [],
+  risks: [],
+  questions: [],
+  limitations: ["Revisión estática sin ejecutar código"],
+};
+await db.query(
+  "update judging_presentations set snapshot=jsonb_set(snapshot,'{repositoryAnalysis}',$1::jsonb) where id=$2",
+  [JSON.stringify(repositoryAnalysis), presentation.id],
+);
+const analyzedAdmin = Schema.decodeUnknownSync(
+  ApiSuccessSchema(AdminBoardSchema),
+)(await (await admin.GET(request("/api/admin/judging"))).json()).data;
+assert.deepEqual(
+  analyzedAdmin.presentations[0]?.repositoryAnalysis,
+  repositoryAnalysis,
+);
+signedIn = "judge";
+const beforePresenting = Schema.decodeUnknownSync(
+  ApiSuccessSchema(JudgeBoardSchema),
+)(await (await judge.GET(request("/api/judging"))).json()).data;
+assert.deepEqual(beforePresenting.presentations, []);
+assert.ok(
+  !JSON.stringify(beforePresenting).includes(repositoryAnalysis.summary),
+);
+signedIn = "admin";
+
 await admin.PATCH(
   request("/api/admin/judging", "PATCH", {
     action: "present",
@@ -138,6 +173,10 @@ const visible = Schema.decodeUnknownSync(ApiSuccessSchema(JudgeBoardSchema))(
 ).data;
 assert.equal(visible.session.currentPresentationId, presentation.id);
 assert.equal(visible.presentations[0]?.project.teamName, "Equipo de prueba");
+assert.deepEqual(
+  visible.presentations[0]?.repositoryAnalysis,
+  repositoryAnalysis,
+);
 const invalid = await judge.PATCH(
   request("/api/judging", "PATCH", {
     presentationId: presentation.id,

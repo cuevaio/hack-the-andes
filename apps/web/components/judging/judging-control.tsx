@@ -15,6 +15,7 @@ import {
   fetchAdminBoard,
   sendAdminCommand,
 } from "@/lib/judging/queries";
+import { RepositoryAnalysis } from "./repository-analysis";
 import { SessionClock, useFreshConnection } from "./session-clock";
 
 const button =
@@ -179,6 +180,7 @@ export function JudgingControl({
                   <ProjectDetails project={current.project} />
                 </div>
               </details>
+              <RepositoryAnalysis analysis={current.repositoryAnalysis} />
             </>
           )}
           {current && currentScores.length < activeJudges.length && (
@@ -318,6 +320,23 @@ export function JudgingControl({
           </p>
         </section>
       </div>
+      <section className="space-y-5" aria-label="Análisis de los proyectos">
+        <h2 className="text-xl font-semibold">Análisis de los proyectos</h2>
+        <p className="text-sm text-muted-foreground">
+          Revisiones del código en orden alfabético. No indican el turno de
+          presentación.
+        </p>
+        {[...presentations]
+          .sort((a, b) =>
+            a.project.teamName.localeCompare(b.project.teamName, "es"),
+          )
+          .map((presentation) => (
+            <article key={presentation.id} className="space-y-3">
+              <h3 className="font-semibold">{presentation.project.teamName}</h3>
+              <RepositoryAnalysis analysis={presentation.repositoryAnalysis} />
+            </article>
+          ))}
+      </section>
       <section className="space-y-5">
         <h2 className="text-xl font-semibold">Resultados privados</h2>
         <p className="text-sm text-muted-foreground">

@@ -21,9 +21,39 @@ export const EvaluationSchema = Schema.Struct({
   submittedAt: Schema.NullOr(Schema.String),
 });
 export type Evaluation = typeof EvaluationSchema.Type;
+export const RepositoryAnalysisSchema = Schema.Struct({
+  repositoryUrl: Schema.String.pipe(
+    Schema.check(
+      Schema.isPattern(/^https:\/\/github\.com\/[^\s/]+\/[^\s/]+\/?$/),
+    ),
+  ),
+  commitSha: Schema.NullOr(
+    Schema.String.pipe(Schema.check(Schema.isPattern(/^[a-f0-9]{40}$/))),
+  ),
+  analyzedAt: Schema.String.pipe(
+    Schema.check(
+      Schema.makeFilter((value: string) => Number.isFinite(Date.parse(value)), {
+        message: "Fecha de análisis inválida.",
+      }),
+    ),
+  ),
+  model: Schema.String,
+  status: Schema.Literals(["completed", "unavailable"]),
+  summary: Schema.String,
+  architecture: Schema.String,
+  implementedFeatures: Schema.Array(Schema.String),
+  strengths: Schema.Array(Schema.String),
+  risks: Schema.Array(Schema.String),
+  questions: Schema.Array(Schema.String),
+  limitations: Schema.Array(Schema.String),
+});
+export type RepositoryAnalysis = typeof RepositoryAnalysisSchema.Type;
 export const PresentationSchema = Schema.Struct({
   id,
   project: TeamProjectSchema,
+  repositoryAnalysis: Schema.optionalKey(
+    Schema.NullOr(RepositoryAnalysisSchema),
+  ),
   members: Schema.Array(Schema.String),
   position: Schema.Int,
   status: Schema.Literals(["queued", "current", "finished", "skipped"]),

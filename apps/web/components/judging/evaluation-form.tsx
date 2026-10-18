@@ -12,6 +12,7 @@ import {
   weightedScore,
 } from "@/lib/judging/contract";
 import { judgeKey, sendEvaluation } from "@/lib/judging/queries";
+import { RepositoryAnalysis } from "./repository-analysis";
 
 const empty: EvaluationFields = {
   traction: null,
@@ -151,6 +152,7 @@ export function EvaluationForm({
           <ProjectDetails project={presentation.project} />
         </div>
       </details>
+      <RepositoryAnalysis analysis={presentation.repositoryAnalysis} />
       <form
         className="space-y-6"
         onSubmit={(event) => {

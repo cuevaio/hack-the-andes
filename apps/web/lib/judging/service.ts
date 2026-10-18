@@ -5,22 +5,29 @@ import { Schema } from "effect";
 import { eventQuery } from "@/lib/event/database";
 import { HttpError } from "@/lib/registration/http";
 import {
+  type AdminBoard,
   AdminBoardSchema,
   type AdminCommand,
   type EvaluationCommand,
+  type JudgeBoard,
   JudgeBoardSchema,
+  RepositoryAnalysisSchema,
 } from "./contract";
 import { withJudgeRole } from "./roles";
 
 export async function getAdminBoard() {
-  return Schema.decodeUnknownSync(AdminBoardSchema)(
-    await eventQuery(sql`select judging_board() as result`),
+  return withRepositoryAnalyses(
+    Schema.decodeUnknownSync(AdminBoardSchema)(
+      await eventQuery(sql`select judging_board() as result`),
+    ),
   );
 }
 export async function getJudgeBoard(judgeId: string) {
   await requireActiveJudge(judgeId);
-  return Schema.decodeUnknownSync(JudgeBoardSchema)(
-    await eventQuery(sql`select judging_board(${judgeId}) as result`),
+  return withRepositoryAnalyses(
+    Schema.decodeUnknownSync(JudgeBoardSchema)(
+      await eventQuery(sql`select judging_board(${judgeId}) as result`),
+    ),
   );
 }
 async function requireActiveJudge(judgeId: string) {
@@ -38,9 +45,11 @@ export async function adminJudgingAction(
   adminId: string,
   command: AdminCommand,
 ) {
-  return Schema.decodeUnknownSync(AdminBoardSchema)(
-    await eventQuery(
-      sql`select judging_admin_action(${adminId},${JSON.stringify(command)}::jsonb) as result`,
+  return withRepositoryAnalyses(
+    Schema.decodeUnknownSync(AdminBoardSchema)(
+      await eventQuery(
+        sql`select judging_admin_action(${adminId},${JSON.stringify(command)}::jsonb) as result`,
+      ),
     ),
   );
 }
@@ -48,9 +57,11 @@ export async function saveEvaluation(
   judgeId: string,
   command: EvaluationCommand,
 ) {
-  return Schema.decodeUnknownSync(JudgeBoardSchema)(
-    await eventQuery(
-      sql`select judging_save_evaluation(${judgeId},${JSON.stringify(command)}::jsonb) as result`,
+  return withRepositoryAnalyses(
+    Schema.decodeUnknownSync(JudgeBoardSchema)(
+      await eventQuery(
+        sql`select judging_save_evaluation(${judgeId},${JSON.stringify(command)}::jsonb) as result`,
+      ),
     ),
   );
 }
@@ -91,4 +102,37 @@ export async function setJudgeActive(judgeId: string, active: boolean) {
     sql`update judging_judges set active=${active} where clerk_user_id=${judgeId} returning true as result`,
   );
   return getAdminBoard();
+}
+
+// Only enrich the presentations already admitted by judging_board's visibility rules.
+async function withRepositoryAnalyses<T extends JudgeBoard | AdminBoard>(
+  board: T,
+): Promise<T> {
+  if (board.presentations.length === 0) return board;
+  const ids = board.presentations.map((presentation) => presentation.id);
+  const records = Schema.decodeUnknownSync(
+    Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        analysis: RepositoryAnalysisSchema,
+      }),
+    ),
+  )(
+    await eventQuery(
+      sql`select coalesce(jsonb_agg(jsonb_build_object('id',id,'analysis',snapshot->'repositoryAnalysis')),'[]'::jsonb) as result from judging_presentations where id in (${sql.join(
+        ids.map((id) => sql`${id}::uuid`),
+        sql`,`,
+      )}) and snapshot->'repositoryAnalysis' is not null`,
+    ),
+  );
+  const analyses = new Map(
+    records.map((record) => [record.id, record.analysis]),
+  );
+  return {
+    ...board,
+    presentations: board.presentations.map((presentation) => ({
+      ...presentation,
+      repositoryAnalysis: analyses.get(presentation.id) ?? null,
+    })),
+  };
 }
