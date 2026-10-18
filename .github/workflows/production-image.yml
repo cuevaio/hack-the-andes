@@ -1,151 +1,29 @@
-name: Production image
-
+name: Typebattle VPS deployment
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
-      deploy:
-        description: Deploy this exact branch image to production
-        required: false
-        default: false
-        type: boolean
-
-concurrency:
-  group: production-image-${{ github.ref }}
-  cancel-in-progress: true
-
+      mode:
+        description: Inspect, deploy or enable HTTPS for the standalone Typebattle application
+        type: choice
+        options: [inspect, deploy, https]
+        default: inspect
 permissions:
   contents: read
-  packages: write
-  attestations: write
-  id-token: write
-
+concurrency:
+  group: typebattle-vps
+  cancel-in-progress: false
 jobs:
-  build:
+  typebattle:
     runs-on: ubuntu-latest
     environment: Production
     steps:
       - uses: actions/checkout@v5
-
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
+      - uses: actions/setup-node@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: metadata
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,format=long,prefix=sha-
-
-      - id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: ${{ steps.metadata.outputs.tags }}
-          labels: ${{ steps.metadata.outputs.labels }}
-          cache-from: type=gha,scope=production-image
-          cache-to: type=gha,mode=min,scope=production-image
-          build-args: |
-            APP_REVISION=${{ github.sha }}
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
-
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.14
-
-      - name: Deploy the published image
-        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
+          node-version: '24'
+      - name: Reconcile standalone Typebattle on the Hack the Andes VPS
         env:
           DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
-          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
-          DOKPLOY_APPLICATION_NAME: Website
-          RATE_LIMIT_SERVICE_URL: ${{ secrets.RATE_LIMIT_SERVICE_URL }}
-          RATE_LIMIT_SERVICE_TOKEN: ${{ secrets.RATE_LIMIT_SERVICE_TOKEN }}
-          DOKPLOY_URL: https://vps.cueva.io
-          DOKPLOY_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [[ -z "$DOKPLOY_API_KEY" || -z "$DOKPLOY_APPLICATION_ID" ]]; then
-            echo "Dokploy deployment secrets are not configured yet; image publication is complete."
-            exit 0
-          fi
-          required_cli_assets=(
-            checksums.txt
-            chofex-darwin-arm64.tar.gz
-            chofex-darwin-x64.tar.gz
-            chofex-linux-arm64.tar.gz
-            chofex-linux-arm64-musl.tar.gz
-            chofex-linux-x64.tar.gz
-            chofex-linux-x64-musl.tar.gz
-            chofex-windows-arm64.tar.gz
-            chofex-windows-x64.tar.gz
-          )
-          cli_assets_ready=false
-          for attempt in {1..120}; do
-            release_assets="$(
-              gh release view \
-                --repo "$GITHUB_REPOSITORY" \
-                --json assets \
-                --jq '.assets[].name' \
-                2>/dev/null || true
-            )"
-            cli_assets_ready=true
-            for asset in "${required_cli_assets[@]}"; do
-              if ! grep -Fxq "$asset" <<<"$release_assets"; then
-                cli_assets_ready=false
-                break
-              fi
-            done
-            if [[ "$cli_assets_ready" == "true" ]]; then
-              break
-            fi
-            echo "Waiting for standalone CLI release assets (${attempt}/120)."
-            sleep 10
-          done
-          if [[ "$cli_assets_ready" != "true" ]]; then
-            echo "Standalone CLI release assets are unavailable; refusing to expose the installer."
-            exit 1
-          fi
-          bun scripts/reconcile-service-environment.ts
-          bun scripts/remove-power-grid-preview-secret.ts
-          curl --fail --silent --show-error --output /dev/null \
-            --request POST \
-            --header "Content-Type: application/json" \
-            --header "x-api-key: $DOKPLOY_API_KEY" \
-            --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\",\"dockerImage\":\"$DOKPLOY_IMAGE\"}" \
-            "$DOKPLOY_URL/api/application.update"
-          curl --fail --silent --show-error --output /dev/null \
-            --request POST \
-            --header "Content-Type: application/json" \
-            --header "x-api-key: $DOKPLOY_API_KEY" \
-            --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\",\"title\":\"GitHub Actions $GITHUB_SHA\"}" \
-            "$DOKPLOY_URL/api/application.redeploy"
-
-      - name: Verify the live production revision and security boundaries
-        if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
-        env:
-          EXPECTED_REVISION: ${{ github.sha }}
-          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
-        run: |
-          if [[ -z "$DOKPLOY_APPLICATION_ID" ]]; then
-            echo "Deployment is not configured; live verification is unavailable."
-            exit 0
-          fi
-          bun scripts/verify-production.ts
+          TYPEBATTLE_ADMIN_KEY: ${{ secrets.TYPEBATTLE_ADMIN_KEY }}
+          DEPLOY_MODE: ${{ inputs.mode }}
+        run: node deployment/typebattle/deploy.mjs
