@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: typebattle-vps
+  group: typebattle-vps-${{ inputs.mode == 'inspect' && 'inspect' || 'write' }}
   cancel-in-progress: false
 jobs:
   typebattle:

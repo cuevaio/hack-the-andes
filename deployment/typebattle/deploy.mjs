@@ -11,7 +11,10 @@ async function api(endpoint,body,query){
 const ip=await api('settings.getIp');if(ip!=='85.239.246.19')throw Error('Unexpected deployment server IP.');
 let projects=await api('project.all');let project=projects.find(p=>p.name===projectName);
 console.log(JSON.stringify({server:base,ip,mode,projectExists:Boolean(project)}));
-if(mode==='inspect'){if(project)console.log(JSON.stringify({projectId:project.projectId,environments:project.environments?.map(e=>({id:e.environmentId,name:e.name,apps:e.applications?.map(a=>({id:a.applicationId,name:a.name,status:a.applicationStatus}))}))}));process.exit(0);}
+if(mode==='inspect'){
+ if(project){for(const e of project.environments||[]){for(const a of e.applications||[]){console.log(JSON.stringify({applicationId:a.applicationId,name:a.name,status:a.applicationStatus}));const deployments=await api('deployment.all',null,{applicationId:a.applicationId});const latest=deployments[0];if(latest){console.log(JSON.stringify({deploymentId:latest.deploymentId,status:latest.status}));console.log(JSON.stringify(await api('deployment.readLogs',null,{deploymentId:latest.deploymentId,tail:'50'})));}console.log(JSON.stringify(await api('application.readLogs',null,{applicationId:a.applicationId,tail:'30'})));}}}
+ process.exit(0);
+}
 if(!['deploy','https'].includes(mode))throw Error('Unknown operation.');
 if(!project){await api('project.create',{name:projectName,description:'Standalone realtime typing battle for 100 players'});projects=await api('project.all');project=projects.find(p=>p.name===projectName);}
 let environment=project.environments?.find(e=>e.name==='production');
