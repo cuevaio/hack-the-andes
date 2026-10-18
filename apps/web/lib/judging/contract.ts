@@ -68,13 +68,8 @@ export const AdminCommandSchema = Schema.Union([
     expectedRevision: version,
   }),
   Schema.Struct({
-    action: Schema.Literals(["present", "skip", "restore"]),
+    action: Schema.Literal("present"),
     presentationId: id,
-    expectedRevision: version,
-  }),
-  Schema.Struct({
-    action: Schema.Literal("reorder"),
-    presentationIds: Schema.Array(id),
     expectedRevision: version,
   }),
   Schema.Struct({

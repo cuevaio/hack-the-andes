@@ -62,6 +62,7 @@ export function JudgingControl({
   );
   const queued = presentations.filter((item) => item.status === "queued");
   const next = queued[0];
+  const previous = presentations.find((item) => item.status === "finished");
   const activeJudges = judges.filter((judge) => judge.active);
   const currentScores = evaluations.filter(
     (item) =>
@@ -91,19 +92,6 @@ export function JudgingControl({
     .sort((a, b) => (b.average ?? -1) - (a.average ?? -1));
   function dispatch(command: AdminCommand) {
     action.mutate(command);
-  }
-  function reorder(index: number, offset: number) {
-    const ids = queued.map((item) => item.id);
-    const other = ids[index + offset];
-    const moving = ids[index];
-    if (!other || !moving) return;
-    ids[index] = other;
-    ids[index + offset] = moving;
-    dispatch({
-      action: "reorder",
-      presentationIds: ids,
-      expectedRevision: session.revision,
-    });
   }
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-5 py-10">
@@ -256,91 +244,16 @@ export function JudgingControl({
       )}
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_22rem]">
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Orden de presentación</h2>
-          {queued.length === 0 && (
-            <p className="text-muted-foreground">No hay equipos pendientes.</p>
-          )}
-          {queued.map((presentation, index) => (
-            <div
-              className="space-y-4 rounded-xl border p-5"
-              key={presentation.id}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-semibold">
-                  {index + 1}. {presentation.project.teamName}
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className={button}
-                    aria-label={`Subir ${presentation.project.teamName}`}
-                    disabled={busy || index === 0}
-                    onClick={() => reorder(index, -1)}
-                  >
-                    Subir
-                  </button>
-                  <button
-                    type="button"
-                    className={button}
-                    aria-label={`Bajar ${presentation.project.teamName}`}
-                    disabled={busy || index === queued.length - 1}
-                    onClick={() => reorder(index, 1)}
-                  >
-                    Bajar
-                  </button>
-                  <button
-                    type="button"
-                    className={button}
-                    disabled={busy}
-                    onClick={() =>
-                      dispatch({
-                        action: "skip",
-                        presentationId: presentation.id,
-                        expectedRevision: session.revision,
-                      })
-                    }
-                  >
-                    Omitir
-                  </button>
-                </div>
-              </div>
-              <details>
-                <summary className="cursor-pointer text-sm underline">
-                  Ver entrega e integrantes
-                </summary>
-                <div className="mt-4 space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {presentation.members.join(" · ")}
-                  </p>
-                  <ProjectDetails project={presentation.project} />
-                </div>
-              </details>
-            </div>
-          ))}
-          {presentations
-            .filter((item) => item.status === "skipped")
-            .map((presentation) => (
-              <div
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5"
-                key={presentation.id}
-              >
-                <span>{presentation.project.teamName} · Omitido</span>
-                <button
-                  className={button}
-                  type="button"
-                  disabled={busy}
-                  onClick={() =>
-                    dispatch({
-                      action: "restore",
-                      presentationId: presentation.id,
-                      expectedRevision: session.revision,
-                    })
-                  }
-                >
-                  Volver a la cola
-                </button>
-              </div>
-            ))}
+          <h2 className="text-xl font-semibold">Turnos de presentación</h2>
+          <p className="text-sm text-muted-foreground">
+            El orden se sorteó al abrir la evaluación y no se puede modificar.
+            Solo se muestran el equipo anterior, el actual y el siguiente.
+          </p>
+          <p>Anterior: {previous?.project.teamName ?? "Ninguno"}</p>
+          <p>Actual: {current?.project.teamName ?? "Ninguno"}</p>
+          <p>
+            Siguiente: {next?.project.teamName ?? "No hay equipos pendientes"}
+          </p>
         </section>
         <section className="space-y-5 rounded-2xl border p-5">
           <h2 className="text-xl font-semibold">Jurados</h2>

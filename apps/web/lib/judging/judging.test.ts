@@ -69,8 +69,11 @@ async function initialize() {
     await admin({ action: "initialize", expectedRevision: 0 }),
   );
 }
-function firstTwo(data: typeof AdminBoardSchema.Type) {
-  const [first, second] = data.presentations;
+async function firstTwo(_data: typeof AdminBoardSchema.Type) {
+  const { rows } = await db.query<{ id: string }>(
+    "select id from judging_presentations order by position,id",
+  );
+  const [first, second] = rows;
   if (!first || !second) throw new Error("Missing fixture presentations");
   return [first, second] as const;
 }
@@ -78,7 +81,7 @@ function firstTwo(data: typeof AdminBoardSchema.Type) {
 test("freezes submissions and admits only submitted projects", async () => {
   await db.exec("insert into teams(name) values('Sin entrega')");
   const data = await initialize();
-  expect(data.presentations).toHaveLength(2);
+  expect(data.presentations).toHaveLength(1);
   await db.exec(
     "update project_submissions set description='Edición posterior'; update teams set name='Renombrado'",
   );
@@ -86,15 +89,16 @@ test("freezes submissions and admits only submitted projects", async () => {
   expect(frozen.presentations[0]?.project.submission?.description).toBe(
     "Descripción original",
   );
-  expect(frozen.presentations.map((p) => p.project.teamName).sort()).toEqual([
-    "Equipo Dos",
-    "Equipo Uno",
-  ]);
+  const { rows } = await db.query<{ count: number }>(
+    "select count(*)::int as count from judging_presentations",
+  );
+  expect(rows[0]?.count).toBe(2);
+  expect(frozen.presentations).toHaveLength(1);
 });
 
 test("stale admin cannot advance or reset a newer presentation", async () => {
   const data = await initialize();
-  const [first, second] = firstTwo(data);
+  const [first, second] = await firstTwo(data);
   const current = Schema.decodeUnknownSync(AdminBoardSchema)(
     await admin({
       action: "present",
@@ -117,7 +121,7 @@ test("stale admin cannot advance or reset a newer presentation", async () => {
 });
 
 test("late evaluation stays attached to the old team and hides it only for its judge", async () => {
-  const [first, second] = firstTwo(await initialize());
+  const [first, second] = await firstTwo(await initialize());
   await admin({
     action: "present",
     presentationId: first.id,
@@ -164,7 +168,7 @@ test("late evaluation stays attached to the old team and hides it only for its j
 });
 
 test("drafts survive reload, prevent stale overwrites, and lock after submission", async () => {
-  const [first] = firstTwo(await initialize());
+  const [first] = await firstTwo(await initialize());
   expect(await save(first.id)).toMatchObject({
     error: { code: "NOT_PRESENTED" },
   });
@@ -206,7 +210,7 @@ test("drafts survive reload, prevent stale overwrites, and lock after submission
 });
 
 test("inactive judges and out-of-range scores cannot save", async () => {
-  const [first] = firstTwo(await initialize());
+  const [first] = await firstTwo(await initialize());
   await admin({
     action: "present",
     presentationId: first.id,
@@ -224,7 +228,7 @@ test("inactive judges and out-of-range scores cannot save", async () => {
 });
 
 test("timer uses server time, pauses, resumes, and never advances teams itself", async () => {
-  const [first] = firstTwo(await initialize());
+  const [first] = await firstTwo(await initialize());
   await admin({
     action: "present",
     presentationId: first.id,
@@ -249,39 +253,66 @@ test("timer uses server time, pauses, resumes, and never advances teams itself",
   expect(data.session.currentPresentationId).toBe(first.id);
 });
 
-test("queue reordering and skipping preserve all teams and reject duplicates", async () => {
-  const [first, second] = firstTwo(await initialize());
-  const reordered = Schema.decodeUnknownSync(AdminBoardSchema)(
-    await admin({
-      action: "reorder",
-      presentationIds: [second.id, first.id],
-      expectedRevision: 1,
-    }),
+test("random queue hides future teams and rejects manual order changes", async () => {
+  await db.exec(
+    "insert into teams(name) values('Equipo Tres'),('Equipo Cuatro'); insert into project_submissions(team_id,deployment_url,presentation_url,description) select id,'https://example.com','https://example.com','Proyecto' from teams where name in ('Equipo Tres','Equipo Cuatro')",
   );
-  expect(reordered.presentations.map((p) => p.id)).toEqual([
-    second.id,
-    first.id,
-  ]);
+  const initial = await initialize();
+  const [first, second] = await firstTwo(initial);
+  expect(initial.presentations.map((p) => p.id)).toEqual([first.id]);
+  expect(
+    Schema.decodeUnknownSync(JudgeBoardSchema)(await board("judge-a"))
+      .presentations,
+  ).toEqual([]);
+  for (const action of ["reorder", "skip", "restore"]) {
+    expect(
+      await admin({
+        action,
+        presentationId: first.id,
+        presentationIds: [second.id, first.id],
+        expectedRevision: 1,
+      }),
+    ).toMatchObject({ error: { code: "RANDOM_ORDER" } });
+  }
   expect(
     await admin({
-      action: "reorder",
-      presentationIds: [first.id, first.id],
-      expectedRevision: 2,
+      action: "present",
+      presentationId: second.id,
+      expectedRevision: 1,
     }),
-  ).toMatchObject({ error: { code: "QUEUE_CHANGED" } });
+  ).toMatchObject({ error: { code: "NEXT_TEAM_REQUIRED" } });
   await admin({
-    action: "skip",
+    action: "present",
+    presentationId: first.id,
+    expectedRevision: 1,
+  });
+  const afterFirst = Schema.decodeUnknownSync(AdminBoardSchema)(await board());
+  expect(afterFirst.presentations.map((p) => p.id)).toEqual([
+    first.id,
+    second.id,
+  ]);
+  await admin({
+    action: "present",
     presentationId: second.id,
     expectedRevision: 2,
   });
-  const restored = Schema.decodeUnknownSync(AdminBoardSchema)(
-    await admin({
-      action: "restore",
-      presentationId: second.id,
-      expectedRevision: 3,
-    }),
-  );
-  expect(restored.presentations.every((p) => p.status === "queued")).toBe(true);
+  const afterSecond = Schema.decodeUnknownSync(AdminBoardSchema)(await board());
+  expect(afterSecond.presentations).toHaveLength(3);
+  expect(
+    afterSecond.presentations.filter((p) => p.status === "queued"),
+  ).toHaveLength(1);
+  const third = afterSecond.presentations.find((p) => p.status === "queued");
+  if (!third) throw Error("Missing next team");
+  await save(first.id, { submit: true });
+  await admin({
+    action: "present",
+    presentationId: third.id,
+    expectedRevision: 3,
+  });
+  const afterThird = Schema.decodeUnknownSync(AdminBoardSchema)(await board());
+  expect(afterThird.presentations.some((p) => p.id === first.id)).toBe(false);
+  expect(afterThird.evaluations).toEqual([]);
+  expect(afterThird.presentations).toHaveLength(3);
 });
 
 test("judge role preserves existing roles without granting admin access", () => {
@@ -297,6 +328,9 @@ test("judge role preserves existing roles without granting admin access", () => 
 });
 
 test("frozen roster uses public names and survives team deletion", async () => {
+  await db.exec(
+    "delete from project_submissions where team_id='00000000-0000-4000-8000-000000000002'",
+  );
   await db.exec(
     "insert into participants(clerk_user_id,legal_name) values('unnamed','Private legal name'); insert into team_members(team_id,participant_id,slot) select '00000000-0000-4000-8000-000000000001',id,1 from participants where clerk_user_id='unnamed'",
   );

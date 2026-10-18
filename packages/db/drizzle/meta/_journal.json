@@ -309,6 +309,13 @@
       "when": 1792333021810,
       "tag": "0043_close_project_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792333622355,
+      "tag": "0044_random_judging_order",
+      "breakpoints": true
     }
   ]
 }
