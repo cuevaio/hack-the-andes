@@ -45,6 +45,7 @@ export const JudgeSchema = Schema.Struct({
   active: Schema.Boolean,
 });
 export const JudgeBoardSchema = Schema.Struct({
+  remainingTeams: version,
   session: SessionSchema,
   presentations: Schema.Array(PresentationSchema),
   evaluations: Schema.Array(EvaluationSchema),

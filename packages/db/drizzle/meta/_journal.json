@@ -316,6 +316,13 @@
       "when": 1792333622355,
       "tag": "0044_random_judging_order",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1792334363654,
+      "tag": "0045_judging_remaining_teams",
+      "breakpoints": true
     }
   ]
 }

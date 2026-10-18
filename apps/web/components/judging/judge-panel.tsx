@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ProjectDetails } from "@/components/project-details";
 import type { JudgeBoard } from "@/lib/judging/contract";
 import { fetchJudgeBoard, judgeKey } from "@/lib/judging/queries";
 import { EvaluationForm } from "./evaluation-form";
@@ -37,7 +36,6 @@ export function JudgePanel({
         Number(b.id === session.currentPresentationId) -
         Number(a.id === session.currentPresentationId),
     );
-  const queued = presentations.filter((item) => item.status === "queued");
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-5 py-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -100,31 +98,14 @@ export function JudgePanel({
           />
         ))}
       </div>
-      <details className="rounded-xl border p-5">
-        <summary className="cursor-pointer font-semibold">
-          Equipos pendientes · {queued.length}
-        </summary>
-        <div className="mt-5 space-y-4">
-          {queued.length === 0 && (
-            <p className="text-muted-foreground">
-              No hay equipos pendientes de presentar.
-            </p>
-          )}
-          {queued.map((presentation) => (
-            <details className="rounded-lg border p-4" key={presentation.id}>
-              <summary className="cursor-pointer">
-                {presentation.project.teamName}
-              </summary>
-              <div className="mt-4 space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {presentation.members.join(" · ")}
-                </p>
-                <ProjectDetails project={presentation.project} />
-              </div>
-            </details>
-          ))}
-        </div>
-      </details>
+      <section className="space-y-2 rounded-xl border p-5" aria-live="polite">
+        <h2 className="font-semibold">
+          Equipos pendientes · {query.data.remainingTeams}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Por presentar. El orden de los equipos se mantiene oculto.
+        </p>
+      </section>
     </main>
   );
 }

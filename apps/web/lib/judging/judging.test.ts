@@ -259,6 +259,11 @@ test("random queue hides future teams and rejects manual order changes", async (
   );
   const initial = await initialize();
   const [first, second] = await firstTwo(initial);
+  expect(initial.remainingTeams).toBe(4);
+  expect(
+    Schema.decodeUnknownSync(JudgeBoardSchema)(await board("judge-a"))
+      .remainingTeams,
+  ).toBe(4);
   expect(initial.presentations.map((p) => p.id)).toEqual([first.id]);
   expect(
     Schema.decodeUnknownSync(JudgeBoardSchema)(await board("judge-a"))
@@ -287,6 +292,7 @@ test("random queue hides future teams and rejects manual order changes", async (
     expectedRevision: 1,
   });
   const afterFirst = Schema.decodeUnknownSync(AdminBoardSchema)(await board());
+  expect(afterFirst.remainingTeams).toBe(3);
   expect(afterFirst.presentations.map((p) => p.id)).toEqual([
     first.id,
     second.id,
@@ -313,6 +319,21 @@ test("random queue hides future teams and rejects manual order changes", async (
   expect(afterThird.presentations.some((p) => p.id === first.id)).toBe(false);
   expect(afterThird.evaluations).toEqual([]);
   expect(afterThird.presentations).toHaveLength(3);
+  expect(afterThird.remainingTeams).toBe(1);
+  await admin({ action: "finish", expectedRevision: 4 });
+  const beforeLast = Schema.decodeUnknownSync(AdminBoardSchema)(await board());
+  expect(beforeLast.remainingTeams).toBe(1);
+  const last = beforeLast.presentations.find((p) => p.status === "queued");
+  if (!last) throw Error("Missing final team");
+  await admin({
+    action: "present",
+    presentationId: last.id,
+    expectedRevision: 5,
+  });
+  expect(
+    Schema.decodeUnknownSync(JudgeBoardSchema)(await board("judge-a"))
+      .remainingTeams,
+  ).toBe(0);
 });
 
 test("judge role preserves existing roles without granting admin access", () => {
