@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {resolve4} from 'node:dns/promises';
 const base='https://vps.cueva.io',hostname='vibe.hacktheandes.com',projectName='Typebattle';
 const key=process.env.DOKPLOY_API_KEY,mode=process.env.DEPLOY_MODE||'inspect';
@@ -22,6 +23,9 @@ if(!environment){await api('environment.create',{projectId:project.projectId,nam
 let app=environment.applications?.find(a=>a.name==='Typebattle');
 if(!app)app=await api('application.create',{name:'Typebattle',appName:'typebattle',environmentId:environment.environmentId,sourceType:'drop'});
 const applicationId=app.applicationId;
+const source=JSON.parse(readFileSync(new URL('./source.json',import.meta.url)));
+const zip=readFileSync(new URL('./source.zip',import.meta.url));
+if(createHash('sha256').update(zip).digest('hex')!==source.sha256)throw Error('Source archive checksum mismatch.');
 console.log(JSON.stringify({projectId:project.projectId,applicationId}));
 const domains=await api('domain.byApplicationId',null,{applicationId});let domain=domains.find(d=>d.host===hostname);
 let dnsReady=false;try{dnsReady=(await resolve4(hostname)).includes(ip);}catch{}
@@ -29,12 +33,12 @@ const route={host:hostname,port:3418,https:dnsReady,certificateType:dnsReady?'le
 if(!domain)domain=await api('domain.create',{...route,applicationId});else await api('domain.update',{...route,domainId:domain.domainId});
 if(mode==='deploy'){
  if(!process.env.TYPEBATTLE_ADMIN_KEY)throw Error('Typebattle admin secret is unavailable.');
- await api('application.saveEnvironment',{applicationId,env:`ADMIN_KEY=${process.env.TYPEBATTLE_ADMIN_KEY}\nPORT=3418\nBIND_HOST=0.0.0.0\nPUBLIC_ORIGIN=https://${hostname}\nDATABASE_PATH=/app/data/battle.sqlite\nNODE_ENV=production\n`,buildArgs:null,buildSecrets:null,createEnvFile:false});
+ await api('application.saveEnvironment',{applicationId,env:`APP_REVISION=${source.sourceCommit}\nADMIN_KEY=${process.env.TYPEBATTLE_ADMIN_KEY}\nPORT=3418\nBIND_HOST=0.0.0.0\nPUBLIC_ORIGIN=https://${hostname}\nDATABASE_PATH=/app/data/battle.sqlite\nNODE_ENV=production\n`,buildArgs:null,buildSecrets:null,createEnvFile:false});
  await api('application.saveBuildType',{applicationId,buildType:'dockerfile',dockerfile:'Dockerfile',dockerContextPath:'.',dockerBuildStage:null,herokuVersion:null,railpackVersion:null});
  await api('application.update',{applicationId,replicas:1});
  const mounts=await api('mounts.listByServiceId',null,{serviceType:'application',serviceId:applicationId});
  if(!mounts.some(m=>m.mountPath==='/app/data'))await api('mounts.create',{type:'volume',volumeName:'typebattle-data',mountPath:'/app/data',serviceType:'application',serviceId:applicationId});
- const form=new FormData();form.set('applicationId',applicationId);form.set('zip',new Blob([readFileSync(new URL('./source.zip',import.meta.url))],{type:'application/zip'}),'source.zip');
+ const form=new FormData();form.set('applicationId',applicationId);form.set('zip',new Blob([zip],{type:'application/zip'}),'source.zip');
  await api('application.dropDeployment',form);
 }else await api('application.redeploy',{applicationId,title:'Enable Typebattle HTTPS'});
 console.log(JSON.stringify({applicationId,host:hostname,dnsReady,operation:'deployment-requested'}));
