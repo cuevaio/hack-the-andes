@@ -27,7 +27,7 @@ async function request(path: string, init: RequestInit = {}) {
 }
 export async function fetchJudgeBoard(signal: AbortSignal) {
   return Schema.decodeUnknownSync(ApiSuccessSchema(JudgeBoardSchema))(
-    await request("/api/judging", { signal }),
+    await request("/api/judging?history=1", { signal }),
   ).data;
 }
 export async function fetchAdminBoard(signal: AbortSignal) {
@@ -44,7 +44,7 @@ function json(method: string, body: unknown): RequestInit {
 }
 export async function sendEvaluation(command: EvaluationCommand) {
   return Schema.decodeUnknownSync(ApiSuccessSchema(JudgeBoardSchema))(
-    await request("/api/judging", json("PATCH", command)),
+    await request("/api/judging?history=1", json("PATCH", command)),
   ).data;
 }
 export async function sendAdminCommand(command: AdminCommand) {

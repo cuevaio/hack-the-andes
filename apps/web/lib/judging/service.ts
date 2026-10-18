@@ -17,11 +17,11 @@ export async function getAdminBoard() {
     await eventQuery(sql`select judging_board() as result`),
   );
 }
-export async function getJudgeBoard(judgeId: string) {
+export async function getJudgeBoard(judgeId: string, history = false) {
   await requireActiveJudge(judgeId);
-  return Schema.decodeUnknownSync(JudgeBoardSchema)(
-    await eventQuery(sql`select judging_board(${judgeId}) as result`),
-  );
+  let query = sql`select judging_board(${judgeId}) as result`;
+  if (history) query = sql`select judging_review_board(${judgeId}) as result`;
+  return Schema.decodeUnknownSync(JudgeBoardSchema)(await eventQuery(query));
 }
 async function requireActiveJudge(judgeId: string) {
   const active = await eventQuery(
@@ -47,12 +47,12 @@ export async function adminJudgingAction(
 export async function saveEvaluation(
   judgeId: string,
   command: EvaluationCommand,
+  history = false,
 ) {
-  return Schema.decodeUnknownSync(JudgeBoardSchema)(
-    await eventQuery(
-      sql`select judging_save_evaluation(${judgeId},${JSON.stringify(command)}::jsonb) as result`,
-    ),
-  );
+  let query = sql`select judging_save_evaluation(${judgeId},${JSON.stringify(command)}::jsonb) as result`;
+  if (history)
+    query = sql`select judging_save_review(${judgeId},${JSON.stringify(command)}::jsonb) as result`;
+  return Schema.decodeUnknownSync(JudgeBoardSchema)(await eventQuery(query));
 }
 export async function grantJudge(email: string) {
   const clerk = await clerkClient();

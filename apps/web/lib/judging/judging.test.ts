@@ -35,9 +35,10 @@ async function admin(command: unknown) {
 }
 async function board(actor: string | null = null) {
   return (
-    await db.query<{ result: unknown }>("select judging_board($1) as result", [
-      actor,
-    ])
+    await db.query<{ result: unknown }>(
+      "select judging_review_board($1) as result",
+      [actor],
+    )
   ).rows[0]?.result;
 }
 async function save(
@@ -47,7 +48,7 @@ async function save(
 ) {
   return (
     await db.query<{ result: unknown }>(
-      "select judging_save_evaluation($1,$2::jsonb) as result",
+      "select judging_save_review($1,$2::jsonb) as result",
       [
         actor,
         JSON.stringify({
@@ -120,7 +121,7 @@ test("stale admin cannot advance or reset a newer presentation", async () => {
   ).toBe(first.id);
 });
 
-test("late evaluation stays attached to the old team and hides it only for its judge", async () => {
+test("late evaluation stays attached to the old team and remains in its judge history", async () => {
   const [first, second] = await firstTwo(await initialize());
   await admin({
     action: "present",
@@ -137,8 +138,17 @@ test("late evaluation stays attached to the old team and hides it only for its j
     await save(first.id, { expectedRevision: 1, submit: true }),
   );
   expect(submitted.session.currentPresentationId).toBe(second.id);
-  expect(submitted.presentations.map((p) => p.id)).toEqual([second.id]);
-  expect(submitted.evaluations).toHaveLength(0);
+  expect(submitted.presentations.map((p) => p.id)).toEqual([
+    first.id,
+    second.id,
+  ]);
+  expect(submitted.evaluations).toHaveLength(1);
+  expect(submitted.evaluations[0]).toMatchObject({
+    presentationId: first.id,
+    traction: 4,
+    technical: 5,
+    pitch: 3,
+  });
   const otherJudge = Schema.decodeUnknownSync(JudgeBoardSchema)(
     await board("judge-b"),
   );
@@ -167,7 +177,7 @@ test("late evaluation stays attached to the old team and hides it only for its j
   ).toBe(82);
 });
 
-test("drafts survive reload, prevent stale overwrites, and lock after submission", async () => {
+test("drafts survive reload, prevent stale overwrites, and require explicit updates after submission", async () => {
   const [first] = await firstTwo(await initialize());
   expect(await save(first.id)).toMatchObject({
     error: { code: "NOT_PRESENTED" },
@@ -194,7 +204,7 @@ test("drafts survive reload, prevent stale overwrites, and lock after submission
   ).toMatchObject({ error: { code: "SCORES_REQUIRED" } });
   await save(first.id, { expectedRevision: 1, submit: true });
   expect(await save(first.id, { expectedRevision: 2 })).toMatchObject({
-    error: { code: "EVALUATION_LOCKED" },
+    error: { code: "SUBMITTED_UPDATE_REQUIRED" },
   });
   await admin({
     action: "reopen",
@@ -376,4 +386,187 @@ test("frozen roster uses public names and survives team deletion", async () => {
     afterDeletion.presentations.find((item) => item.id === presentation.id)
       ?.project.teamName,
   ).toBe("Equipo Uno");
+});
+
+test("judges can revise submitted scores for previous teams without changing other judges or the queue", async () => {
+  const [first, second] = await firstTwo(await initialize());
+  await admin({
+    action: "present",
+    presentationId: first.id,
+    expectedRevision: 1,
+  });
+  await save(first.id, { submit: true });
+  await save(
+    first.id,
+    { submit: true, traction: 2, technical: 2, pitch: 2 },
+    "judge-b",
+  );
+  await admin({
+    action: "present",
+    presentationId: second.id,
+    expectedRevision: 2,
+  });
+  expect(
+    await save(first.id, {
+      expectedRevision: 1,
+      submit: true,
+      technical: null,
+    }),
+  ).toMatchObject({ error: { code: "SCORES_REQUIRED" } });
+  const updated = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await save(first.id, {
+      expectedRevision: 1,
+      submit: true,
+      traction: 5,
+      technical: 4,
+      pitch: 5,
+      notes: "Puntajes revisados",
+    }),
+  );
+  expect(updated.session.currentPresentationId).toBe(second.id);
+  expect(updated.evaluations).toHaveLength(1);
+  expect(updated.evaluations[0]).toMatchObject({
+    judgeId: "judge-a",
+    traction: 5,
+    technical: 4,
+    pitch: 5,
+    notes: "Puntajes revisados",
+    revision: 2,
+  });
+  expect(updated.evaluations[0]?.submittedAt).not.toBeNull();
+  const reloaded = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await board("judge-a"),
+  );
+  expect(reloaded.evaluations).toEqual(updated.evaluations);
+  expect(reloaded.presentations.some((item) => item.id === first.id)).toBe(
+    true,
+  );
+  expect(
+    await save(first.id, { expectedRevision: 1, submit: true }),
+  ).toMatchObject({ error: { code: "EVALUATION_CHANGED" } });
+  const other = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await board("judge-b"),
+  );
+  expect(other.evaluations).toHaveLength(1);
+  expect(other.evaluations[0]).toMatchObject({
+    judgeId: "judge-b",
+    traction: 2,
+    technical: 2,
+    pitch: 2,
+    revision: 1,
+  });
+});
+
+test("existing judge clients keep their live board and submission contract", async () => {
+  const [first] = await firstTwo(await initialize());
+  await admin({
+    action: "present",
+    presentationId: first.id,
+    expectedRevision: 1,
+  });
+  const command = {
+    presentationId: first.id,
+    expectedRevision: 0,
+    traction: 4,
+    technical: 5,
+    pitch: 3,
+    notes: "Original",
+    submit: true,
+  };
+  const legacySubmit = await db.query<{ result: unknown }>(
+    "select judging_save_evaluation('judge-a',$1::jsonb) as result",
+    [JSON.stringify(command)],
+  );
+  const legacy = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    legacySubmit.rows[0]?.result,
+  );
+  expect(legacy.presentations).toEqual([]);
+  expect(legacy.evaluations).toEqual([]);
+  const history = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await board("judge-a"),
+  );
+  expect(history.presentations.map((item) => item.id)).toEqual([first.id]);
+  expect(history.evaluations[0]).toMatchObject({
+    traction: 4,
+    technical: 5,
+    pitch: 3,
+    revision: 1,
+  });
+  const legacyEdit = await db.query<{ result: unknown }>(
+    "select judging_save_evaluation('judge-a',$1::jsonb) as result",
+    [JSON.stringify({ ...command, expectedRevision: 1 })],
+  );
+  expect(legacyEdit.rows[0]?.result).toMatchObject({
+    error: { code: "EVALUATION_LOCKED" },
+  });
+  const revised = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await save(first.id, { expectedRevision: 1, traction: 5, submit: true }),
+  );
+  expect(revised.evaluations[0]).toMatchObject({ traction: 5, revision: 2 });
+  const legacyPoll = await db.query<{ result: unknown }>(
+    "select judging_board('judge-a') as result",
+  );
+  const polled = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    legacyPoll.rows[0]?.result,
+  );
+  expect(polled.presentations).toEqual([]);
+  expect(polled.evaluations).toEqual([]);
+});
+
+test("all 26 teams remain reviewable and editable after the last presentation ends", async () => {
+  await db.exec(
+    "insert into teams(name) select 'Equipo adicional ' || n from generate_series(1,24) n; insert into project_submissions(team_id,deployment_url,presentation_url,description) select id,'https://example.com/demo','https://example.com/slides','Proyecto adicional' from teams where name like 'Equipo adicional %'",
+  );
+  await initialize();
+  const { rows: teams } = await db.query<{ id: string }>(
+    "select id from judging_presentations order by position,id",
+  );
+  expect(teams).toHaveLength(26);
+  for (const [index, team] of teams.entries()) {
+    await admin({
+      action: "present",
+      presentationId: team.id,
+      expectedRevision: index + 1,
+    });
+    await save(team.id, { submit: true });
+  }
+  await admin({ action: "finish", expectedRevision: 27 });
+  const finished = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await board("judge-a"),
+  );
+  expect(finished.remainingTeams).toBe(0);
+  expect(finished.session.currentPresentationId).toBeNull();
+  expect(finished.presentations.map((item) => item.id)).toEqual(
+    teams.map((team) => team.id),
+  );
+  expect(finished.evaluations).toHaveLength(26);
+  for (const team of teams) {
+    const revised = Schema.decodeUnknownSync(JudgeBoardSchema)(
+      await save(team.id, {
+        expectedRevision: 1,
+        traction: 5,
+        notes: "Revisado después del evento",
+        submit: true,
+      }),
+    );
+    expect(
+      revised.evaluations.find((item) => item.presentationId === team.id),
+    ).toMatchObject({
+      traction: 5,
+      revision: 2,
+      notes: "Revisado después del evento",
+    });
+    expect(revised.session.currentPresentationId).toBeNull();
+  }
+  const reloaded = Schema.decodeUnknownSync(JudgeBoardSchema)(
+    await board("judge-a"),
+  );
+  expect(reloaded.presentations).toHaveLength(26);
+  expect(reloaded.evaluations).toHaveLength(26);
+  expect(
+    reloaded.evaluations.every(
+      (item) =>
+        item.revision === 2 && item.traction === 5 && item.submittedAt !== null,
+    ),
+  ).toBe(true);
 });

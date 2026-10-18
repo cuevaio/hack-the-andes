@@ -48,7 +48,7 @@ export function EvaluationForm({
     fields: fieldsOf(evaluation),
     revision: evaluation?.revision ?? 0,
   }));
-  const [submitted, setSubmitted] = useState(false);
+  const submitted = evaluation?.submittedAt != null;
   const [conflict, setConflict] = useState(false);
   const mutation = useMutation({
     mutationFn: ({
@@ -69,10 +69,10 @@ export function EvaluationForm({
       const updated = board.evaluations.find(
         (item) => item.presentationId === presentation.id,
       );
-      if (variables.submit) setSubmitted(true);
-      else if (updated)
+      if (updated)
         setSaved({ fields: variables.snapshot, revision: updated.revision });
       await client.cancelQueries({ queryKey: judgeKey(judgeId) });
+      client.setQueryData(judgeKey(judgeId), board);
       await client.invalidateQueries({ queryKey: judgeKey(judgeId) });
     },
     onError: () => {
@@ -119,17 +119,13 @@ export function EvaluationForm({
   ]);
   const total = weightedScore(fields);
   let presentationLabel = "Evaluación pendiente · presentación anterior";
+  if (submitted) presentationLabel = "Evaluación enviada · puedes editarla";
   if (current) presentationLabel = "Presentación actual";
   if (!connected) presentationLabel = "Esperando sincronización";
   let saveLabel = "Borrador guardado";
+  if (submitted) saveLabel = "Evaluación enviada";
   if (dirty) saveLabel = "Cambios pendientes de guardar";
   if (mutation.isPending) saveLabel = "Guardando…";
-  if (submitted)
-    return (
-      <p role="status" className="rounded-xl border p-6">
-        Evaluación enviada. Esperando al siguiente equipo.
-      </p>
-    );
   return (
     <article className="space-y-6 rounded-2xl border p-5 md:p-8">
       <header className="space-y-2">
@@ -226,15 +222,19 @@ export function EvaluationForm({
           <button
             type="submit"
             disabled={
-              !connected || conflict || mutation.isPending || total === null
+              !connected ||
+              conflict ||
+              mutation.isPending ||
+              total === null ||
+              (submitted && !dirty)
             }
             className="whitespace-nowrap rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground disabled:opacity-50"
           >
-            Enviar evaluación
+            {submitted ? "Guardar cambios" : "Enviar evaluación"}
           </button>
         </div>
         <p className="text-sm text-muted-foreground" role="status">
-          {saveLabel}. Al enviar, el equipo desaparecerá de tu vista.
+          {saveLabel}. Puedes revisar y editar tus puntajes en Mis evaluaciones.
         </p>
         {mutation.isError && (
           <div role="alert" className="space-y-2">
@@ -244,7 +244,7 @@ export function EvaluationForm({
               type="button"
               disabled={!connected || mutation.isPending || conflict}
               onClick={() =>
-                mutation.mutate({ submit: false, snapshot: fields })
+                mutation.mutate({ submit: submitted, snapshot: fields })
               }
             >
               Reintentar guardado

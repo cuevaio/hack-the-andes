@@ -12,7 +12,7 @@ export default async function JudgingPage() {
   const identity = await getJudgingIdentity("judge");
   if (identity) {
     try {
-      const initialData = await getJudgeBoard(identity.clerkUserId);
+      const initialData = await getJudgeBoard(identity.clerkUserId, true);
       return (
         <JudgePanel judgeId={identity.clerkUserId} initialData={initialData} />
       );

@@ -76,7 +76,7 @@ assert.equal((await admin.GET(request("/api/admin/judging"))).status, 403);
 signedIn = "reviewer";
 assert.equal((await admin.GET(request("/api/admin/judging"))).status, 403);
 signedIn = "judge";
-assert.equal((await judge.GET(request("/api/judging"))).status, 403);
+assert.equal((await judge.GET(request("/api/judging?history=1"))).status, 403);
 signedIn = "admin";
 assert.equal(
   (
@@ -134,12 +134,12 @@ assert.equal(
   403,
 );
 const visible = Schema.decodeUnknownSync(ApiSuccessSchema(JudgeBoardSchema))(
-  await (await judge.GET(request("/api/judging"))).json(),
+  await (await judge.GET(request("/api/judging?history=1"))).json(),
 ).data;
 assert.equal(visible.session.currentPresentationId, presentation.id);
 assert.equal(visible.presentations[0]?.project.teamName, "Equipo de prueba");
 const invalid = await judge.PATCH(
-  request("/api/judging", "PATCH", {
+  request("/api/judging?history=1", "PATCH", {
     presentationId: presentation.id,
     expectedRevision: 0,
     traction: 6,
@@ -151,7 +151,7 @@ const invalid = await judge.PATCH(
 );
 assert.equal(invalid.status, 422);
 const submittedResponse = await judge.PATCH(
-  request("/api/judging", "PATCH", {
+  request("/api/judging?history=1", "PATCH", {
     presentationId: presentation.id,
     expectedRevision: 0,
     traction: 4,
@@ -165,9 +165,34 @@ assert.equal(submittedResponse.status, 200);
 const submitted = Schema.decodeUnknownSync(ApiSuccessSchema(JudgeBoardSchema))(
   await submittedResponse.json(),
 ).data;
-assert.equal(submitted.presentations.length, 0);
-assert.equal(submitted.evaluations.length, 0);
+assert.equal(submitted.presentations.length, 1);
+assert.equal(submitted.evaluations.length, 1);
+assert.equal(submitted.evaluations[0]?.traction, 4);
+const editedResponse = await judge.PATCH(
+  request("/api/judging?history=1", "PATCH", {
+    presentationId: presentation.id,
+    expectedRevision: 1,
+    traction: 5,
+    technical: 4,
+    pitch: 5,
+    notes: "Revisado",
+    submit: true,
+  }),
+);
+assert.equal(editedResponse.status, 200);
+const edited = Schema.decodeUnknownSync(ApiSuccessSchema(JudgeBoardSchema))(
+  await editedResponse.json(),
+).data;
+assert.equal(edited.evaluations[0]?.traction, 5);
+assert.equal(edited.evaluations[0]?.revision, 2);
+assert.notEqual(edited.evaluations[0]?.submittedAt, null);
 assert.equal("judges" in submitted, false);
+const legacyResponse = Schema.decodeUnknownSync(
+  ApiSuccessSchema(JudgeBoardSchema),
+)(await (await judge.GET(request("/api/judging"))).json()).data;
+assert.deepEqual(legacyResponse.presentations, []);
+assert.deepEqual(legacyResponse.evaluations, []);
+
 signedIn = "admin";
 await judges.PATCH(
   request("/api/admin/judging/judges", "PATCH", {
@@ -176,11 +201,11 @@ await judges.PATCH(
   }),
 );
 signedIn = "judge";
-assert.equal((await judge.GET(request("/api/judging"))).status, 403);
+assert.equal((await judge.GET(request("/api/judging?history=1"))).status, 403);
 assert.equal(
   (
     await judge.PATCH(
-      request("/api/judging", "PATCH", {
+      request("/api/judging?history=1", "PATCH", {
         presentationId: presentation.id,
         expectedRevision: 1,
         traction: 4,

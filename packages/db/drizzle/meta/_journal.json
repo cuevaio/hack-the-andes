@@ -323,6 +323,13 @@
       "when": 1792334363654,
       "tag": "0045_judging_remaining_teams",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1792345543210,
+      "tag": "0046_judge_evaluation_history",
+      "breakpoints": true
     }
   ]
 }

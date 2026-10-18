@@ -8,7 +8,11 @@ export const runtime = "nodejs";
 export const GET = (request: Request) =>
   withApiHandler(request, async (requestId) => {
     const judge = await requireJudgingIdentity("judge");
-    return jsonSuccess(requestId, await getJudgeBoard(judge.clerkUserId));
+    const history = new URL(request.url).searchParams.get("history") === "1";
+    return jsonSuccess(
+      requestId,
+      await getJudgeBoard(judge.clerkUserId, history),
+    );
   });
 export const PATCH = (request: Request) =>
   withApiHandler(request, async (requestId) => {
@@ -19,6 +23,10 @@ export const PATCH = (request: Request) =>
     );
     return jsonSuccess(
       requestId,
-      await saveEvaluation(judge.clerkUserId, command),
+      await saveEvaluation(
+        judge.clerkUserId,
+        command,
+        new URL(request.url).searchParams.get("history") === "1",
+      ),
     );
   });
