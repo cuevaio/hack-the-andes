@@ -16,6 +16,7 @@ import {
   sendAdminCommand,
 } from "@/lib/judging/queries";
 import { JudgingRubric } from "./judging-rubric";
+import { PresentationLinks } from "./presentation-links";
 import { SessionClock, useFreshConnection } from "./session-clock";
 
 const button =
@@ -157,6 +158,14 @@ export function JudgingControl({
       {session.initializedAt && (
         <section className="space-y-5 rounded-2xl border p-6">
           <SessionClock session={session} />
+          <div className="grid gap-4 md:grid-cols-2">
+            {current && (
+              <PresentationLinks presentation={current} label="Equipo actual" />
+            )}
+            {next && (
+              <PresentationLinks presentation={next} label="Siguiente equipo" />
+            )}
+          </div>
           {current && (
             <>
               <div className="flex flex-wrap justify-between gap-4">
