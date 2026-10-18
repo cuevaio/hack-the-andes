@@ -349,7 +349,7 @@ test("joining another team archives the solo team's history and submission witho
   );
 });
 
-test("organizers close and reopen submissions, blocking new submissions and edits while preserving updates", async () => {
+test("organizers close and reopen submissions, blocking new submissions, edits and updates", async () => {
   await seed(1);
   const team = await create(1);
   const command = {
@@ -381,7 +381,7 @@ test("organizers close and reopen submissions, blocking new submissions and edit
       expectedTeamId: team.team?.id,
       body: "Seguimos trabajando",
     }),
-  ).toMatchObject({ update: { body: "Seguimos trabajando" } });
+  ).toMatchObject({ error: { code: "SUBMISSIONS_CLOSED" } });
   const opened = await project(
     null,
     { action: "submissions", submissionsOpen: true },
@@ -390,6 +390,16 @@ test("organizers close and reopen submissions, blocking new submissions and edit
   expect(
     Schema.decodeUnknownSync(ProjectDashboardSchema)(opened).submissionsOpen,
   ).toBe(true);
+  expect(
+    await project(1, {
+      action: "update",
+      expectedTeamId: team.team?.id,
+      body: "Actualización permitida",
+    }),
+  ).toMatchObject({
+    update: { body: "Actualización permitida" },
+    updateCount: 1,
+  });
   const submitted = Schema.decodeUnknownSync(ProjectStateSchema)(
     await project(1, command),
   );

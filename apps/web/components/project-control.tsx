@@ -65,8 +65,8 @@ export function ProjectControl({
           Entregas de proyectos: {submissionsOpen ? "abiertas" : "cerradas"}
         </h2>
         <p className="text-muted-foreground">
-          Al cerrar, los equipos no podrán enviar ni editar sus entregas. Las
-          bitácoras seguirán disponibles.
+          Al cerrar, los equipos no podrán enviar ni editar sus entregas ni
+          publicar actualizaciones en sus bitácoras.
         </p>
         <button
           className="whitespace-nowrap rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"

@@ -302,6 +302,13 @@
       "when": 1792332753262,
       "tag": "0042_bored_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792333021810,
+      "tag": "0043_close_project_updates",
+      "breakpoints": true
     }
   ]
 }
