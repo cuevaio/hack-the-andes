@@ -15,6 +15,7 @@ import {
   fetchAdminBoard,
   sendAdminCommand,
 } from "@/lib/judging/queries";
+import { JudgingRubric } from "./judging-rubric";
 import { SessionClock, useFreshConnection } from "./session-clock";
 
 const button =
@@ -118,6 +119,7 @@ export function JudgingControl({
           {connected ? "Sincronizado" : "Reconectando…"}
         </p>
       </header>
+      <JudgingRubric />
       {!connected && (
         <p role="alert" className="rounded-xl border border-amber-500 p-4">
           No hay conexión actualizada. Los controles están desactivados hasta

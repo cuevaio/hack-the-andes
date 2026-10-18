@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { JudgeBoard } from "@/lib/judging/contract";
 import { fetchJudgeBoard, judgeKey } from "@/lib/judging/queries";
 import { EvaluationForm } from "./evaluation-form";
+import { JudgingRubric } from "./judging-rubric";
 import { SessionClock, useFreshConnection } from "./session-clock";
 
 export function JudgePanel({
@@ -82,6 +83,7 @@ export function JudgePanel({
           </>
         )}
       </section>
+      <JudgingRubric />
       <div className="space-y-6">
         {pending.map((presentation) => (
           <EvaluationForm
