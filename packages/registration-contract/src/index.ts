@@ -2,6 +2,7 @@ import { ParticipantChallengeProgressSchema } from "@chofex/challenges-contract"
 import { DateTime, Option, Schema, SchemaGetter } from "effect";
 import { CountryCode } from "#countries";
 
+export * from "#certificates";
 export * from "#countries";
 export * from "#projects";
 export * from "#teams";

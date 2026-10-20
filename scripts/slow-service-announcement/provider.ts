@@ -136,6 +136,28 @@ export function createProvider(input: {
         if (page.length < 100) return rows;
       }
     },
+    async recipientPolicy(emails: readonly string[]) {
+      const contacts: (typeof ContactSchema.Type)[] = [];
+      const suppressions: (typeof SuppressionSchema.Type)[] = [];
+      for (const email of new Set(emails)) {
+        const encoded = encodeURIComponent(email);
+        const contact = await request("Resend", `/contacts/${encoded}`);
+        if (contact.status !== 404)
+          contacts.push(
+            decode(ContactSchema, await json(contact), "Resend contact"),
+          );
+        const suppression = await request("Resend", `/suppressions/${encoded}`);
+        if (suppression.status !== 404)
+          suppressions.push(
+            decode(
+              SuppressionSchema,
+              await json(suppression),
+              "Resend suppression",
+            ),
+          );
+      }
+      return { contacts, suppressions };
+    },
     async policy() {
       // A sending-only key cannot read these endpoints. Fail closed, never
       // replace missing policy data with an empty suppression list.

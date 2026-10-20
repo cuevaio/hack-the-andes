@@ -15,6 +15,7 @@ import {
   selectRegistrationCountry,
 } from "./api-client.js";
 import { login as oauthLogin, logout as oauthLogout } from "./auth.js";
+import { certificateCommand } from "./certificate-command.js";
 import { challengeCommand } from "./challenge-commands.js";
 import { registrationPartsText } from "./challenge-output.js";
 import { checkinCommand } from "./checkin-command.js";
@@ -758,6 +759,7 @@ export const command = root.pipe(
     teamCommand,
     projectCommand,
     checkinCommand,
+    certificateCommand,
     creditsCommand,
   ]),
 );

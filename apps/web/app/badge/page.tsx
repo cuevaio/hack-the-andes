@@ -132,6 +132,9 @@ export default async function BadgePage() {
         <CredentialCard credential={credential} />
       </CredentialStage>
       <BadgeDownload badge={badge} participantName={credential.name} />
+      <Link className="credential-back-link" href="/certificate">
+        Mi certificado de participación
+      </Link>
     </BrandCenteredPage>
   );
 }

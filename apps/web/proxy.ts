@@ -24,6 +24,8 @@ function isPublicMarketingPath(pathname: string) {
     pathname === "/guide" ||
     pathname === "/wifi" ||
     pathname === "/participation-terms" ||
+    pathname === "/certificate" ||
+    pathname.startsWith("/certificate/") ||
     pathname === "/projects" ||
     pathname.startsWith("/projects/") ||
     pathname === "/privacy" ||

@@ -330,6 +330,20 @@
       "when": 1792345543210,
       "tag": "0046_judge_evaluation_history",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792525348086,
+      "tag": "0047_cynical_skullbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792525464161,
+      "tag": "0048_solid_gwen_stacy",
+      "breakpoints": true
     }
   ]
 }

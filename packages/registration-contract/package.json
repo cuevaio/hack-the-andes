@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "imports": {
+    "#certificates": "./src/certificates.ts",
     "#countries": "./src/countries.ts",
     "#teams": "./src/teams.ts",
     "#projects": "./src/projects.ts"

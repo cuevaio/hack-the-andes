@@ -45,6 +45,8 @@ andes badge
 andes badge regenerate
 andes credits
 andes credits --output json
+andes certificate
+andes certificate --output json
 ```
 
 `andes update` and `andes upgrade` are interchangeable; both update the CLI
@@ -88,6 +90,11 @@ Run `andes` to see your current progress and the next command to run.
 Repeating `andes register` after submission shows your next step without submitting again.
 After acceptance, run `andes confirm`; after confirmation, run `andes badge`.
 Confirmation generates the badge automatically. Repeat `andes badge` if it is still processing.
+After organizers record your physical check-in, run `andes certificate`.
+The command issues your participation certificate and prints its permanent
+`https://hacktheandes.com/certificate/<id>` URL. Run it again to retrieve the same
+certificate. The public page provides PDF/PNG downloads, QR verification, and
+credential details to add it to LinkedIn. No browser sign-in is needed to view it.
 Run `andes --help` for the full command reference. The welcome screen's
 landscape uses colored terminal cells, with readable text that works with your
 terminal's line spacing. It adapts to the terminal width and has a plain ASCII

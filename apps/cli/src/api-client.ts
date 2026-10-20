@@ -21,6 +21,7 @@ import {
   type BadgeResult,
   BadgeResultSchema,
   type CampaignAttributionHandoff,
+  CertificateReceiptSchema,
   CheckinSchema,
   type CreatedRegistration,
   CreatedRegistrationSchema,
@@ -542,4 +543,12 @@ export const getCredits = (options: ApiClientOptions) =>
     "/api/v1/credits",
     { method: "GET" },
     Schema.decodeUnknownEffect(ApiSuccessSchema(CreditsSchema)),
+  );
+
+export const getCertificate = (options: ApiClientOptions) =>
+  request(
+    options,
+    "/api/v1/certificate",
+    { method: "POST" },
+    Schema.decodeUnknownEffect(ApiSuccessSchema(CertificateReceiptSchema)),
   );

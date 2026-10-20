@@ -107,6 +107,9 @@ export function TeamDashboardView({
           <Link className="underline" href="/teams">
             Equipos
           </Link>
+          <Link className="underline" href="/certificate">
+            Certificado
+          </Link>
           {admin && (
             <Link className="underline" href="/tracks">
               Tracks

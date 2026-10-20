@@ -7,5 +7,6 @@ export * from "./judging";
 export * from "./participant-badges";
 export * from "./participant-funnel-milestones";
 export * from "./participants";
+export * from "./participation-certificates";
 export * from "./projects";
 export * from "./teams";

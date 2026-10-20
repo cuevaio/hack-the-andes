@@ -22,6 +22,38 @@ function providerWith(
 }
 
 describe("provider policy and send boundaries", () => {
+  test("certificate policy checks only the requested email addresses and preserves exclusions", async () => {
+    const requests: string[] = [];
+    const provider = providerWith((url, init) => {
+      requests.push(url);
+      expect(init?.method ?? "GET").toBe("GET");
+      if (url.includes("/contacts/"))
+        return Response.json({
+          id: "contact",
+          email: "ana@example.com",
+          unsubscribed: true,
+        });
+      return Response.json({
+        id: "suppression",
+        email: "ana@example.com",
+        origin: "bounce",
+      });
+    });
+    expect(
+      await provider.recipientPolicy(["ana@example.com", "ana@example.com"]),
+    ).toEqual({
+      contacts: [
+        { id: "contact", email: "ana@example.com", unsubscribed: true },
+      ],
+      suppressions: [
+        { id: "suppression", email: "ana@example.com", origin: "bounce" },
+      ],
+    });
+    expect(requests).toEqual([
+      "https://api.resend.com/contacts/ana%40example.com",
+      "https://api.resend.com/suppressions/ana%40example.com",
+    ]);
+  });
   test("fences the campaign immediately before every HTTP attempt, including a retry after ownership is lost", async () => {
     let attempts = 0;
     let checks = 0;

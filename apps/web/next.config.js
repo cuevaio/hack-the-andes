@@ -37,6 +37,7 @@ const nextConfig = {
   // key has to keep naming a real route — a key that matches nothing is not
   // insurance, it is a comment that reads like one.
   outputFileTracingIncludes: {
+    "/certificate/*/*": ["./content/certificates/**/*"],
     "/deck/[...slug]": ["./content/decks/**/*"],
     "/comunal": ["./content/decks/comunal/**/*"],
     "/api/v1/challenges/*/test": [
