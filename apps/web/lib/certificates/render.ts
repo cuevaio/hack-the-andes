@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ParticipationCertificate } from "@chofex/registration-contract";
-import * as fontkit from "@pdf-lib/fontkit";
+import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import sharp from "sharp";
