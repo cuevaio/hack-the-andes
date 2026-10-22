@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   twitter: { title, description },
 };
 
+const videoCount = galleryPhotos.filter((item) => item.video).length;
+const photoCount = galleryPhotos.length - videoCount;
+
 export default function GalleryPage() {
   return (
     <BrandPage className="relative h-svh overflow-hidden">
@@ -37,7 +40,8 @@ export default function GalleryPage() {
           Galería · Lima · 17–18 oct 2026
         </p>
         <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-          {galleryPhotos.length} fotos · arrastra para explorar
+          {photoCount} fotos · {videoCount} videos
+          <span className="hidden sm:inline"> · arrastra para explorar</span>
         </p>
       </footer>
     </BrandPage>

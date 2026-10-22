@@ -1,5 +1,6 @@
 "use client";
 
+import { Play } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -97,16 +98,20 @@ function layoutFor(width: number, height: number): Layout {
 
 export function InfiniteGrid({
   sources,
+  clips,
   labels,
   onOpen,
 }: {
   readonly sources: readonly string[];
+  readonly clips: readonly (string | null)[];
   readonly labels: readonly string[];
   readonly onOpen: (index: number) => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
   const cellsRef = useRef<Cell[]>([]);
+  const previewRef = useRef<HTMLVideoElement | null>(null);
+  const previewAt = useRef({ gx: Number.NaN, gy: Number.NaN });
   const [layout, setLayout] = useState<Layout | null>(null);
 
   const pointer = useRef({ x: 0, y: 0, inside: false });
@@ -154,6 +159,15 @@ export function InfiniteGrid({
     return () => observer.disconnect();
   }, []);
 
+  // One shared muted <video> follows the hovered clip cell, so the pool of
+  // cells never holds more than a single playing video.
+  const stopPreview = useCallback(() => {
+    const video = previewRef.current;
+    if (!video) return;
+    video.pause();
+    video.remove();
+  }, []);
+
   const assign = useCallback(() => {
     const { bx, by } = baseCell.current;
     for (const cell of cellsRef.current) {
@@ -167,13 +181,27 @@ export function InfiniteGrid({
         sources.length;
       const src = sources[index] ?? "";
       cell.button.dataset.index = String(index);
+      cell.button.dataset.video = String(Boolean(clips[index]));
       cell.button.setAttribute("aria-label", labels[index] ?? "");
       if (cell.src !== src) {
         cell.src = src;
         cell.img.src = src;
       }
     }
-  }, [labels, sources, tile, tileSize]);
+    // Cells shift content when the grid crosses a boundary, so the preview
+    // follows the grid position it started on rather than its DOM cell.
+    const video = previewRef.current;
+    if (!video?.parentElement) return;
+    const { gx, gy } = previewAt.current;
+    const holder = cellsRef.current.find(
+      (cell) => cell.gx === gx && cell.gy === gy,
+    );
+    if (!holder) {
+      stopPreview();
+      return;
+    }
+    if (video.parentElement !== holder.button) holder.button.append(video);
+  }, [clips, labels, sources, stopPreview, tile, tileSize]);
 
   // Rebuild the cell pool and reassign photos whenever the grid changes shape.
   useLayoutEffect(() => {
@@ -355,6 +383,42 @@ export function InfiniteGrid({
     state.id = -1;
   };
 
+  const onPointerOver = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || drag.current.id !== -1) return;
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "button[data-video='true']",
+    );
+    const clip = button ? clips[Number(button.dataset.index)] : null;
+    if (!button || !clip) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let video = previewRef.current;
+    if (!video) {
+      video = document.createElement("video");
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = "auto";
+      video.className =
+        "pointer-events-none absolute inset-0 size-full object-cover";
+      previewRef.current = video;
+    }
+    const cell = cellsRef.current.find((item) => item.button === button);
+    previewAt.current = {
+      gx: cell?.gx ?? Number.NaN,
+      gy: cell?.gy ?? Number.NaN,
+    };
+    if (video.parentElement !== button) button.append(video);
+    if (!video.src.endsWith(clip)) video.src = clip;
+    video.play().catch(() => {});
+  };
+
+  const onPointerOut = (event: React.PointerEvent<HTMLDivElement>) => {
+    const video = previewRef.current;
+    const button = video?.parentElement;
+    if (!button || button.contains(event.relatedTarget as Node | null)) return;
+    stopPreview();
+  };
+
   const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -372,7 +436,7 @@ export function InfiniteGrid({
       const key = `${row}:${col}`;
       cells.push(
         <button
-          className="absolute block cursor-zoom-in overflow-hidden bg-muted outline-none [transform:scale(var(--s,1))] focus-visible:ring-2 focus-visible:ring-primary"
+          className="group absolute block cursor-zoom-in overflow-hidden bg-muted outline-none [transform:scale(var(--s,1))] focus-visible:ring-2 focus-visible:ring-primary"
           key={key}
           data-col={col}
           data-row={row}
@@ -392,6 +456,9 @@ export function InfiniteGrid({
             decoding="async"
             draggable={false}
           />
+          <span className="pointer-events-none absolute right-2 bottom-2 z-10 hidden size-7 items-center justify-center rounded-full bg-black/60 text-white group-data-[video=true]:flex">
+            <Play aria-hidden="true" className="size-3.5 fill-current" />
+          </span>
         </button>,
       );
     }
@@ -406,6 +473,8 @@ export function InfiniteGrid({
       onPointerCancel={endDrag}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
+      onPointerOut={onPointerOut}
+      onPointerOver={onPointerOver}
       onPointerUp={endDrag}
       ref={rootRef}
     >

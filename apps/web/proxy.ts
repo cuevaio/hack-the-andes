@@ -94,7 +94,7 @@ export default async function proxy(...args: Parameters<typeof clerk>) {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|glb|wasm)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|glb|wasm|mp4)).*)",
     "/(api|trpc)(.*)",
     "/_next/image",
     "/__clerk/:path*",
