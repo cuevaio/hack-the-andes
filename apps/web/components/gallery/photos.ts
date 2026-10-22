@@ -1,0 +1,85 @@
+export type GalleryPhoto = {
+  readonly slug: string;
+  readonly width: number;
+  readonly height: number;
+};
+
+// Generated from the event photo export: square 640px thumbnails live in
+// public/gallery/thumb and 2000px full-size images in public/gallery/full.
+export const galleryPhotos: readonly GalleryPhoto[] = [
+  { slug: "p1080632", width: 2000, height: 1125 },
+  { slug: "p1080690", width: 2000, height: 1125 },
+  { slug: "p1080693", width: 2000, height: 1125 },
+  { slug: "p1080695", width: 2000, height: 1125 },
+  { slug: "p1080697", width: 2000, height: 1125 },
+  { slug: "p1080700", width: 2000, height: 1125 },
+  { slug: "p1080702", width: 2000, height: 1125 },
+  { slug: "p1080703", width: 2000, height: 1125 },
+  { slug: "p1080709", width: 2000, height: 1125 },
+  { slug: "p1080709-b", width: 2000, height: 1125 },
+  { slug: "p1080714", width: 1125, height: 2000 },
+  { slug: "p1080715", width: 1125, height: 2000 },
+  { slug: "p1080731", width: 2000, height: 1125 },
+  { slug: "p1080734", width: 2000, height: 1125 },
+  { slug: "p1080749", width: 2000, height: 1125 },
+  { slug: "p1080761", width: 2000, height: 1125 },
+  { slug: "p1080782", width: 2000, height: 1125 },
+  { slug: "p1080804", width: 2000, height: 1125 },
+  { slug: "p1080811", width: 2000, height: 1125 },
+  { slug: "p1080816", width: 1125, height: 2000 },
+  { slug: "p1080822", width: 2000, height: 1125 },
+  { slug: "p1080833", width: 1125, height: 2000 },
+  { slug: "p1090020", width: 2000, height: 1125 },
+  { slug: "p1090023", width: 2000, height: 1125 },
+  { slug: "p1090031", width: 2000, height: 1125 },
+  { slug: "p1090047", width: 2000, height: 1125 },
+  { slug: "p1090059", width: 2000, height: 1125 },
+  { slug: "p1090073", width: 2000, height: 1165 },
+  { slug: "p1090085", width: 2000, height: 1125 },
+  { slug: "p1080769", width: 2000, height: 1125 },
+  { slug: "gonza-hack-3", width: 1145, height: 637 },
+  { slug: "nuevo-gonza", width: 1125, height: 2000 },
+  { slug: "pizarra", width: 1206, height: 677 },
+  { slug: "p1080670", width: 2000, height: 1125 },
+  { slug: "p1080672", width: 2000, height: 1125 },
+  { slug: "p1080716", width: 2000, height: 1125 },
+  { slug: "p1080727", width: 2000, height: 1125 },
+  { slug: "p1080733", width: 2000, height: 1125 },
+  { slug: "p1080735", width: 2000, height: 1125 },
+  { slug: "p1080736", width: 2000, height: 1125 },
+  { slug: "p1080738", width: 2000, height: 1125 },
+  { slug: "p1080743", width: 2000, height: 1125 },
+  { slug: "p1080745", width: 2000, height: 1125 },
+  { slug: "p1080747", width: 2000, height: 1125 },
+  { slug: "p1080757", width: 2000, height: 1125 },
+  { slug: "p1080760", width: 2000, height: 1125 },
+  { slug: "p1080769-b", width: 2000, height: 1125 },
+  { slug: "p1080797", width: 2000, height: 1125 },
+  { slug: "p1080805", width: 2000, height: 1125 },
+  { slug: "p1080807", width: 2000, height: 1125 },
+  { slug: "p1080808", width: 1125, height: 2000 },
+  { slug: "p1080810", width: 2000, height: 1125 },
+  { slug: "p1080813", width: 2000, height: 1264 },
+  { slug: "p1080821", width: 2000, height: 1125 },
+  { slug: "p1080829", width: 2000, height: 1125 },
+  { slug: "p1080830", width: 1125, height: 2000 },
+  { slug: "p1080834", width: 2000, height: 1125 },
+  { slug: "p1090024", width: 2000, height: 1125 },
+  { slug: "p1090042", width: 2000, height: 1125 },
+  { slug: "p1090045", width: 2000, height: 1125 },
+  { slug: "p1090049", width: 1125, height: 2000 },
+  { slug: "p1090092", width: 2000, height: 1125 },
+  { slug: "p1090097", width: 2000, height: 1125 },
+  { slug: "p1090116", width: 2000, height: 1125 },
+  { slug: "p1080695-b", width: 2000, height: 1125 },
+  { slug: "gonca-hack", width: 1142, height: 643 },
+  { slug: "gonza-hack-2", width: 1206, height: 681 },
+];
+
+export function galleryThumbSrc(photo: GalleryPhoto) {
+  return `/gallery/thumb/${photo.slug}.webp`;
+}
+
+export function galleryFullSrc(photo: GalleryPhoto) {
+  return `/gallery/full/${photo.slug}.webp`;
+}

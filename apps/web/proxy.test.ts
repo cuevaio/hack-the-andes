@@ -23,6 +23,7 @@ test.each([
   ["/game", null],
   ["/wifi", null],
   ["/brand", null],
+  ["/gallery", null],
   ["/comunal", null],
   ["/deck/comunal", null],
   ["/deck/comunal.pdf", null],
